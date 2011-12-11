@@ -64,8 +64,10 @@ echo '
         <h3>Servers using ' . $name . '</h3>
         <table>
             <tr> <td> Total </td> <td> ' . number_format($plugin->countServers()) . ' </td> </tr>
-            <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - MILLISECONDS_IN_DAY)) . ' </td> </tr>
-            <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - MILLISECONDS_IN_WEEK)) . ' </td> </tr>
+            <tr> <td> Last hour </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HOUR)) . ' </td> </tr>
+            <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
+            <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_DAY)) . ' </td> </tr>
+            <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_WEEK)) . ' </td> </tr>
             <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(strtotime(date('m').'/01/'.date('Y').' 00:00:00'))) . ' </td> </tr>
         </table>
 

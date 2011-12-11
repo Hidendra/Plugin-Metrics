@@ -8,8 +8,10 @@ require 'Plugin.class.php';
 require ROOT . 'geoip/countries.php';
 
 // Some constants
-define('MILLISECONDS_IN_DAY', 60 * 60 * 24 * 1000);
-define('MILLISECONDS_IN_WEEK', 60 * 60 * 24 * 7 * 1000);
+define('SECONDS_IN_HOUR', 60 * 60);
+define('SECONDS_IN_HALFDAY', 60 * 60 * 12);
+define('SECONDS_IN_DAY', 60 * 60 * 24);
+define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
 
 /**
  * Load a key from POST. If it does not exist, die loudly
