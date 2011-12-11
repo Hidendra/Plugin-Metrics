@@ -29,7 +29,6 @@ echo '
 
     <body>
         <h3>Plugin information</h3>
-        ID: ' . $plugin->getID() . ' <br/>
         Name: ' . $name . ' <br/>
         Global starts: ' . number_format($plugin->getGlobalHits()) . ' <br/>
 
@@ -39,13 +38,12 @@ echo '
         Last 7 days: ' . number_format($plugin->countServersLastUpdatedAfter(time() - MILLISECONDS_IN_WEEK)) . ' <br/>
         This month: ' . number_format($plugin->countServersLastUpdatedAfter(strtotime(date('m').'/01/'.date('Y').' 00:00:00'))) . ' <br/>
 
-        <h3>Version stats</h3>
-        Servers last known using the version.... <br/>
+        <h3>Servers\' last known version</h3>
 ';
 
 foreach ($plugin->getVersions() as $version)
 {
-    echo '        ' . $version . ': ' . $plugin->countServersUsingVersion($version) . ' <br/>
+    echo '        <b>' . $version . '</b>: ' . $plugin->countServersUsingVersion($version) . ' <br/>
 ';
 }
 ?>
