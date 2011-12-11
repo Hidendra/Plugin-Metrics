@@ -30,12 +30,12 @@ $server = $plugin->getOrCreateServer($guid);
 // Are they using a different version?
 if ($server->getCurrentVersion() != $version)
 {
-    // Log it
+    // Log it and update the current version
     $server->addVersionHistory($version);
+    $server->setCurrentVersion($version);
 }
 
-// Update the current version, increment the hits, and save
-$server->setCurrentVersion($version);
+// increment the hits and save
 $server->incrementHits();
 $server->save();
 
