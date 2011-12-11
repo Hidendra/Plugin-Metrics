@@ -68,7 +68,7 @@ echo '
             <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
             <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_DAY)) . ' </td> </tr>
             <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_WEEK)) . ' </td> </tr>
-            <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(strtotime(date('m').'/01/'.date('Y').' 00:00:00'))) . ' </td> </tr>
+            <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(strtotime(date('m').'/01/' . date('Y') . ' 00:00:00'))) . ' </td> </tr>
         </table>
 
         <h3>Servers\' last known version</h3>
