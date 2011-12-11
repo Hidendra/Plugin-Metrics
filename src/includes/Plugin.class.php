@@ -21,6 +21,66 @@ class Plugin
     private $globalHits;
 
     /**
+     * Get an array of possible versions
+     * @return array
+     */
+    public function getVersions()
+    {
+        global $pdo;
+
+        $versions = array();
+        $statement = $pdo->prepare('SELECT DISTINCT Version FROM VersionHistory WHERE Plugin = ?');
+        $statement->execute(array($this->id));
+
+        while (($row = $statement->fetch()) != null)
+        {
+            $versions[] = $row['Version'];
+        }
+
+        return $versions;
+    }
+
+    /**
+     * Get a count of all of the servers using this plugin
+     */
+    public function countServers()
+    {
+        global $pdo;
+
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ?');
+        $statement->execute(array($this->id));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
+    }
+
+    /**
+     * Count all of the servers that were updated after the given epoch
+     * @param $after integer
+     */
+    public function countServersLastUpdatedAfter($after)
+    {
+        global $pdo;
+
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND Updated > ?');
+        $statement->execute(array($this->id, $after));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
+    }
+
+    public function countServersUsingVersion($version)
+    {
+        global $pdo;
+
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND CurrentVersion = ?');
+        $statement->execute(array($this->id, $version));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
+    }
+
+    /**
      * Get a server by its GUID. If not found, this will create it.
      * @param $guid
      * @param $attemptedToCreate
@@ -75,7 +135,7 @@ class Plugin
         $statement = $pdo->prepare('UPDATE Plugin SET Name = :Name, GlobalHits = :GlobalHits WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->ID, ':Name' => $this->name, ':GlobalHits' => $this->globalHits));
+        $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':GlobalHits' => $this->globalHits));
     }
 
     /**

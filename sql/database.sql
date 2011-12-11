@@ -36,6 +36,9 @@ CREATE TABLE IF NOT EXISTS Server (
   INDEX (GUID),
 
   --
+  INDEX (CurrentVersion),
+
+  --
   INDEX (Hits),
 
   --
@@ -54,6 +57,8 @@ CREATE TABLE IF NOT EXISTS Server (
 CREATE TABLE IF NOT EXISTS VersionHistory (
   ID int NOT NULL AUTO_INCREMENT,
 
+  Plugin INT NOT NULL,
+
   -- Name of the plugin
   Server INT NOT NULL,
 
@@ -64,6 +69,9 @@ CREATE TABLE IF NOT EXISTS VersionHistory (
   Created INTEGER NOT NULL,
 
   --
+  INDEX (Plugin),
+
+  --
   INDEX (Server),
 
   --
@@ -71,6 +79,9 @@ CREATE TABLE IF NOT EXISTS VersionHistory (
 
   --
   INDEX (Created),
+
+  --
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
 
   --
   FOREIGN KEY (Server) REFERENCES Server (ID),

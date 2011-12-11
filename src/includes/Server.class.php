@@ -49,8 +49,8 @@ class Server
     {
         global $pdo;
 
-        $statement = $pdo->prepare('INSERT INTO VersionHistory (Server, Version, Created) VALUES (:Server, :Version, :Created)');
-        $statement->execute(array(':Server' => $this->id, ':Version' => $version, ':Created' => time()));
+        $statement = $pdo->prepare('INSERT INTO VersionHistory (Plugin, Server, Version, Created) VALUES (:Plugin, :Server, :Version, :Created)');
+        $statement->execute(array(':Plugin' => $this->plugin, ':Server' => $this->id, ':Version' => $version, ':Created' => time()));
     }
 
     /**

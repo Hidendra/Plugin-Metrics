@@ -36,6 +36,7 @@ if ($server->getCurrentVersion() != $version)
 }
 
 // increment the hits and save
+$plugin->incrementGlobalHits();
 $server->incrementHits();
 $server->save();
 

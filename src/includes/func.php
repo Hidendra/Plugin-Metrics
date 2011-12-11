@@ -7,6 +7,10 @@ require 'Plugin.class.php';
 // include the geo ip database
 require ROOT . 'geoip/countries.php';
 
+// Some constants
+define('MILLISECONDS_IN_DAY', 60 * 60 * 24 * 1000);
+define('MILLISECONDS_IN_WEEK', 60 * 60 * 24 * 7 * 1000);
+
 /**
  * Load a key from POST. If it does not exist, die loudly
  *
