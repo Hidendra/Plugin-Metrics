@@ -55,31 +55,3 @@ function loadPlugin($plugin)
 
     return NULL;
 }
-
-/**
- * Convert an IP to a 2-char country code (ISO3166-1 alpha-2)
- * Obtained from: http://www.phptutorial.info/iptocountry/the_script.html
- *
- * @param $ip
- * @return string the country code, otherwise XX
- */
-function convertIPToCountryCode($ip)
-{
-    // split the octets
-    $numbers = preg_split( "/\./", $ip);
-
-    // load the database for the single octet
-    include ROOT . "geoip/" . $numbers[0] . ".php";
-
-    // calculate the hashcode for the ip
-    $code=($numbers[0] * 16777216) + ($numbers[1] * 65536) + ($numbers[2] * 256) + ($numbers[3]);
-
-    // Search for a country
-    foreach($ranges as $key => $value){
-        if($key<=$code){
-            if($ranges[$key][0]>=$code){$country=$ranges[$key][1];break;}
-        }
-    }
-
-    return empty($country) ? "ZZ" : $country;
-}
