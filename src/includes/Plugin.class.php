@@ -29,7 +29,7 @@ class Plugin
         global $pdo;
 
         $versions = array();
-        $statement = $pdo->prepare('SELECT DISTINCT Version FROM VersionHistory WHERE Plugin = ?');
+        $statement = $pdo->prepare('SELECT DISTINCT Version FROM VersionHistory WHERE Plugin = ? ORDER BY Created DESC');
         $statement->execute(array($this->id));
 
         while (($row = $statement->fetch()) != null)
@@ -38,6 +38,24 @@ class Plugin
         }
 
         return $versions;
+    }
+
+    /**
+     * Count version changes for epoch times between the min and max
+     *
+     * @param $min
+     * @param $max
+     * @return integer
+     */
+    public function countVersionChanges($min, $max)
+    {
+        global $pdo;
+
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM VersionHistory WHERE Created > ? AND Created < ?');
+        $statement->execute(array($min, $max));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
     }
 
     /**

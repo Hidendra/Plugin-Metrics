@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS Server (
   ServerVersion VARCHAR(40) NOT NULL,
 
   -- The last known version of LWC the server was using
-  CurrentVersion VARCHAR(20) NOT NULL,
+  CurrentVersion VARCHAR(40) NOT NULL,
 
   -- Incremented each time the server pings us
   Hits INT NOT NULL,
@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS Server (
 
   --
   INDEX (GUID),
+
+  --
+  INDEX (ServerVersion),
 
   --
   INDEX (CurrentVersion),
@@ -66,7 +69,7 @@ CREATE TABLE IF NOT EXISTS VersionHistory (
   Server INT NOT NULL,
 
   -- The version they changed to
-  Version VARCHAR(20) NOT NULL,
+  Version VARCHAR(40) NOT NULL,
 
   -- The epoch time they changed at
   Created INTEGER NOT NULL,

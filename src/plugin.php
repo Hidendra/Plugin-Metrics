@@ -20,11 +20,11 @@ if ($plugin === NULL)
     exit('ERR Invalid plugin.');
 }
 
-$name = $plugin->getName();
-echo '
+$name = $plugin->getName(); ?>
+
 <html>
     <head>
-        <title>' . $name . ' statistics</title>
+        <title><?php echo $name; ?> statistics</title>
         <style>
             table
             {
@@ -52,9 +52,73 @@ echo '
                 color: #009;
             }
         </style>
+
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript">
+            google.load("jquery", "1.7.1");
+            google.load('visualization', '1.0', {'packages':['corechart']});
+            google.setOnLoadCallback(drawCharts);
+
+            /**
+             * Convert epoch time to a Date object to be used for graphing
+             * @param epoch
+             * @return Date
+             */
+            function epochToDate(epoch)
+            {
+                var date = new Date(0);
+                date.setUTCSeconds(epoch);
+                return date;
+            }
+
+            /**
+             * Draw the charts on the page
+             */
+            function drawCharts()
+            {
+                // last 2 weeks
+                generateTimeline(14, '14day_timeline');
+
+                // last month
+                generateTimeline(31, '31day_timeline');
+            }
+
+            /**
+             * Generate a timeline for X days
+             * @param days
+             * @param div
+             */
+            function generateTimeline(days, div)
+            {
+                $.getJSON('/timeline/<?php echo $name; ?>/' + days, function(json) {
+                    var graph = new google.visualization.DataTable();
+                    graph.addColumn('date', 'Day');
+                    graph.addColumn('number', 'Changes');
+
+                    // iterate through the JSON data
+                    $.each(json, function(i, v) {
+                        // extract data
+                        date = epochToDate(parseInt(v.epoch));
+                        changes = parseInt(v.changes);
+
+                        // add it to the graph
+                        graph.addRow([date, changes]);
+                    });
+
+                    var options = {
+                        width: 950, height: 340,
+                        title: days + '-day version timeline'
+                    };
+
+                    var chart = new google.visualization.LineChart(document.getElementById(div));
+                    chart.draw(graph, options);
+                });
+            }
+        </script>
     </head>
 
-    <body>
+<?php
+echo '    <body>
         <h3>Plugin information</h3>
         <table>
             <tr> <td> Name </td> <td> ' . $name . ' </td> </tr>
@@ -82,5 +146,8 @@ foreach ($plugin->getVersions() as $version)
 }
 ?>
         </table>
+
+        <div id="14day_timeline" style="width:950; height:400"></div>
+        <div id="31day_timeline" style="width:950; height:400"></div>
     </body>
 </html>
