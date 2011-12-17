@@ -23,6 +23,7 @@ if ($plugin === NULL)
 $guid = getPostArgument('guid');
 $serverVersion = getPostArgument('server');
 $version = getPostArgument('version');
+$ping = isset($_POST['ping']); // if they're pinging us, we don't update the hitcount
 
 // Now load the server
 $server = $plugin->getOrCreateServer($guid);
@@ -42,9 +43,14 @@ if ($server->getServerVersion() != $serverVersion)
 }
 
 
-// increment the hits and save
-$plugin->incrementGlobalHits();
-$server->incrementHits();
+// increment the hits if it's a fresh server start
+if (!ping)
+{
+    $plugin->incrementGlobalHits();
+    $server->incrementHits();
+}
+
+// save. if no changes, this at least updates the 'updated' time
 $server->save();
 
 // All good; no errors!
