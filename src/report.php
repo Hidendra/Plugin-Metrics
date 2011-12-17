@@ -44,7 +44,7 @@ if ($server->getServerVersion() != $serverVersion)
 
 
 // increment the hits if it's a fresh server start
-if (!ping)
+if (!$ping)
 {
     $plugin->incrementGlobalHits();
     $server->incrementHits();
