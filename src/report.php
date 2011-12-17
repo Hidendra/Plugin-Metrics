@@ -25,6 +25,9 @@ $serverVersion = getPostArgument('server');
 $version = getPostArgument('version');
 $ping = isset($_POST['ping']); // if they're pinging us, we don't update the hitcount
 
+// Some arguments added later in that to remain backwards compatibility
+$players = isset($_POST['players']) ? intval($_POST['players']) : 0;
+
 // Now load the server
 $server = $plugin->getOrCreateServer($guid);
 
@@ -42,6 +45,11 @@ if ($server->getServerVersion() != $serverVersion)
     $server->setServerVersion($serverVersion);
 }
 
+// Check the player count
+if ($server->getPlayers() != $players)
+{
+    $server->setPlayers($players);
+}
 
 // increment the hits if it's a fresh server start
 if (!$ping)
