@@ -22,6 +22,12 @@ class Server
     private $guid;
 
     /**
+     * The server's software version
+     * @var string
+     */
+    private $serverVersion;
+
+    /**
      * The server's last known version
      * @var string
      */
@@ -64,10 +70,10 @@ class Server
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
+        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, ServerVersion = :ServerVersion, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':GUID' => $this->guid, ':CurrentVersion' => $this->currentVersion,
+        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':GUID' => $this->guid, ':ServerVersion' => $this->serverVersion, ':CurrentVersion' => $this->currentVersion,
             ':Hits' => $this->hits, ':Created' => $this->created, ':Updated' => $this->updated));
     }
 
@@ -107,6 +113,16 @@ class Server
     public function setGUID($guid)
     {
         $this->guid = $guid;
+    }
+
+    public function getServerVersion()
+    {
+        return $this->serverVersion;
+    }
+
+    public function setServerVersion($serverVersion)
+    {
+        $this->serverVersion = $serverVersion;
     }
 
     public function getCurrentVersion()

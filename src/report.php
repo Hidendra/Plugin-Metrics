@@ -22,6 +22,7 @@ if ($plugin === NULL)
 
 // Begin extracting arguments
 $guid = getPostArgument('guid');
+$server = getPostArgument('server');
 $version = getPostArgument('version');
 
 // Now load the server
@@ -34,6 +35,13 @@ if ($server->getCurrentVersion() != $version)
     $server->addVersionHistory($version);
     $server->setCurrentVersion($version);
 }
+
+// Different server version?
+if ($server->getServerVersion() != $server)
+{
+    $server->setServerVersion($server);
+}
+
 
 // increment the hits and save
 $plugin->incrementGlobalHits();

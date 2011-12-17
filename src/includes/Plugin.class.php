@@ -90,7 +90,7 @@ class Plugin
         global $pdo;
 
         // Try to select it first
-        $statement = $pdo->prepare('SELECT ID, Plugin, GUID, CurrentVersion, Hits, Created, Updated FROM Server WHERE GUID = :GUID');
+        $statement = $pdo->prepare('SELECT ID, Plugin, GUID, ServerVersion, CurrentVersion, Hits, Created, Updated FROM Server WHERE GUID = :GUID');
         $statement->execute(array(':GUID' => $guid));
 
         if ($row = $statement->fetch())
@@ -100,6 +100,7 @@ class Plugin
             $server->setID($row['ID']);
             $server->setPlugin($row['Plugin']);
             $server->setGUID($row['GUID']);
+            $server->setServerVersion($row['ServerVersion']);
             $server->setCurrentVersion($row['CurrentVersion']);
             $server->setHits($row['Hits']);
             $server->setCreated($row['Created']);
@@ -117,8 +118,8 @@ class Plugin
         // It doesn't exist so we are going to create it ^^
 
         // now try to create it
-        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, CurrentVersion, Hits, Created, Updated) VALUES(:Plugin, :GUID, :CurrentVersion, :Hits, :Created, :Updated)');
-        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, 'CurrentVersion' => 'unknown', ':Hits' => 0, ':Created' => time(), ':Updated' => time()));
+        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, ServerVersion, CurrentVersion, Hits, Created, Updated) VALUES(:Plugin, :GUID, :ServerVersion, :CurrentVersion, :Hits, :Created, :Updated)');
+        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':ServerVersion' => '', ':CurrentVersion' => '', ':Hits' => 0, ':Created' => time(), ':Updated' => time()));
 
         // reselect it
         return $this->getOrCreateServer($guid, TRUE);
