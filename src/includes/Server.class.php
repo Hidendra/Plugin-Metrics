@@ -77,7 +77,7 @@ class Server
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = Players, ServerVersion = :ServerVersion, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
+        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = :Players, ServerVersion = :ServerVersion, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
 
         // Execute
         $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':Players' => $this->players, ':GUID' => $this->guid, ':ServerVersion' => $this->serverVersion,
