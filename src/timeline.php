@@ -1,8 +1,6 @@
 <?php
 // Emits JSON
-
 define('ROOT', './');
-session_start();
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
