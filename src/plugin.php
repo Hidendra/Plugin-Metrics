@@ -126,7 +126,7 @@ echo '    <body>
 
         <h3>Servers using ' . $name . '</h3>
         <table>
-            <tr> <td> Total </td> <td> ' . number_format($plugin->countServers()) . ' </td> </tr>
+            <tr> <td> All-time </td> <td> ' . number_format($plugin->countServers()) . ' </td> </tr>
             <tr> <td> Last hour </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HOUR)) . ' </td> </tr>
             <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
             <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_DAY)) . ' </td> </tr>
