@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS Server (
   -- GUID
   GUID VARCHAR(40) NOT NULL,
 
+  -- Last known amount of players to be on the server
+  Players INT NOT NULL,
+
   -- Current server version
   ServerVersion VARCHAR(100) NOT NULL,
 

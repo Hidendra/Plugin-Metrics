@@ -23,6 +23,12 @@ class Server
     private $guid;
 
     /**
+     * Last known amount of players on the server
+     * @var integer
+     */
+    private $players;
+
+    /**
      * The server's software version
      * @var string
      */
@@ -71,11 +77,11 @@ class Server
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, ServerVersion = :ServerVersion, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
+        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = Players, ServerVersion = :ServerVersion, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':GUID' => $this->guid, ':ServerVersion' => $this->serverVersion, ':CurrentVersion' => $this->currentVersion,
-            ':Hits' => $this->hits, ':Created' => $this->created, ':Updated' => $this->updated));
+        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':Players' => $this->players, ':GUID' => $this->guid, ':ServerVersion' => $this->serverVersion,
+            ':CurrentVersion' => $this->currentVersion, ':Hits' => $this->hits, ':Created' => $this->created, ':Updated' => $this->updated));
     }
 
     /**
@@ -114,6 +120,16 @@ class Server
     public function setGUID($guid)
     {
         $this->guid = $guid;
+    }
+
+    public function getPlayers()
+    {
+        return $this->players;
+    }
+
+    public function setPlayers($players)
+    {
+        $this->players = $players;
     }
 
     public function getServerVersion()

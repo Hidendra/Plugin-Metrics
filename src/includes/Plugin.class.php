@@ -119,6 +119,7 @@ class Plugin
             $server->setID($row['ID']);
             $server->setPlugin($row['Plugin']);
             $server->setGUID($row['GUID']);
+            $server->setPlayers($row['Players']);
             $server->setServerVersion($row['ServerVersion']);
             $server->setCurrentVersion($row['CurrentVersion']);
             $server->setHits($row['Hits']);
@@ -137,8 +138,8 @@ class Plugin
         // It doesn't exist so we are going to create it ^^
 
         // now try to create it
-        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, ServerVersion, CurrentVersion, Hits, Created, Updated) VALUES(:Plugin, :GUID, :ServerVersion, :CurrentVersion, :Hits, :Created, :Updated)');
-        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':ServerVersion' => '', ':CurrentVersion' => '', ':Hits' => 0, ':Created' => time(), ':Updated' => time()));
+        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, ServerVersion, CurrentVersion, Hits, Created, Updated) VALUES(:Plugin, :GUID, :Players, :ServerVersion, :CurrentVersion, :Hits, :Created, :Updated)');
+        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':ServerVersion' => '', ':CurrentVersion' => '', ':Hits' => 0, ':Created' => time(), ':Updated' => time()));
 
         // reselect it
         return $this->getOrCreateServer($guid, TRUE);
