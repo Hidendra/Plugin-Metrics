@@ -1,4 +1,5 @@
 <?php
+if (!defined('ROOT')) exit('For science.');
 
 /**
  * Global PDO object that is accessible after the database is connected to

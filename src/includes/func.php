@@ -1,4 +1,5 @@
 <?php
+if (!defined('ROOT')) exit('For science.');
 
 // Include classes
 require 'Server.class.php';
