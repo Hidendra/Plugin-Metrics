@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Server (
   GUID VARCHAR(40) NOT NULL,
 
   -- Current server version
-  ServerVersion VARCHAR(40) NOT NULL,
+  ServerVersion VARCHAR(100) NOT NULL,
 
   -- The last known version of LWC the server was using
   CurrentVersion VARCHAR(40) NOT NULL,

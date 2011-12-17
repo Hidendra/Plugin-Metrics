@@ -21,7 +21,7 @@ if ($plugin === NULL)
 
 // Begin extracting arguments
 $guid = getPostArgument('guid');
-$server = getPostArgument('server');
+$serverVersion = getPostArgument('server');
 $version = getPostArgument('version');
 
 // Now load the server
@@ -36,9 +36,9 @@ if ($server->getCurrentVersion() != $version)
 }
 
 // Different server version?
-if ($server->getServerVersion() != $server)
+if ($server->getServerVersion() != $serverVersion)
 {
-    $server->setServerVersion($server);
+    $server->setServerVersion($serverVersion);
 }
 
 
