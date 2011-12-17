@@ -145,6 +145,7 @@ foreach ($plugin->getVersions() as $version)
 }
 ?>
         </table>
+        <br/>
 
         <div id="14day_timeline" style="width:950; height:400"></div>
         <div id="31day_timeline" style="width:950; height:400"></div>
