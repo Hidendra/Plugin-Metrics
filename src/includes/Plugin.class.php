@@ -42,6 +42,21 @@ class Plugin
     }
 
     /**
+     * Sum all of the current player counts for servers that have pinged the server in the last hour
+     * @param $after integer
+     */
+    public function sumPlayersOfServersLastUpdatedAfter($after)
+    {
+        global $pdo;
+
+        $statement = $pdo->prepare('SELECT SUM(Players) FROM Server WHERE Plugin = ? AND Updated > ?');
+        $statement->execute(array($this->id, $after));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
+    }
+
+    /**
      * Count version changes for epoch times between the min and max
      *
      * @param $min

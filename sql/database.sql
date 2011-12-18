@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS Plugin (
-  ID int NOT NULL AUTO_INCREMENT,
+  ID INT NOT NULL AUTO_INCREMENT,
 
   -- Name of the plugin
   Name VARCHAR(20) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS Plugin (
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS Server (
-  ID int NOT NULL AUTO_INCREMENT,
+  ID INT NOT NULL AUTO_INCREMENT,
 
   -- Foreign key to the related plugin
   Plugin INT NOT NULL,
@@ -64,8 +64,9 @@ CREATE TABLE IF NOT EXISTS Server (
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS VersionHistory (
-  ID int NOT NULL AUTO_INCREMENT,
+  ID INT NOT NULL AUTO_INCREMENT,
 
+  --
   Plugin INT NOT NULL,
 
   -- Name of the plugin
@@ -94,6 +95,64 @@ CREATE TABLE IF NOT EXISTS VersionHistory (
 
   --
   FOREIGN KEY (Server) REFERENCES Server (ID),
+
+  --
+  PRIMARY KEY (ID)
+) ENGINE = InnoDB;
+
+-- These tables are using for post-processing raw data into easy to use data
+-- for example, getting the amount of servers that were online in the last hour and storing that
+CREATE TABLE IF NOT EXISTS PlayerTimeline (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Plugin INT NOT NULL,
+
+  --
+  Players INT NOT NULL,
+
+  -- The unix timestamp this timeline entry refers to
+  Epoch INTEGER NOT NULL,
+
+  --
+  Index (Plugin),
+
+  --
+  INDEX (Players),
+
+  --
+  UNIQUE INDEX (Epoch),
+
+  --
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+
+  --
+  PRIMARY KEY (ID)
+) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS ServerTimeline (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Plugin INT NOT NULL,
+
+  --
+  Servers INT NOT NULL,
+
+  -- The unix timestamp this timeline entry refers to
+  Epoch INTEGER NOT NULL,
+
+  --
+  Index (Plugin),
+
+  --
+  INDEX (Servers),
+
+  --
+  UNIQUE INDEX (Epoch),
+
+  --
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
 
   --
   PRIMARY KEY (ID)

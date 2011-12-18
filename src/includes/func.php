@@ -33,6 +33,31 @@ function getPostArgument($key)
 }
 
 /**
+ * Loads all of the plugins from the database
+ *
+ * @return Plugin[]
+ */
+function loadPlugins()
+{
+    global $pdo;
+    $plugins = array();
+
+    $statement = $pdo->prepare('SELECT ID, Name, GlobalHits FROM Plugin');
+    $statement->execute();
+
+    if ($row = $statement->fetch())
+    {
+        $plugin = new Plugin();
+        $plugin->setID($row['ID']);
+        $plugin->setName($row['Name']);
+        $plugin->setGlobalHits($row['GlobalHits']);
+        $plugins[] = $plugin;
+    }
+
+    return $plugins;
+}
+
+/**
  * Load a plugin
  *
  * @param $plugin string The plugin's name
