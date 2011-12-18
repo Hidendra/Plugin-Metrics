@@ -92,8 +92,8 @@ $name = $plugin->getName(); ?>
                 $.getJSON('/coverage/<?php echo $name; ?>/144', function(json) {
                     var graph = new google.visualization.DataTable();
                     graph.addColumn('datetime', 'Day');
-                    graph.addColumn('number', 'Servers using LWC');
-                    graph.addColumn('number', 'Players online');
+                    graph.addColumn('number', 'Active Servers');
+                    graph.addColumn('number', 'Active Players');
 
                     // iterate through the JSON data
                     $.each(json, function(i, v) {
