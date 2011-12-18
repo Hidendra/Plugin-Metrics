@@ -21,7 +21,7 @@ foreach (loadPlugins() as $plugin)
     $minimum = strtotime('-1 hour', $baseEpoch);
 
     // load the players online in the last hour
-    $servers = $plugin->countServersLastUpdatedAfter($minimum);
+    $servers = $plugin->countServersLastUpdated($minimum);
 
     // Insert it into the database
     $statement = $pdo->prepare('INSERT INTO ServerTimeline (Plugin, Servers, Epoch) VALUES (:Plugin, :Servers, :Epoch)');

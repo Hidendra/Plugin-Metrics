@@ -45,12 +45,18 @@ class Plugin
      * Sum all of the current player counts for servers that have pinged the server in the last hour
      * @param $after integer
      */
-    public function sumPlayersOfServersLastUpdatedAfter($after)
+    public function sumPlayersOfServersLastUpdated($min, $max = -1)
     {
         global $pdo;
 
-        $statement = $pdo->prepare('SELECT SUM(Players) FROM Server WHERE Plugin = ? AND Updated > ?');
-        $statement->execute(array($this->id, $after));
+        // use time() if $max is -1
+        if ($max == -1)
+        {
+            $max = time();
+        }
+
+        $statement = $pdo->prepare('SELECT SUM(Players) FROM Server WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
         return $row != null ? $row[0] : 0;
@@ -67,7 +73,7 @@ class Plugin
     {
         global $pdo;
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM VersionHistory WHERE Created > ? AND Created < ?');
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM VersionHistory WHERE Created >= ? AND Created <= ?');
         $statement->execute(array($min, $max));
 
         $row = $statement->fetch();
@@ -92,12 +98,18 @@ class Plugin
      * Count all of the servers that were updated after the given epoch
      * @param $after integer
      */
-    public function countServersLastUpdatedAfter($after)
+    public function countServersLastUpdated($min, $max = -1)
     {
         global $pdo;
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND Updated > ?');
-        $statement->execute(array($this->id, $after));
+        // use time() if $max is -1
+        if ($max == -1)
+        {
+            $max = time();
+        }
+
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
         return $row != null ? $row[0] : 0;
@@ -112,6 +124,52 @@ class Plugin
 
         $row = $statement->fetch();
         return $row != null ? $row[0] : 0;
+    }
+
+    /**
+     * Get the amount of players online between two epochs
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return int
+     */
+    function getTimelinePlayers($minEpoch, $maxEpoch = -1)
+    {
+        global $pdo;
+
+        // use time() if $max is -1
+        if ($maxEpoch == -1)
+        {
+            $maxEpoch = time();
+        }
+
+        $statement = $pdo->prepare('SELECT Players FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement->execute(array($this->id, $minEpoch, $maxEpoch));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : -1;
+    }
+
+    /**
+     * Get the amount of servers online and using LWC between two epochs
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return int
+     */
+    function getTimelineServers($minEpoch, $maxEpoch = -1)
+    {
+        global $pdo;
+
+        // use time() if $max is -1
+        if ($maxEpoch == -1)
+        {
+            $maxEpoch = time();
+        }
+
+        $statement = $pdo->prepare('SELECT Servers FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement->execute(array($this->id, $minEpoch, $maxEpoch));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : -1;
     }
 
     /**

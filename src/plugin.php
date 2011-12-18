@@ -75,11 +75,45 @@ $name = $plugin->getName(); ?>
              */
             function drawCharts()
             {
+                generateCoverage();
+
                 // last 2 weeks
                 generateTimeline(14, '14day_timeline');
 
                 // last month
                 generateTimeline(31, '31day_timeline');
+            }
+
+            /**
+             * Generate the timeline coverage for player/server counts
+             */
+            function generateCoverage()
+            {
+                $.getJSON('/coverage/<?php echo $name; ?>/144', function(json) {
+                    var graph = new google.visualization.DataTable();
+                    graph.addColumn('datetime', 'Day');
+                    graph.addColumn('number', 'Servers using LWC');
+                    graph.addColumn('number', 'Players online');
+
+                    // iterate through the JSON data
+                    $.each(json, function(i, v) {
+                        // extract data
+                        date = epochToDate(parseInt(v.epoch));
+                        servers = parseInt(v.servers);
+                        players = parseInt(v.players);
+
+                        // add it to the graph
+                        graph.addRow([date, servers, players]);
+                    });
+
+                    var options = {
+                        width: 950, height: 500,
+                        title: 'Global statistics'
+                    };
+
+                    var chart = new google.visualization.LineChart(document.getElementById('coverage_timeline'));
+                    chart.draw(graph, options);
+                });
             }
 
             /**
@@ -127,12 +161,14 @@ echo '    <body>
         <h3>Servers using ' . $name . '</h3>
         <table>
             <tr> <td> All-time </td> <td> ' . number_format($plugin->countServers()) . ' </td> </tr>
-            <tr> <td> Last hour </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HOUR)) . ' </td> </tr>
-            <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
-            <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_DAY)) . ' </td> </tr>
-            <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(time() - SECONDS_IN_WEEK)) . ' </td> </tr>
-            <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdatedAfter(strtotime(date('m').'/01/' . date('Y') . ' 00:00:00'))) . ' </td> </tr>
+            <tr> <td> Last hour </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_HOUR)) . ' </td> </tr>
+            <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
+            <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_DAY)) . ' </td> </tr>
+            <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_WEEK)) . ' </td> </tr>
+            <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdated(strtotime(date('m').'/01/' . date('Y') . ' 00:00:00'))) . ' </td> </tr>
         </table>
+
+        <div id="coverage_timeline" style="width:950; height:500"></div>
 
         <h3>Servers\' last known version</h3>
         <table>
