@@ -40,21 +40,28 @@ $json = array();
 $denom = 60 * 60; // 60 minutes * 60 seconds = 3600 seconds in an hour
 $baseEpoch = round(time() / $denom) * $denom;
 
-for ($hour = $hours - 1; $hour >= 0; $hour --)
+// calculate the minimum
+$minimum = strtotime('-' . $hours . ' hours', $baseEpoch);
+$maximum = $baseEpoch;
+
+// load the data from mysql
+$servers = $plugin->getTimelineServers($minimum, $maximum);
+$players = $plugin->getTimelinePlayers($minimum, $maximum);
+
+// go through each and add to json
+foreach ($servers as $epoch => $count)
 {
-    // calculate the range
-    $minimum = strtotime('-' . $hour . ' hours', $baseEpoch);
-    $maximum = strtotime('+1 hour', $minimum);
-
-    // get the amount of servers that changed
-    $servers = $plugin->getTimelineServers($minimum, $maximum);
-    $players = $plugin->getTimelinePlayers($minimum, $maximum);
-
-    // store it if they aren't -1
-    if ($servers != -1 && $players != -1)
+    // if we're missing even one data point, continue on
+    if (!isset($players[$epoch]))
     {
-        $json[] = array('epoch' => $minimum, 'servers' => $servers, 'players' => $players);
+        continue;
     }
+
+    $json[] = array(
+        'epoch' => $epoch,
+        'servers' => $count,
+        'players' => $players[$epoch]
+    );
 }
 
 // output the json

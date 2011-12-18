@@ -130,7 +130,7 @@ class Plugin
      * Get the amount of players online between two epochs
      * @param $minEpoch int
      * @param $maxEpoch int
-     * @return int
+     * @return array keyed by the epoch
      */
     function getTimelinePlayers($minEpoch, $maxEpoch = -1)
     {
@@ -142,18 +142,23 @@ class Plugin
             $maxEpoch = time();
         }
 
-        $statement = $pdo->prepare('SELECT Players FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $ret = array();
+        $statement = $pdo->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
-        $row = $statement->fetch();
-        return $row != null ? $row[0] : -1;
+        while ($row = $statement->fetch())
+        {
+            $ret[$row['Epoch']] = $row['Players'];
+        }
+
+        return $ret;
     }
 
     /**
      * Get the amount of servers online and using LWC between two epochs
      * @param $minEpoch int
      * @param $maxEpoch int
-     * @return int
+     * @return array keyed by the epoch
      */
     function getTimelineServers($minEpoch, $maxEpoch = -1)
     {
@@ -165,11 +170,16 @@ class Plugin
             $maxEpoch = time();
         }
 
-        $statement = $pdo->prepare('SELECT Servers FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $ret = array();
+        $statement = $pdo->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
-        $row = $statement->fetch();
-        return $row != null ? $row[0] : -1;
+        while ($row = $statement->fetch())
+        {
+            $ret[$row['Epoch']] = $row['Servers'];
+        }
+
+        return $ret;
     }
 
     /**
