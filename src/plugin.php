@@ -23,7 +23,7 @@ $name = $plugin->getName(); ?>
 
 <html>
     <head>
-        <title><?php echo $name; ?> statistics</title>
+        <title><?php echo $name; ?> Statistics</title>
         <style>
             table
             {
@@ -108,7 +108,7 @@ $name = $plugin->getName(); ?>
 
                     var options = {
                         width: 950, height: 500,
-                        title: 'Global statistics'
+                        title: 'Global Statistics'
                     };
 
                     var chart = new google.visualization.LineChart(document.getElementById('coverage_timeline'));
