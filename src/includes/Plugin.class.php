@@ -118,9 +118,10 @@ class Plugin
     public function countServersUsingVersion($version)
     {
         global $pdo;
+        $weekAgo = time() - SECONDS_IN_WEEK;
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND CurrentVersion = ?');
-        $statement->execute(array($this->id, $version));
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND CurrentVersion = ? AND Updated >= ?');
+        $statement->execute(array($this->id, $version, $weekAgo));
 
         $row = $statement->fetch();
         return $row != null ? $row[0] : 0;

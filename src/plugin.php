@@ -171,12 +171,20 @@ echo '    <body>
         <div id="coverage_timeline" style="width:950; height:500"></div>
 
         <h3>Servers\' last known version</h3>
+        <p> Versions with less than 5 servers are omitted. <br/> Servers not using LWC in the last 7 days are also omitted. </p>
         <table>
 ';
 
 foreach ($plugin->getVersions() as $version)
 {
-    echo '            <tr> <td>' . $version . '</td> <td>' . $plugin->countServersUsingVersion($version) . '</td> </tr>
+    $count = $plugin->countServersUsingVersion($version);
+
+    if ($count < 5)
+    {
+        continue;
+    }
+
+    echo '            <tr> <td>' . $version . '</td> <td>' . $count . '</td> </tr>
 ';
 }
 ?>
