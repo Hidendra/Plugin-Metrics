@@ -184,7 +184,7 @@ foreach ($plugin->getVersions() as $version)
         continue;
     }
 
-    echo '            <tr> <td>' . $version . '</td> <td>' . $count . '</td> </tr>
+    echo '            <tr> <td>' . $version . '</td> <td>' . number_format($count) . '</td> </tr>
 ';
 }
 ?>
