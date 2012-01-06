@@ -24,12 +24,12 @@ function getPostArgument($key)
 {
     // FIXME change to $_POST
     // check
-    if (!isset($_REQUEST[$key]))
+    if (!isset($_POST[$key]))
     {
         exit('ERR Missing arguments.');
     }
 
-    return $_REQUEST[$key];
+    return $_POST[$key];
 }
 
 /**
