@@ -76,12 +76,6 @@ $name = $plugin->getName(); ?>
             function drawCharts()
             {
                 generateCoverage();
-
-                // last 2 weeks
-                generateTimeline(14, '14day_timeline');
-
-                // last month
-                generateTimeline(31, '31day_timeline');
             }
 
             /**
@@ -112,38 +106,6 @@ $name = $plugin->getName(); ?>
                     };
 
                     var chart = new google.visualization.LineChart(document.getElementById('coverage_timeline'));
-                    chart.draw(graph, options);
-                });
-            }
-
-            /**
-             * Generate a timeline for X days
-             * @param days
-             * @param div
-             */
-            function generateTimeline(days, div)
-            {
-                $.getJSON('/timeline/<?php echo $name; ?>/' + days, function(json) {
-                    var graph = new google.visualization.DataTable();
-                    graph.addColumn('date', 'Day');
-                    graph.addColumn('number', 'Changes');
-
-                    // iterate through the JSON data
-                    $.each(json, function(i, v) {
-                        // extract data
-                        date = epochToDate(parseInt(v.epoch));
-                        changes = parseInt(v.changes);
-
-                        // add it to the graph
-                        graph.addRow([date, changes]);
-                    });
-
-                    var options = {
-                        width: 950, height: 340,
-                        title: days + '-day version timeline'
-                    };
-
-                    var chart = new google.visualization.LineChart(document.getElementById(div));
                     chart.draw(graph, options);
                 });
             }
@@ -190,8 +152,5 @@ foreach ($plugin->getVersions() as $version)
 ?>
         </table>
         <br/>
-
-        <div id="14day_timeline" style="width:950; height:400"></div>
-        <div id="31day_timeline" style="width:950; height:400"></div>
     </body>
 </html>
