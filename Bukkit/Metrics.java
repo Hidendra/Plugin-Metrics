@@ -30,7 +30,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -220,12 +225,14 @@ public class Metrics {
 
                 try {
                     Thread.sleep(2500L);
-                } catch (InterruptedException e) { }
+                } catch (InterruptedException e) {
+                }
             }
         }
 
         /**
          * Add a plugin to be updated every so often
+         *
          * @param plugin
          */
         public void addPlugin(Plugin plugin) {
