@@ -4,6 +4,12 @@ CREATE TABLE IF NOT EXISTS Plugin (
   -- Name of the plugin
   Name VARCHAR(20) NOT NULL,
 
+  -- Author of the plugin
+  Author VARCHAR(20) NOT NULL,
+
+  -- If the plugin should be hidden from the main page
+  Hidden BOOLEAN NOT NULL,
+
   -- The total amount of hits for the plugin since time started
   GlobalHits INTEGER NOT NULL,
 

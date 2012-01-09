@@ -5,9 +5,6 @@ if (!defined('ROOT')) exit('For science.');
 require 'Server.class.php';
 require 'Plugin.class.php';
 
-// include the geo ip database
-require ROOT . 'geoip/countries.php';
-
 // Some constants
 define('SECONDS_IN_HOUR', 60 * 60);
 define('SECONDS_IN_HALFDAY', 60 * 60 * 12);
@@ -42,14 +39,16 @@ function loadPlugins()
     global $pdo;
     $plugins = array();
 
-    $statement = $pdo->prepare('SELECT ID, Name, GlobalHits FROM Plugin');
+    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin');
     $statement->execute();
 
-    if ($row = $statement->fetch())
+    while ($row = $statement->fetch())
     {
         $plugin = new Plugin();
         $plugin->setID($row['ID']);
         $plugin->setName($row['Name']);
+        $plugin->setAuthor($row['Author']);
+        $plugin->setHidden($row['Hidden']);
         $plugin->setGlobalHits($row['GlobalHits']);
         $plugins[] = $plugin;
     }
@@ -67,7 +66,7 @@ function loadPlugin($plugin)
 {
     global $pdo;
 
-    $statement = $pdo->prepare('SELECT ID, Name, GlobalHits FROM Plugin WHERE Name = :Name');
+    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Name = :Name');
     $statement->execute(array(':Name' => $plugin));
 
     if ($row = $statement->fetch())
@@ -75,6 +74,8 @@ function loadPlugin($plugin)
         $plugin = new Plugin();
         $plugin->setID($row['ID']);
         $plugin->setName($row['Name']);
+        $plugin->setAuthor($row['Author']);
+        $plugin->setHidden($row['Hidden']);
         $plugin->setGlobalHits($row['GlobalHits']);
         return $plugin;
     }

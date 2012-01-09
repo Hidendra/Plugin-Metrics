@@ -16,6 +16,18 @@ class Plugin
     private $name;
 
     /**
+     * The plugin's author
+     * @var string
+     */
+    private $author;
+
+    /**
+     * If the plugin is hidden from the main page
+     * @var boolean
+     */
+    private $hidden;
+
+    /**
      * The total amount of hits this plugin has received
      * @var integer
      */
@@ -220,13 +232,26 @@ class Plugin
         }
 
         // It doesn't exist so we are going to create it ^^
-
-        // now try to create it
         $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, ServerVersion, CurrentVersion, Hits, Created, Updated) VALUES(:Plugin, :GUID, :Players, :ServerVersion, :CurrentVersion, :Hits, :Created, :Updated)');
         $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':ServerVersion' => '', ':CurrentVersion' => '', ':Hits' => 0, ':Created' => time(), ':Updated' => time()));
 
         // reselect it
         return $this->getOrCreateServer($guid, TRUE);
+    }
+
+    /**
+     * Create the plugin in the database
+     */
+    public function create()
+    {
+        global $pdo;
+
+        // Prepare it
+        $statement = $pdo->prepare('INSERT INTO Plugin (Name, Author, Hidden, GlobalHits) VALUES (:Name, :Author, :Hidden, :GlobalHits)');
+
+        // Execute
+        $statement->execute(array(':Name' => $this->name, ':Author' => $this->author, ':Hidden' => $this->hidden,
+            ':GlobalHits' => $this->globalHits));
     }
 
     /**
@@ -237,10 +262,11 @@ class Plugin
         global $pdo;
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Plugin SET Name = :Name, GlobalHits = :GlobalHits WHERE ID = :ID');
+        $statement = $pdo->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':GlobalHits' => $this->globalHits));
+        $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':Author' => $this->author,
+            ':Hidden' => $this->hidden, ':GlobalHits' => $this->globalHits));
     }
 
     /**
@@ -270,6 +296,26 @@ class Plugin
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    public function getAuthor()
+    {
+        return $this->author;
+    }
+
+    public function setAuthor($author)
+    {
+        $this->author = $author;
+    }
+
+    public function isHidden()
+    {
+        return $this->hidden;
+    }
+
+    public function setHidden($hidden)
+    {
+        $this->hidden = $hidden;
     }
 
     public function getGlobalHits()

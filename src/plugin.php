@@ -24,33 +24,7 @@ $name = $plugin->getName(); ?>
 <html>
     <head>
         <title><?php echo $name; ?> Statistics</title>
-        <style>
-            table
-            {
-                font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
-                font-size: 12px;
-                background: #fff;
-                border-collapse: collapse;
-                text-align: left;
-            }
-            table th
-            {
-                font-size: 14px;
-                font-weight: normal;
-                color: #039;
-                padding: 10px 8px;
-                border-bottom: 2px solid #6678b1;
-            }
-            table td
-            {
-                color: #669;
-                padding: 9px 8px 0px 8px;
-            }
-            table tbody tr:hover td
-            {
-                color: #009;
-            }
-        </style>
+        <link href="/static/css/main.css" rel="stylesheet" type="text/css" />
 
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <script type="text/javascript">
@@ -117,6 +91,7 @@ echo '    <body>
         <h3>Plugin information</h3>
         <table>
             <tr> <td> Name </td> <td> ' . $name . ' </td> </tr>
+            <tr> <td> Author </td> <td> ' . $plugin->getAuthor() . ' </td> </tr>
             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
         </table>
 

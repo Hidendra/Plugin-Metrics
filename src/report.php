@@ -13,10 +13,16 @@ if (!isset($_GET['plugin']))
 // Load the plugin
 $plugin = loadPlugin($_GET['plugin']);
 
-// Doesn't exist
+// If it does not exist we will create a new plugin for them :-)
 if ($plugin === NULL)
 {
-    exit('ERR Invalid plugin.');
+    $plugin = new Plugin();
+    $plugin->setName($_GET['plugin']);
+    $plugin->setAuthor('');
+    $plugin->setHidden(0);
+    $plugin->setGlobalHits(0);
+    $plugin->create();
+    $plugin = loadPlugin($_GET['plugin']);
 }
 
 // Begin extracting arguments
