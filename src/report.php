@@ -10,6 +10,11 @@ if (!isset($_GET['plugin']))
     exit('ERR No plugin provided.');
 }
 
+// Check that we have a valid plugin name
+if (!preg_match('/[a-zA-Z ]/', $_GET['plugin'])) {
+    exit('ERR Invalid plugin name.');
+}
+
 // Load the plugin
 $plugin = loadPlugin($_GET['plugin']);
 
@@ -18,6 +23,13 @@ $guid = getPostArgument('guid');
 $serverVersion = getPostArgument('server');
 $version = getPostArgument('version');
 $ping = isset($_POST['ping']); // if they're pinging us, we don't update the hitcount
+
+// simple user agent check to block the lazy
+if (!preg_match('/Java/', $_SERVER['HTTP_USER_AGENT'])) {
+    exit('ERR');
+}
+
+// We only want spaces
 
 // If it does not exist we will create a new plugin for them :-)
 if ($plugin === NULL)
