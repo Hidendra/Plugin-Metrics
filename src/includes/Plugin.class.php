@@ -132,7 +132,7 @@ class Plugin
         global $pdo;
         $weekAgo = time() - SECONDS_IN_WEEK;
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND CurrentVersion = ? AND Updated >= ?');
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Version = ? AND Updated >= ?');
         $statement->execute(array($this->id, $version, $weekAgo));
 
         $row = $statement->fetch();
@@ -205,19 +205,21 @@ class Plugin
         global $pdo;
 
         // Try to select it first
-        $statement = $pdo->prepare('SELECT ID, Plugin, GUID, ServerVersion, CurrentVersion, Hits, Created, Updated FROM Server WHERE GUID = :GUID');
-        $statement->execute(array(':GUID' => $guid));
+        $statement = $pdo->prepare('SELECT ID, GUID, ServerVersion, Version, Hits, Created, ServerPlugin.Plugin, ServerPlugin.Version, ServerPlugin.Updated FROM Server
+                                    LEFT OUTER JOIN ServerPlugin ON (ServerPlugin.Server = Server.ID AND ServerPlugin.Plugin = :Plugin)
+                                    WHERE GUID = :GUID');
+        $statement->execute(array(':GUID' => $guid, ':Plugin' => $this->id));
 
         if ($row = $statement->fetch())
         {
             // Exists, begin creating it
             $server = new Server();
             $server->setID($row['ID']);
-            $server->setPlugin($row['Plugin']);
+            $server->setPlugin($this->id);
             $server->setGUID($row['GUID']);
             $server->setPlayers($row['Players']);
             $server->setServerVersion($row['ServerVersion']);
-            $server->setCurrentVersion($row['CurrentVersion']);
+            $server->setCurrentVersion($row['Version']);
             $server->setHits($row['Hits']);
             $server->setCreated($row['Created']);
             $server->setUpdated($row['Updated']);
@@ -232,8 +234,15 @@ class Plugin
         }
 
         // It doesn't exist so we are going to create it ^^
-        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, ServerVersion, CurrentVersion, Hits, Created, Updated) VALUES(:Plugin, :GUID, :Players, :ServerVersion, :CurrentVersion, :Hits, :Created, :Updated)');
-        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':ServerVersion' => '', ':CurrentVersion' => '', ':Hits' => 0, ':Created' => time(), ':Updated' => time()));
+        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, ServerVersion, Hits, Created) VALUES(:Plugin, :GUID, :Players, :ServerVersion, :Hits, :Created)');
+        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
+
+        // get the last id
+        $serverId = $pdo->lastInsertId();
+
+        // insert it into ServerPlugin
+        $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
+        $statement->execute(array(':Server' => $serverId, ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
 
         // reselect it
         return $this->getOrCreateServer($guid, TRUE);

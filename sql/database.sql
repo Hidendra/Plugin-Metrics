@@ -32,17 +32,11 @@ CREATE TABLE IF NOT EXISTS Server (
   -- Current server version
   ServerVersion VARCHAR(100) NOT NULL,
 
-  -- The last known version of LWC the server was using
-  CurrentVersion VARCHAR(40) NOT NULL,
-
   -- Incremented each time the server pings us
   Hits INT NOT NULL,
 
   -- When the server was created on our end; epoch
   Created INTEGER NOT NULL,
-
-  -- When the server last pinged us; epoch
-  Updated INTEGER NOT NULL,
 
   --
   INDEX (GUID),
@@ -51,16 +45,10 @@ CREATE TABLE IF NOT EXISTS Server (
   INDEX (ServerVersion),
 
   --
-  INDEX (CurrentVersion),
-
-  --
   INDEX (Hits),
 
   --
   INDEX (Created),
-
-  --
-  INDEX (Updated),
 
   --
   FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
@@ -68,6 +56,40 @@ CREATE TABLE IF NOT EXISTS Server (
   --
   PRIMARY KEY (ID)
 ) ENGINE = InnoDB;
+
+-- Stores which plugins a server is using
+-- note: no primary key, only relation between Server <-> Plugin
+CREATE TABLE IF NOT EXISTS ServerPlugin (
+  -- FK to Server
+  Server INT NOT NULL,
+
+  -- FK to Plugin
+  Plugin INT NOT NULL,
+
+  -- The last known version of LWC the server was using
+  Version VARCHAR(40) NOT NULL,
+
+  -- epoch of when the plugin last pinged us
+  Updated INTEGER NOT NULL,
+
+  -- We only want one of each
+  UNIQUE INDEX (Server, Plugin),
+
+  -- FK
+  INDEX (Server),
+
+  -- FK
+  INDEX (Plugin),
+
+  --
+  INDEX (Version),
+
+  --
+  INDEX (Updated),
+
+  FOREIGN KEY (Server) REFERENCES Server (ID),
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID)
+);
 
 CREATE TABLE IF NOT EXISTS VersionHistory (
   ID INT NOT NULL AUTO_INCREMENT,

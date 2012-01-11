@@ -77,11 +77,25 @@ class Server
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = :Players, ServerVersion = :ServerVersion, CurrentVersion = :CurrentVersion, Hits = :Hits, Created = :Created, Updated = :Updated WHERE ID = :ID');
+        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = :Players, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
 
         // Execute
         $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':Players' => $this->players, ':GUID' => $this->guid, ':ServerVersion' => $this->serverVersion,
-            ':CurrentVersion' => $this->currentVersion, ':Hits' => $this->hits, ':Created' => $this->created, ':Updated' => $this->updated));
+            ':Hits' => $this->hits, ':Created' => $this->created));
+
+        // update the plugin part of it
+        $this->updatePlugin();
+    }
+
+    public function updatePlugin()
+    {
+        global $pdo;
+
+        // inserts or updates into the ServerPlugin table
+        $statement = $pdo->prepare('UPDATE ServerPlugin SET Version = :Version, Updated = :Updated WHERE Server = :Server AND Plugin = :Plugin');
+
+        // Execute
+        $statement->execute(array(':Server' => $this->id, ':Plugin' => $this->plugin, ':Version' => $this->currentVersion, ':Updated' => $this->getUpdated()));
     }
 
     /**
