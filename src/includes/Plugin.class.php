@@ -67,7 +67,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT SUM(Players) FROM Server WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement = $pdo->prepare('SELECT SUM(Players) FROM ServerPlugin WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
         $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
@@ -99,7 +99,7 @@ class Plugin
     {
         global $pdo;
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ?');
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ?');
         $statement->execute(array($this->id));
 
         $row = $statement->fetch();
@@ -120,7 +120,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM Server WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
         $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
