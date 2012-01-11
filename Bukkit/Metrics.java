@@ -225,14 +225,12 @@ public class Metrics {
 
                 try {
                     Thread.sleep(2500L);
-                } catch (InterruptedException e) {
-                }
+                } catch (InterruptedException e) { }
             }
         }
 
         /**
          * Add a plugin to be updated every so often
-         *
          * @param plugin
          */
         public void addPlugin(Plugin plugin) {

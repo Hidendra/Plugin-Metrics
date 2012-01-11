@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS PlayerTimeline (
   INDEX (Players),
 
   --
-  UNIQUE INDEX (Epoch),
+  UNIQUE INDEX (Plugin, Epoch),
 
   --
   FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS ServerTimeline (
   INDEX (Servers),
 
   --
-  UNIQUE INDEX (Epoch),
+  UNIQUE INDEX (Plugin, Epoch),
 
   --
   FOREIGN KEY (Plugin) REFERENCES Plugin (ID),

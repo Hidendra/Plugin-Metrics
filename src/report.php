@@ -13,6 +13,12 @@ if (!isset($_GET['plugin']))
 // Load the plugin
 $plugin = loadPlugin($_GET['plugin']);
 
+// Begin extracting arguments
+$guid = getPostArgument('guid');
+$serverVersion = getPostArgument('server');
+$version = getPostArgument('version');
+$ping = isset($_POST['ping']); // if they're pinging us, we don't update the hitcount
+
 // If it does not exist we will create a new plugin for them :-)
 if ($plugin === NULL)
 {
@@ -24,12 +30,6 @@ if ($plugin === NULL)
     $plugin->create();
     $plugin = loadPlugin($_GET['plugin']);
 }
-
-// Begin extracting arguments
-$guid = getPostArgument('guid');
-$serverVersion = getPostArgument('server');
-$version = getPostArgument('version');
-$ping = isset($_POST['ping']); // if they're pinging us, we don't update the hitcount
 
 // Some arguments added later in that to remain backwards compatibility
 $players = isset($_POST['players']) ? intval($_POST['players']) : 0;
