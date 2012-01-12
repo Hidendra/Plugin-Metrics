@@ -67,7 +67,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT SUM(Players) FROM ServerPlugin WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement = $pdo->prepare('SELECT SUM(Players) FROM ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ? AND ServerPlugin.Updated <= ?');
         $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
