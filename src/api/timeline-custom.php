@@ -1,6 +1,6 @@
 <?php
 // Emits JSON
-define('ROOT', './');
+define('ROOT', '../');
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
@@ -44,24 +44,25 @@ $baseEpoch = round(time() / $denom) * $denom;
 $minimum = strtotime('-' . $hours . ' hours', $baseEpoch);
 $maximum = $baseEpoch;
 
-// load the data from mysql
-$servers = $plugin->getTimelineServers($minimum, $maximum);
-$players = $plugin->getTimelinePlayers($minimum, $maximum);
+// An array of the column names so the client knows what to use
+$json['columns'] = array();
 
-// go through each and add to json
-foreach ($servers as $epoch => $count)
+// the actual data
+// breaks down into json[data][epoch][columnID]
+$json['data'] = array();
+
+foreach ($plugin->getCustomColumns() as $id => $name)
 {
-    // if we're missing even one data point, continue on
-    if (!isset($players[$epoch]))
-    {
-        continue;
-    }
+    // store the column name
+    $json['columns'][] = $name;
 
-    $json[] = array(
-        'epoch' => $epoch,
-        'servers' => $count,
-        'players' => $players[$epoch]
-    );
+    // load the datapoints from the database
+    $dataPoints = $plugin->getTimelineCustom($id, $minimum, $maximum);
+
+    foreach ($dataPoints as $epoch => $dataPoint)
+    {
+        $json['data'][$epoch][$id] = $dataPoint;
+    }
 }
 
 // output the json

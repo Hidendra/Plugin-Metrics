@@ -87,10 +87,130 @@ CREATE TABLE IF NOT EXISTS ServerPlugin (
   --
   INDEX (Updated),
 
+  --
+  INDEX (Plugin, Version, Updated),
+
   FOREIGN KEY (Server) REFERENCES Server (ID),
   FOREIGN KEY (Plugin) REFERENCES Plugin (ID)
 );
 
+-- Custom plugin-created columns
+CREATE TABLE IF NOT EXISTS CustomColumn (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Plugin INT NOT NULL,
+
+  --
+  Name VARCHAR(100) NOT NULL,
+
+  -- FK
+  INDEX (Plugin),
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+
+  --
+  INDEX (Name),
+
+  PRIMARY KEY (ID)
+);
+
+-- Custom plugin data
+-- This is unique per Server / Plugin / Column. Every hour, the data for the past hour
+-- is collected into CustomDataTimeline which is graphed
+CREATE TABLE IF NOT EXISTS CustomData (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Server INT NOT NULL,
+
+  --
+  Plugin INT NOT NULL,
+
+  --
+  ColumnID INT NOT NULL,
+
+  --
+  DataPoint INT NOT NULL,
+
+  --
+  Updated INTEGER NOT NULL,
+
+  -- FK
+  INDEX (Server),
+
+  -- FK
+  INDEX (Plugin),
+
+  -- FK
+  INDEX (ColumnID),
+
+  --
+  INDEX (Updated),
+
+  FOREIGN KEY (Server) REFERENCES Server (ID),
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+  FOREIGN KEY (ColumnID) REFERENCES CustomColumn (ID),
+
+  PRIMARY KEY (ID)
+);
+
+CREATE TABLE IF NOT EXISTS CustomDataTimeline (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Plugin INT NOT NULL,
+
+  --
+  ColumnID INT NOT NULL,
+
+  --
+  DataPoint INT NOT NULL,
+
+  -- The unix timestamp this timeline entry refers to
+  Epoch INTEGER NOT NULL,
+
+  --
+  Index (Plugin),
+
+  -- FK
+  INDEX (ColumnID),
+
+  --
+  UNIQUE INDEX (Plugin, ColumnID, Epoch),
+
+  --
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+  FOREIGN KEY (ColumnID) REFERENCES CustomColumn (ID),
+
+  --
+  PRIMARY KEY (ID)
+);
+
+--
+CREATE TABLE IF NOT EXISTS Versions (
+  --
+  Plugin INT NOT NULL,
+
+  -- The version they changed to
+  Version VARCHAR(40) NOT NULL,
+
+  -- The epoch time they changed at
+  Created INTEGER NOT NULL,
+
+  --
+  INDEX (Plugin),
+
+  --
+  INDEX (Created),
+
+  --
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+
+  --
+  PRIMARY KEY (Version)
+);
+
+-- deprecated
 CREATE TABLE IF NOT EXISTS VersionHistory (
   ID INT NOT NULL AUTO_INCREMENT,
 

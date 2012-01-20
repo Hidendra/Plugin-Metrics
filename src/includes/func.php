@@ -30,6 +30,34 @@ function getPostArgument($key)
 }
 
 /**
+ * Extract custom data from the post request
+ * @return array
+ */
+function extractCustomData()
+{
+    $custom = array();
+
+    foreach ($_POST as $key => $value)
+    {
+        // verify we have a number as the key
+        if (!is_numeric($value)) {
+            continue;
+        }
+
+        // check if the string starts with custom
+        // note !== note == (false == 0, false !== 0)
+        if (stripos($key, 'custom') !== 0) {
+            continue;
+        }
+
+        $columnName = str_replace('_', ' ', substr($key, 6));
+        $custom[$columnName] = $value;
+    }
+
+    return $custom;
+}
+
+/**
  * Loads all of the plugins from the database
  *
  * @return Plugin[]

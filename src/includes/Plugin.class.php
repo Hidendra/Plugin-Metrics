@@ -42,7 +42,7 @@ class Plugin
         global $pdo;
 
         $versions = array();
-        $statement = $pdo->prepare('SELECT DISTINCT Version FROM VersionHistory WHERE Plugin = ? ORDER BY Created DESC');
+        $statement = $pdo->prepare('SELECT Version FROM Versions WHERE Plugin = ? ORDER BY Created DESC');
         $statement->execute(array($this->id));
 
         while (($row = $statement->fetch()) != null)
@@ -51,6 +51,80 @@ class Plugin
         }
 
         return $versions;
+    }
+
+    /**
+     * Get all of the custom columns available for grapinh for this plugin
+     * @return array, [id] => name
+     */
+    public function getCustomColumns()
+    {
+        global $pdo;
+
+        $columns = array();
+        $statement = $pdo->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ?');
+        $statement->execute(array($this->id));
+
+        while (($row = $statement->fetch()) != null)
+        {
+            $id = $row['ID'];
+            $name = $row['Name'];
+            $columns[$id] = $name;
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Sum all of the data points for a custom column
+     * @param $columnID int
+     * @param $min int
+     * @return int
+     */
+    public function sumCustomData($columnID, $min, $max = -1)
+    {
+        global $pdo;
+
+        // use time() if $max is -1
+        if ($max == -1)
+        {
+            $max = time();
+        }
+
+        $data = array();
+        $statement = $pdo->prepare('SELECT SUM(DataPoint) FROM CustomData WHERE ColumnID = ? AND Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement->execute(array($columnID, $this->id, $min, $max));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
+    }
+
+    /**
+     * Get the amount of servers online and using LWC between two epochs
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return array keyed by the epoch
+     */
+    function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1)
+    {
+        global $pdo;
+
+        // use time() if $max is -1
+        if ($maxEpoch == -1)
+        {
+            $maxEpoch = time();
+        }
+
+        $ret = array();
+        $statement = $pdo->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
+
+        while ($row = $statement->fetch())
+        {
+            $ret[$row['Epoch']] = $row['DataPoint'];
+        }
+
+        return $ret;
     }
 
     /**

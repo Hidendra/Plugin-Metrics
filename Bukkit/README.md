@@ -11,7 +11,7 @@ With the simple formalities out of the way, submitting stats to metrics is extre
 
 ## Creating a plugin on the website
 
-When your plugin first connects it will create it automatically. If you want the author tag set, or your plugin hidden from the main page, please contact me.
+When your plugin first connects it will create it automatically on the website. If you want the author tag set or your plugin hidden from the main page, please contact me.
 
 ## Usage
 
@@ -23,4 +23,29 @@ When your plugin first connects it will create it automatically. If you want the
         metrics.beginMeasuringPlugin(this);
     } catch (IOException e) {
         // Failed to submit the stats :-(
+    }
+
+## Custom Data
+
+You can also submit your own custom data that can be graphed, as seen [here](http://metrics.griefcraft.com/plugin/LWC). This is very easy and here is an example from LWC:
+
+    try {
+        Metrics metrics = new Metrics();
+
+        // Add our plotters
+        metrics.addCustomData(plugin, new Metrics.Plotter() {
+            @Override
+            public String getColumnName() {
+                return "Total Protections";
+            }
+
+            @Override
+            public int getValue() {
+                return physicalDatabase.getProtectionCount();
+            }
+        });
+
+        metrics.beginMeasuringPlugin(plugin);
+    } catch (IOException e) {
+        log(e.getMessage());
     }

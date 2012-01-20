@@ -29,8 +29,6 @@ if (!preg_match('/Java/', $_SERVER['HTTP_USER_AGENT'])) {
     exit('ERR');
 }
 
-// We only want spaces
-
 // If it does not exist we will create a new plugin for them :-)
 if ($plugin === NULL)
 {
@@ -74,6 +72,14 @@ if (!$ping)
 {
     $plugin->incrementGlobalHits();
     $server->incrementHits();
+}
+
+// Check for custom data
+if (count(($data = extractCustomData())) > 0) {
+    foreach ($data as $k => $v)
+    {
+        $server->addCustomData($k, $v);
+    }
 }
 
 // save. if no changes, this at least updates the 'updated' time

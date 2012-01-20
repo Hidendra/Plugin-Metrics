@@ -52,6 +52,43 @@ $name = $plugin->getName(); ?>
                 generateCoverage();
             }
 
+            function generateCustomData()
+            {
+                $.getJSON('/timeline-custom/<?php echo $name; ?>/144', function(json) {
+                    var graph = new google.visualization.DataTable();
+                    graph.addColumn('datetime', 'Day');
+                    console.log(json);
+
+                    // Add the columns
+                    $.each(json.columns, function(i, v) {
+                        graph.addColumn('number', v);
+                    });
+
+                    // iterate through the JSON data
+                    $.each(json.data, function(i, v) {
+                        // The graph row
+                        var date = epochToDate(parseInt(i));
+                        var row = [date];
+
+                        $.each(v, function(i, v) {
+                            row.push(parseInt(v));
+                        });
+                        console.log(row);
+
+                        // add it to the graph
+                        graph.addRow(row);
+                    });
+
+                    var options = {
+                        width: '80%', height: 500,
+                        chartArea: {width: '70%'}, title: 'Custom Data'
+                    };
+
+                    var chart = new google.visualization.LineChart(document.getElementById('custom_timeline'));
+                    chart.draw(graph, options);
+                });
+            }
+
             /**
              * Generate the timeline coverage for player/server counts
              */
@@ -66,17 +103,17 @@ $name = $plugin->getName(); ?>
                     // iterate through the JSON data
                     $.each(json, function(i, v) {
                         // extract data
-                        date = epochToDate(parseInt(v.epoch));
-                        servers = parseInt(v.servers);
-                        players = parseInt(v.players);
+                        var date = epochToDate(parseInt(v.epoch));
+                        var servers = parseInt(v.servers);
+                        var players = parseInt(v.players);
 
                         // add it to the graph
                         graph.addRow([date, servers, players]);
                     });
 
                     var options = {
-                        width: 950, height: 500,
-                        title: 'Global Statistics'
+                        width: '80%', height: 500,
+                        chartArea: {width: '70%'}, title: 'Global Statistics'
                     };
 
                     var chart = new google.visualization.LineChart(document.getElementById('coverage_timeline'));
@@ -105,9 +142,16 @@ echo '    <body>
             <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdated(strtotime(date('m').'/01/' . date('Y') . ' 00:00:00'))) . ' </td> </tr>
         </table>
 
-        <div id="coverage_timeline" style="width:950; height:500"></div>
+        <div id="coverage_timeline" style="height:500"></div>
+';
 
-        <h3>Servers\' last known version</h3>
+if (count($plugin->getCustomColumns()) > 0)
+{
+    echo '        <div id="custom_timeline" style="height:500"></div> <script> generateCustomData(); </script>
+';
+}
+
+echo '        <h3>Servers\' last known version</h3>
         <p> Versions with less than 5 servers are omitted. <br/> Servers not using ' . $plugin->getName() . ' in the last 7 days are also omitted. </p>
         <table>
 ';
