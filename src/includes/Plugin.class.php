@@ -298,6 +298,9 @@ class Plugin
             $server->setCreated($row['Created']);
             $server->setUpdated($row['Updated']);
 
+            // verify we have the plugin
+            $server->verifyPlugin($this->id);
+
             return $server;
         }
 

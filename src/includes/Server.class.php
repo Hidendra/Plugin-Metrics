@@ -104,6 +104,24 @@ class Server
     }
 
     /**
+     * Verify the server has the given plugin
+     * $param $plugin int
+     */
+    public function verifyPlugin($plugin)
+    {
+        global $pdo;
+
+        $statement = $pdo->prepare('SELECT ID FROM ServerPlugin WHERE Plugin = ?');
+        $statement->execute(array($plugin));
+
+        if (!$statement->fetch())
+        {
+            $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
+            $statement->execute(array(':Server' => $this->id, ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
+        }
+    }
+
+    /**
      * Get or create a custom column and return the id
      *
      * @param $columnName string

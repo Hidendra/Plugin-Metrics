@@ -50,7 +50,7 @@ function extractCustomData()
             continue;
         }
 
-        $columnName = str_replace('_', ' ', substr($key, 6));
+        $columnName = utf8_decode(str_replace('_', ' ', substr($key, 6)));
         $custom[$columnName] = $value;
     }
 
