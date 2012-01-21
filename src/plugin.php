@@ -65,6 +65,7 @@ $name = $plugin->getName(); ?>
                         );
                     });
 
+                    customGraphOptions.title.text = 'Custom data for <?php echo $plugin->getName(); ?>';
                     customGraph = new Highcharts.Chart(customGraphOptions);
                 });
             }
@@ -108,6 +109,7 @@ $name = $plugin->getName(); ?>
                         },
                         data: allPlayers
                     });
+                    globalStatisticsOptions.title.text = 'Global Statistics for <?php echo $plugin->getName(); ?>';
                     globalStatistics = new Highcharts.Chart(globalStatisticsOptions);
                 });
             }
