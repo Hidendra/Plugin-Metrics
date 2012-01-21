@@ -91,8 +91,6 @@ $name = $plugin->getName(); ?>
                         allServers.push([date, servers]);
                         allPlayers.push([date, players]);
                     });
-                    console.log(allServers);
-                    console.log(allPlayers);
 
                     globalStatisticsOptions.series.push({
                         name: 'Active Servers',
