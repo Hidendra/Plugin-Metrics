@@ -26,66 +26,46 @@ $name = $plugin->getName(); ?>
         <title><?php echo $name; ?> Statistics</title>
         <link href="/static/css/main.css" rel="stylesheet" type="text/css" />
 
-        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+        <script src="/static/javascript/highcharts/highcharts.js" type="text/javascript"></script>
+        <script src="/static/javascript/highcharts/themes/gray.js" type="text/javascript"></script>
+        <script src="/static/javascript/charts.js" type="text/javascript"></script>
         <script type="text/javascript">
-            google.load("jquery", "1.7.1");
-            google.load('visualization', '1.0', {'packages':['corechart']});
-            google.setOnLoadCallback(drawCharts);
-
-            /**
-             * Convert epoch time to a Date object to be used for graphing
-             * @param epoch
-             * @return Date
-             */
-            function epochToDate(epoch)
-            {
-                var date = new Date(0);
-                date.setUTCSeconds(epoch);
-                return date;
-            }
-
-            /**
-             * Draw the charts on the page
-             */
-            function drawCharts()
-            {
-                generateCoverage();
-            }
-
             function generateCustomData()
             {
                 $.getJSON('/timeline-custom/<?php echo $name; ?>/144', function(json) {
-                    var graph = new google.visualization.DataTable();
-                    graph.addColumn('datetime', 'Day');
-                    console.log(json);
+                    var columnNames = {};
+                    var columnData = {}; // columnData[id] = [date, xx, yy...]
 
                     // Add the columns
                     $.each(json.columns, function(i, v) {
-                        graph.addColumn('number', v);
+                        columnNames[i] = v;
+                        columnData[i] = [];
                     });
 
                     // iterate through the JSON data
                     $.each(json.data, function(i, v) {
                         // The graph row
-                        var date = epochToDate(parseInt(i));
+                        var date = Date.parse(epochToDate(parseInt(i)));
                         var row = [date];
 
+                        // Generate the data into the map
                         $.each(v, function(i, v) {
-                            row.push(parseInt(v));
+                            columnData[i].push([date, parseInt(v)]);
                         });
-                        console.log(row);
-
-                        // add it to the graph
-                        graph.addRow(row);
                     });
 
-                    var options = {
-                        width: '80%', height: 500,
-                        chartArea: {width: '70%'}, title: 'Custom Data'
-                    };
+                    // Add the data to the graph
+                    $.each(columnData, function(id, data) {
+                        customGraphOptions.series.push(
+                            {
+                                name: columnNames[id],
+                                data: data
+                            }
+                        );
+                    });
 
-                    var chart = new google.visualization.LineChart(document.getElementById('custom_timeline'));
-                    chart.draw(graph, options);
+                    customGraph = new Highcharts.Chart(customGraphOptions);
                 });
             }
 
@@ -95,29 +75,40 @@ $name = $plugin->getName(); ?>
             function generateCoverage()
             {
                 $.getJSON('/coverage/<?php echo $name; ?>/144', function(json) {
-                    var graph = new google.visualization.DataTable();
-                    graph.addColumn('datetime', 'Day');
-                    graph.addColumn('number', 'Active Servers');
-                    graph.addColumn('number', 'Active Players');
+                    // Store all of the extracted data in an arrow
+                    var allServers = [];
+                    var allPlayers = [];
 
                     // iterate through the JSON data
                     $.each(json, function(i, v) {
                         // extract data
-                        var date = epochToDate(parseInt(v.epoch));
+                        var date = Date.parse(epochToDate(parseInt(v.epoch)));
                         var servers = parseInt(v.servers);
                         var players = parseInt(v.players);
 
                         // add it to the graph
-                        graph.addRow([date, servers, players]);
+                        allServers.push([date, servers]);
+                        allPlayers.push([date, players]);
+                    });
+                    console.log(allServers);
+                    console.log(allPlayers);
+
+                    globalStatisticsOptions.series.push({
+                        name: 'Active Servers',
+                        marker: {
+                            radius: 3
+                        },
+                        data: allServers
                     });
 
-                    var options = {
-                        width: '80%', height: 500,
-                        chartArea: {width: '70%'}, title: 'Global Statistics'
-                    };
-
-                    var chart = new google.visualization.LineChart(document.getElementById('coverage_timeline'));
-                    chart.draw(graph, options);
+                    globalStatisticsOptions.series.push({
+                        name: 'Active Players',
+                        marker: {
+                            radius: 3
+                        },
+                        data: allPlayers
+                    });
+                    globalStatistics = new Highcharts.Chart(globalStatisticsOptions);
                 });
             }
         </script>
@@ -140,14 +131,14 @@ echo '    <body>
             <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_DAY)) . ' </td> </tr>
             <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_WEEK)) . ' </td> </tr>
             <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdated(strtotime(date('m').'/01/' . date('Y') . ' 00:00:00'))) . ' </td> </tr>
-        </table>
+        </table> <br/>
 
         <div id="coverage_timeline" style="height:500"></div>
 ';
 
 if (count($plugin->getCustomColumns()) > 0)
 {
-    echo '        <div id="custom_timeline" style="height:500"></div> <script> generateCustomData(); </script>
+    echo '        <br/> <div id="custom_timeline" style="height:500"></div> <script> generateCustomData(); </script>
 ';
 }
 

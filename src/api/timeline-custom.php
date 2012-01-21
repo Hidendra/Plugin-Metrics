@@ -54,7 +54,7 @@ $json['data'] = array();
 foreach ($plugin->getCustomColumns() as $id => $name)
 {
     // store the column name
-    $json['columns'][] = $name;
+    $json['columns'][$id] = $name;
 
     // load the datapoints from the database
     $dataPoints = $plugin->getTimelineCustom($id, $minimum, $maximum);
