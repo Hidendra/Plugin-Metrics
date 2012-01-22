@@ -26,92 +26,15 @@ $name = $plugin->getName(); ?>
         <title><?php echo $name; ?> Statistics</title>
         <link href="/static/css/main.css" rel="stylesheet" type="text/css" />
 
+        <script>
+            // Plugin-specific bindings
+            var pluginName = "<?php echo $name;?>";
+        </script>
+
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
         <script src="/static/javascript/highcharts/highcharts.js" type="text/javascript"></script>
         <script src="/static/javascript/highcharts/themes/gray.js" type="text/javascript"></script>
         <script src="/static/javascript/charts.js" type="text/javascript"></script>
-        <script type="text/javascript">
-            function generateCustomData()
-            {
-                $.getJSON('/timeline-custom/<?php echo $name; ?>/144', function(json) {
-                    var columnNames = {};
-                    var columnData = {}; // columnData[id] = [date, xx, yy...]
-
-                    // Add the columns
-                    $.each(json.columns, function(i, v) {
-                        columnNames[i] = v;
-                        columnData[i] = [];
-                    });
-
-                    // iterate through the JSON data
-                    $.each(json.data, function(i, v) {
-                        // The graph row
-                        var date = Date.parse(epochToDate(parseInt(i)));
-                        var row = [date];
-
-                        // Generate the data into the map
-                        $.each(v, function(i, v) {
-                            columnData[i].push([date, parseInt(v)]);
-                        });
-                    });
-
-                    // Add the data to the graph
-                    $.each(columnData, function(id, data) {
-                        customGraphOptions.series.push(
-                            {
-                                name: columnNames[id],
-                                data: data
-                            }
-                        );
-                    });
-
-                    customGraphOptions.title.text = 'Custom data for <?php echo $plugin->getName(); ?>';
-                    customGraph = new Highcharts.Chart(customGraphOptions);
-                });
-            }
-
-            /**
-             * Generate the timeline coverage for player/server counts
-             */
-            function generateCoverage()
-            {
-                $.getJSON('/coverage/<?php echo $name; ?>/144', function(json) {
-                    // Store all of the extracted data in an arrow
-                    var allServers = [];
-                    var allPlayers = [];
-
-                    // iterate through the JSON data
-                    $.each(json, function(i, v) {
-                        // extract data
-                        var date = Date.parse(epochToDate(parseInt(v.epoch)));
-                        var servers = parseInt(v.servers);
-                        var players = parseInt(v.players);
-
-                        // add it to the graph
-                        allServers.push([date, servers]);
-                        allPlayers.push([date, players]);
-                    });
-
-                    globalStatisticsOptions.series.push({
-                        name: 'Active Servers',
-                        marker: {
-                            radius: 3
-                        },
-                        data: allServers
-                    });
-
-                    globalStatisticsOptions.series.push({
-                        name: 'Active Players',
-                        marker: {
-                            radius: 3
-                        },
-                        data: allPlayers
-                    });
-                    globalStatisticsOptions.title.text = 'Global Statistics for <?php echo $plugin->getName(); ?>';
-                    globalStatistics = new Highcharts.Chart(globalStatisticsOptions);
-                });
-            }
-        </script>
     </head>
 
 <?php
@@ -139,6 +62,7 @@ echo '    <body>
 if (count($plugin->getCustomColumns()) > 0)
 {
     echo '        <br/> <div id="custom_timeline" style="height:500"></div> <script> generateCustomData(); </script>
+
 ';
 }
 
