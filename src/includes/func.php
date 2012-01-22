@@ -52,7 +52,16 @@ function extractCustomData()
 
         $columnName = str_replace('_', ' ', substr($key, 6));
         $columnName = mb_convert_encoding($columnName, 'ISO-8859-1', 'UTF-8');
-        $custom[$columnName] = $value;
+
+        if (strstr($columnName, 'Protections') !== FALSE)
+        {
+            $columnName = str_replace('?', 'i', $columnName);
+        }
+
+        if (!in_array($columnName, $custom))
+        {
+            $custom[$columnName] = $value;
+        }
     }
 
     return $custom;
