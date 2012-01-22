@@ -1,8 +1,8 @@
 <?php
 
-// 0 * * * * php cron/servers.php
+// 0 * * * * php cron/custom.php
 //
-// stores the amount of servers that pinged us in the last hour so it can be easily graphed
+// stores the custom data obtained in the last hour into a graphable format
 
 define('ROOT', '../');
 define('MAX_COLUMNS', 30); // soft limit of max amount of columns to loop through per plugin

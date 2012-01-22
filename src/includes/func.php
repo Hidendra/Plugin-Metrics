@@ -77,7 +77,7 @@ function loadPlugins()
     global $pdo;
     $plugins = array();
 
-    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin');
+    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY GlobalHits DESC');
     $statement->execute();
 
     while ($row = $statement->fetch())

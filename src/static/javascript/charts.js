@@ -115,6 +115,10 @@ $(document).ready(function() {
             text: 'via http://metrics.griefcraft.com'
         },
 
+        credits: {
+            enabled: false
+        },
+
         xAxis: {
             type: 'datetime',
             tickInterval: 1 * 3600 * 1000, // one hour
@@ -161,7 +165,7 @@ $(document).ready(function() {
         legend: {
             align: 'left',
             verticalAlign: 'top',
-            y: 20,
+            y: 25,
             floating: true,
             borderWidth: 0
         },
@@ -214,6 +218,10 @@ $(document).ready(function() {
             text: 'via http://metrics.griefcraft.com'
         },
 
+        credits: {
+            enabled: false
+        },
+
         xAxis: {
             type: 'datetime',
             tickInterval: 1 * 3600 * 1000, // one hour
@@ -260,7 +268,7 @@ $(document).ready(function() {
         legend: {
             align: 'left',
             verticalAlign: 'top',
-            y: 20,
+            y: 25,
             floating: true,
             borderWidth: 0
         },
@@ -295,7 +303,6 @@ $(document).ready(function() {
             }
         },
 
-        // Columns added in dynamically later on
         series: []
     };
 
