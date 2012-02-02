@@ -201,6 +201,29 @@ class Plugin
         return $row != null ? $row[0] : 0;
     }
 
+    /**
+     * Count all of the servers that were updated after the given epoch
+     * @param $after integer
+     */
+    public function countServersLastUpdatedFromCountry($country, $min, $max = -1)
+    {
+        global $pdo;
+
+        // use time() if $max is -1
+        if ($max == -1)
+        {
+            $max = time();
+        }
+
+        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin
+                                    LEFT OUTER JOIN Server ON (ServerPlugin.Server = Server.ID)
+                                    WHERE Country = ? AND ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ? AND ServerPlugin.Updated <= ?');
+        $statement->execute(array($country, $this->id, $min, $max));
+
+        $row = $statement->fetch();
+        return $row != null ? $row[0] : 0;
+    }
+
     public function countServersUsingVersion($version)
     {
         global $pdo;
@@ -211,6 +234,35 @@ class Plugin
 
         $row = $statement->fetch();
         return $row != null ? $row[0] : 0;
+    }
+
+    /**
+     * Get country timeline data between two epochs, showing the amount of players online per country
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return array keyed by the epoch
+     */
+    function getTimelineCountry($minEpoch, $maxEpoch = -1)
+    {
+        global $pdo;
+
+        // use time() if $max is -1
+        if ($maxEpoch == -1)
+        {
+            $maxEpoch = time();
+        }
+
+        $ret = array();
+
+        $statement = $pdo->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement->execute(array($this->id, $minEpoch, $maxEpoch));
+
+        while ($row = $statement->fetch())
+        {
+            $ret[$row['Epoch']][$row['Country']] = $row['Servers'];
+        }
+
+        return $ret;
     }
 
     /**
@@ -230,6 +282,7 @@ class Plugin
         }
 
         $ret = array();
+
         $statement = $pdo->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
@@ -258,6 +311,7 @@ class Plugin
         }
 
         $ret = array();
+
         $statement = $pdo->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
@@ -279,7 +333,7 @@ class Plugin
         global $pdo;
 
         // Try to select it first
-        $statement = $pdo->prepare('SELECT ID, GUID, ServerVersion, Version, Hits, Created, ServerPlugin.Plugin, ServerPlugin.Version, ServerPlugin.Updated FROM Server
+        $statement = $pdo->prepare('SELECT ID, GUID, ServerVersion, Version, Country, Hits, Created, ServerPlugin.Plugin, ServerPlugin.Version, ServerPlugin.Updated FROM Server
                                     LEFT OUTER JOIN ServerPlugin ON (ServerPlugin.Server = Server.ID AND ServerPlugin.Plugin = :Plugin)
                                     WHERE GUID = :GUID');
         $statement->execute(array(':GUID' => $guid, ':Plugin' => $this->id));
@@ -291,6 +345,7 @@ class Plugin
             $server->setID($row['ID']);
             $server->setPlugin($this->id);
             $server->setGUID($row['GUID']);
+            $server->setCountry($row['Country']);
             $server->setPlayers($row['Players']);
             $server->setServerVersion($row['ServerVersion']);
             $server->setCurrentVersion($row['Version']);
@@ -311,8 +366,8 @@ class Plugin
         }
 
         // It doesn't exist so we are going to create it ^^
-        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, ServerVersion, Hits, Created) VALUES(:Plugin, :GUID, :Players, :ServerVersion, :Hits, :Created)');
-        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
+        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, Country, ServerVersion, Hits, Created) VALUES(:Plugin, :GUID, :Players, :Country, :ServerVersion, :Hits, :Created)');
+        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':Country' => 'ZZ', ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
 
         // get the last id
         $serverId = $pdo->lastInsertId();
