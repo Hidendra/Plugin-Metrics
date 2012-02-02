@@ -27,6 +27,11 @@ require_once ROOT . 'includes/func.php';
 <?php
     foreach (loadPlugins() as $plugin)
     {
+        if ($plugin->isHidden())
+        {
+            continue;
+        }
+
         echo '<tr> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_DAY)) . ' </td> </tr>';
     }
 ?>

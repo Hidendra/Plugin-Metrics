@@ -22,7 +22,7 @@ if ($plugin === NULL)
 
 if (!isset($_GET['hours']))
 {
-    exit('ERR No amount of days provided.');
+    exit('ERR No amount of hours provided.');
 }
 
 // Amount of days to go back in past

@@ -23,6 +23,12 @@ class Server
     private $guid;
 
     /**
+     * The server's 2-char country code
+     * $var string
+     */
+    private $country = 'ZZ';
+
+    /**
      * Last known amount of players on the server
      * @var integer
      */
@@ -79,11 +85,11 @@ class Server
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = :Players, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
+        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = :Players, Country = :Country, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':Players' => $this->players, ':GUID' => $this->guid, ':ServerVersion' => $this->serverVersion,
-            ':Hits' => $this->hits, ':Created' => $this->created));
+        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':Players' => $this->players, ':Country' => $this->country, ':GUID' => $this->guid,
+            ':ServerVersion' => $this->serverVersion, ':Hits' => $this->hits, ':Created' => $this->created));
 
         // update the plugin part of it
         $this->updatePlugin();
@@ -117,7 +123,7 @@ class Server
         if (!$statement->fetch())
         {
             $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
-            $statement->execute(array(':Server' => $this->id, ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
+            $statement->execute(array(':Server' => $this->id, ':Plugin' => $plugin, ':Version' => '', ':Updated' => time()));
         }
     }
 
@@ -214,6 +220,16 @@ class Server
     public function setPlugin($plugin)
     {
         $this->plugin = $plugin;
+    }
+
+    public function getCountry()
+    {
+        return $this->country;
+    }
+
+    public function setCountry($country)
+    {
+        $this->country = $country;
     }
 
     public function getGUID()

@@ -68,6 +68,30 @@ function extractCustomData()
 }
 
 /**
+ * Get all of the possible country codes we have stored
+ *
+ * @return string[], e.g ["CA"] = "Canada"
+ */
+function loadCountries()
+{
+    global $pdo;
+    $countries = array();
+
+    $statement = $pdo->prepare('SELECT ShortCode, FullName FROM Country LIMIT 300'); // hard limit of 300
+    $statement->execute();
+
+    while ($row = $statement->fetch())
+    {
+        $shortCode = $row['ShortCode'];
+        $fullName = $row['FullName'];
+
+        $countries[$shortCode] = $fullName;
+    }
+
+    return $countries;
+}
+
+/**
  * Loads all of the plugins from the database
  *
  * @return Plugin[]

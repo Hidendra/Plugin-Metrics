@@ -18,6 +18,11 @@ if (!preg_match('/[a-zA-Z ]/', $_GET['plugin'])) {
 // Load the plugin
 $plugin = loadPlugin($_GET['plugin']);
 
+if ($plugin->getID() == GLOBAL_PLUGIN)
+{
+    exit('ERR The global plugin cannot be reported to.');
+}
+
 // Begin extracting arguments
 $guid = getPostArgument('guid');
 $serverVersion = getPostArgument('server');
@@ -72,6 +77,23 @@ if (!$ping)
 {
     $plugin->incrementGlobalHits();
     $server->incrementHits();
+}
+
+// Check for Geo IP
+if (isset($_SERVER['GEOIP_COUNTRY_CODE']))
+{
+    $shortCode = $_SERVER['GEOIP_COUNTRY_CODE'];
+    $fullName = $_SERVER['GEOIP_COUNTRY_NAME'];
+
+    // Do we need to update their country?
+    if ($server->getCountry() != $shortCode)
+    {
+        $server->setCountry($shortCode);
+
+        // Insert it into the Country table
+        $statement = $pdo->prepare('INSERT INTO Country (ShortCode, FullName) VALUES (:ShortCode, :FullName)');
+        $statement->execute(array(':ShortCode' => $shortCode, ':FullName' => $fullName));
+    }
 }
 
 // Check for custom data

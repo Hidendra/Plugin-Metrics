@@ -66,7 +66,10 @@ if (count($plugin->getCustomColumns()) > 0)
 ';
 }
 
-echo '        <h3>Servers\' last known version</h3>
+echo '
+        <br/> <div id="country_piechart" style="height:500"></div>
+
+        <h3>Servers\' last known version</h3>
         <p> Versions with less than 5 servers are omitted. <br/> Servers not using ' . $plugin->getName() . ' in the last 7 days are also omitted. </p>
         <table>
 ';

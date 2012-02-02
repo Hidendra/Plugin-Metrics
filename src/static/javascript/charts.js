@@ -2,6 +2,10 @@
 var globalStatistics;
 var globalStatisticsOptions;
 
+// Country pie chart
+var countryPieChart;
+var countryPieChartOptions;
+
 // Custom graphing
 var customGraph;
 var customGraphOptions;
@@ -95,6 +99,33 @@ function generateCoverage()
         });
         globalStatisticsOptions.title.text = 'Global Statistics for ' + pluginName;
         globalStatistics = new Highcharts.Chart(globalStatisticsOptions);
+    });
+}
+
+/**
+ * Generates the pie chart for country data
+ */
+function generateCountryPieChart()
+{
+    $.getJSON('/country-piechart/' + pluginName, function(json) {
+        var data = [];
+
+        // iterate through the JSON data
+        $.each(json, function(i, v) {
+            var country = i;
+            var servers = v;
+
+            data.push([country, servers]);
+        });
+
+        countryPieChartOptions.series.push({
+            type: 'pie',
+            name: 'Country',
+            data: data
+        });
+
+        countryPieChartOptions.title.text = 'Country Statistics for ' + pluginName;
+        countryPieChart = new Highcharts.Chart(countryPieChartOptions);
     });
 }
 
@@ -306,6 +337,42 @@ $(document).ready(function() {
         series: []
     };
 
-    // Generate the global stats
+    countryPieChartOptions = {
+        chart: {
+            renderTo: 'country_piechart',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'Country Statistics'
+        },
+        subtitle: {
+            text: 'via http://metrics.griefcraft.com'
+        },
+        tooltip: {
+            formatter: function() {
+                return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(1) +' %';
+            }
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: Highcharts.theme.textColor || '#000000',
+                    connectorColor: Highcharts.theme.textColor || '#000000',
+                    formatter: function() {
+                        return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(1) +' %';
+                    }
+                }
+            }
+        },
+        series: []
+    };
+
+    // Generate stats!
     generateCoverage();
+    generateCountryPieChart();
 });

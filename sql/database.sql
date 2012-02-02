@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS Server (
   -- GUID
   GUID VARCHAR(40) NOT NULL,
 
+  -- The server's country, 2 letter country code
+  Country CHAR(2) NOT NULL,
+
   -- Last known amount of players to be on the server
   Players INT NOT NULL,
 
@@ -40,6 +43,9 @@ CREATE TABLE IF NOT EXISTS Server (
 
   --
   INDEX (GUID),
+
+  --
+  INDEX (Country),
 
   --
   INDEX (ServerVersion),
@@ -186,6 +192,17 @@ CREATE TABLE IF NOT EXISTS CustomDataTimeline (
   PRIMARY KEY (ID)
 );
 
+CREATE TABLE IF NOT EXISTS Country (
+  -- 2char representation of the country e.g CA
+  ShortCode CHAR(2) NOT NULL,
+
+  -- The full name of the country e.g Canada
+  FullName VARCHAR(40) NOT NULL,
+
+  PRIMARY KEY (ShortCode)
+);
+INSERT INTO Country (ShortCode, FullName) VALUES ('ZZ' , 'Unknown');
+
 --
 CREATE TABLE IF NOT EXISTS Versions (
   --
@@ -301,6 +318,40 @@ CREATE TABLE IF NOT EXISTS ServerTimeline (
 
   --
   FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+
+  --
+  PRIMARY KEY (ID)
+) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS CountryTimeline (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Plugin INT NOT NULL,
+
+  --
+  Country CHAR(2) NOT NULL,
+
+  --
+  Servers INT NOT NULL,
+
+  -- The unix timestamp this timeline entry refers to
+  Epoch INTEGER NOT NULL,
+
+  --
+  Index (Plugin),
+
+  --
+  INDEX (Servers),
+
+  --
+  UNIQUE INDEX (Plugin, Country, Epoch),
+
+  --
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+
+  --
+  FOREIGN KEY (Country) REFERENCES Country (ShortCode),
 
   --
   PRIMARY KEY (ID)
