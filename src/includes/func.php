@@ -101,8 +101,8 @@ function loadPlugins()
     global $pdo;
     $plugins = array();
 
-    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY GlobalHits DESC');
-    $statement->execute();
+    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY (SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = Plugin.ID AND Updated >= ?) DESC');
+    $statement->execute(array(time() - SECONDS_IN_DAY));
 
     while ($row = $statement->fetch())
     {
