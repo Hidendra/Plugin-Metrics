@@ -25,16 +25,11 @@ if ($plugin === NULL)
 $json = array();
 $countries = loadCountries();
 
-// Calculate the closest hour
-$denom = 60 * 60; // 60 minutes * 60 seconds = 3600 seconds in an hour
-$baseEpoch = round(time() / $denom) * $denom;
-
-// calculate the minimum
-$minimum = strtotime('-1 hour', $baseEpoch);
-$maximum = $baseEpoch;
+// The epoch to lookup
+$epoch = getLastHour();
 
 // load the data from mysql
-$servers = $plugin->getTimelineCountry($minimum, $maximum);
+$servers = $plugin->getTimelineCountry($epoch);
 
 // go through each and add to json
 foreach ($servers as $epoch => $data)
@@ -69,15 +64,14 @@ foreach ($servers as $epoch => $data)
 
         // Sort again
         arsort(&$data);
-
-        // Begin emitting unadulterated JSON
-        foreach ($data as $country => $amount)
-        {
-            $key = ($country == 'Others') ? $country : $countries[$country];
-            $json[$key] = round(($amount / $server_total) * 100, 2);
-        }
     }
 
+    // Begin emitting unadulterated JSON
+    foreach ($data as $country => $amount)
+    {
+        $key = ($country == 'Others') ? $country : $countries[$country];
+        $json[$key] = round(($amount / $server_total) * 100, 2);
+    }
 
     // We only want 1
     break;
