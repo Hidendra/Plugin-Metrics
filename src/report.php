@@ -18,11 +18,6 @@ if (!preg_match('/[a-zA-Z ]/', $_GET['plugin'])) {
 // Load the plugin
 $plugin = loadPlugin($_GET['plugin']);
 
-if ($plugin->getID() == GLOBAL_PLUGIN)
-{
-    exit('ERR The global plugin cannot be reported to.');
-}
-
 // Begin extracting arguments
 $guid = getPostArgument('guid');
 $serverVersion = getPostArgument('server');
