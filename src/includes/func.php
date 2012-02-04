@@ -12,6 +12,15 @@ define('SECONDS_IN_DAY', 60 * 60 * 24);
 define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
 
 /**
+ * Get the epoch of the closest hour (downwards, never up)
+ * @return float
+ */
+function getLastHour()
+{
+    return strtotime(date('F d Y H:00'));
+}
+
+/**
  * Load a key from POST. If it does not exist, die loudly
  *
  * @param $key string

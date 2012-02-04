@@ -104,8 +104,17 @@ if (count(($data = extractCustomData())) > 0) {
     }
 }
 
+// Get the timestamp for the last hour
+$lastHour = getLastHour();
+
+// Is this the first time they updated this hour?
+if ($lastHour > $server->getUpdated())
+{
+    echo 'OK This is your first update this hour.';
+} else
+{
+    echo 'OK';
+}
+
 // save. if no changes, this at least updates the 'updated' time
 $server->save();
-
-// All good; no errors!
-echo 'OK Thank you for your contribution.';
