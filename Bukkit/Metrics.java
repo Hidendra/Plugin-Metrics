@@ -219,7 +219,7 @@ public class Metrics {
 
         if (plotters != null) {
             for (Plotter plotter : plotters) {
-                data += "&" + encode ("Custom" + plotter.getColumnName())
+                data += "&" + encode("Custom" + plotter.getColumnName())
                         + "=" + encode(Integer.toString(plotter.getValue()));
             }
         }
@@ -244,7 +244,7 @@ public class Metrics {
         writer.close();
         reader.close();
 
-        if (response.startsWith("ERR")){
+        if (response.startsWith("ERR")) {
             throw new IOException(response); //Throw the exception
         } else {
             // Is this the first update this hour?
