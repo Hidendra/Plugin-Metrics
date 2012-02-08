@@ -50,6 +50,9 @@ function generateCustomData()
             customGraphOptions.series.push(
                 {
                     name: columnNames[id],
+                    marker: {
+                        radius: 0
+                    },
                     data: data
                 }
             );
@@ -85,7 +88,7 @@ function generateCoverage()
         globalStatisticsOptions.series.push({
             name: 'Active Servers',
             marker: {
-                radius: 3
+                radius: 0
             },
             data: allServers
         });
@@ -93,7 +96,7 @@ function generateCoverage()
         globalStatisticsOptions.series.push({
             name: 'Active Players',
             marker: {
-                radius: 3
+                radius: 0
             },
             data: allPlayers
         });
@@ -135,7 +138,8 @@ $(document).ready(function() {
     globalStatisticsOptions = {
 
         chart: {
-            renderTo: 'coverage_timeline'
+            renderTo: 'coverage_timeline',
+            type: 'spline'
         },
 
         title: {
@@ -152,17 +156,15 @@ $(document).ready(function() {
 
         xAxis: {
             type: 'datetime',
-            tickInterval: 1 * 3600 * 1000, // one hour
-            tickWidth: 0,
-            gridLineWidth: 0,
-            labels: {
-                align: 'left',
-                x: 3,
-                y: -3
-            }
+            dateTimeLabelFormats: { // don't display the dummy year
+                month: '%e. %b',
+                year: '%b'
+            },
+            gridLineWidth: 0
         },
 
-        yAxis: [{ // left y axis
+        yAxis: { // left y axis
+            min: 0,
             title: {
                 text: null
             },
@@ -175,23 +177,7 @@ $(document).ready(function() {
                 }
             },
             showFirstLabel: false
-        }, { // right y axis
-            linkedTo: 0,
-            gridLineWidth: 0,
-            opposite: true,
-            title: {
-                text: null
-            },
-            labels: {
-                align: 'right',
-                x: -3,
-                y: 16,
-                formatter: function() {
-                    return Highcharts.numberFormat(this.value, 0);
-                }
-            },
-            showFirstLabel: false
-        }],
+        },
 
         legend: {
             align: 'left',
@@ -255,17 +241,15 @@ $(document).ready(function() {
 
         xAxis: {
             type: 'datetime',
-            tickInterval: 1 * 3600 * 1000, // one hour
-            tickWidth: 0,
-            gridLineWidth: 0,
-            labels: {
-                align: 'left',
-                x: 3,
-                y: -3
-            }
+            dateTimeLabelFormats: { // don't display the dummy year
+                month: '%e. %b',
+                year: '%b'
+            },
+            gridLineWidth: 0
         },
 
-        yAxis: [{ // left y axis
+        yAxis: { // left y axis
+            min: 0,
             title: {
                 text: null
             },
@@ -278,23 +262,7 @@ $(document).ready(function() {
                 }
             },
             showFirstLabel: false
-        }, { // right y axis
-            linkedTo: 0,
-            gridLineWidth: 0,
-            opposite: true,
-            title: {
-                text: null
-            },
-            labels: {
-                align: 'right',
-                x: -3,
-                y: 16,
-                formatter: function() {
-                    return Highcharts.numberFormat(this.value, 0);
-                }
-            },
-            showFirstLabel: false
-        }],
+        },
 
         legend: {
             align: 'left',

@@ -36,11 +36,8 @@ if ($hours <= 0 || $hours > 744)
 
 $json = array();
 
-// Calculate the closest hour
-$denom = 60 * 60; // 60 minutes * 60 seconds = 3600 seconds in an hour
-$baseEpoch = round(time() / $denom) * $denom;
-
 // calculate the minimum
+$baseEpoch = normalizeTime();
 $minimum = strtotime('-' . $hours . ' hours', $baseEpoch);
 $maximum = $baseEpoch;
 
