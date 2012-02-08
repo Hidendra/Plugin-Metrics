@@ -18,7 +18,8 @@ require_once ROOT . 'includes/func.php';
     <body>
 
         <div align="center">
-            <h2>Plugin Metrics</h2>
+            <h2> Plugin Metrics </h2>
+            <p> Servers with zero servers (last 24 hrs) are omitted from this list. </p>
 
             <table>
 
@@ -32,11 +33,25 @@ require_once ROOT . 'includes/func.php';
             continue;
         }
 
-        echo '<tr> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_DAY)) . ' </td> </tr>';
+        // Count the amount of servers in the last 24 hours
+        $servers = $plugin->countServersLastUpdated(time() - SECONDS_IN_DAY);
+
+        // Omit Servers with 0
+        if ($servers == 0)
+        {
+            continue;
+        }
+
+        echo '<tr> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . number_format($servers) . ' </td> </tr>';
     }
 ?>
             </table>
         </div>
 
+        <!-- Footer -->
+        <div align="center" style="font-size: 11px; margin-top: 30px;">
+            <p> Created by Hidendra. Plugins are owned by their respective authors, I simply provide statistical data. <br/>
+            <a href="http://forums.bukkit.org/threads/53449/">Bukkit Thread</a>. Can't access the thread? <a href="mailto:hidendra@griefcraft.com">Concerns/feedback/etc</a> </p>
+        </div>
     </body>
 </html>
