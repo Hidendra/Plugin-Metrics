@@ -13,9 +13,7 @@ require_once ROOT . 'includes/func.php';
 // iterate through all of the plugins
 foreach (loadPlugins() as $plugin)
 {
-    // Calculate the closest hour
-    $denom = 60 * 60; // 60 minutes * 60 seconds = 3600 seconds in an hour
-    $baseEpoch = round(time() / $denom) * $denom;
+    $baseEpoch = normalizeTime();
 
     // we want the data for the last hour
     $minimum = strtotime('-1 hour', $baseEpoch);

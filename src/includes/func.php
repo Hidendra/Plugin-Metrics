@@ -21,6 +21,30 @@ function getLastHour()
 }
 
 /**
+ * Normalize a time to the nearest graphing period
+ *
+ * @param $time if < 0, the time() will be used
+ */
+function normalizeTime($time = -1)
+{
+    global $config;
+
+    if ($time < 0)
+    {
+        $time = time();
+    }
+
+    // The amount of minutes between graphing periods
+    $interval = $config['graph']['interval'];
+
+    // Calculate the denominator (interval * 60 secs)
+    $denom = $interval * 60;
+
+    // Round to the closest one
+    return round(time() / $denom) * $denom;
+}
+
+/**
  * Load a key from POST. If it does not exist, die loudly
  *
  * @param $key string
