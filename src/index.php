@@ -19,7 +19,7 @@ require_once ROOT . 'includes/func.php';
 
         <div align="center">
             <h2> Plugin Metrics </h2>
-            <p> Plugins with zero servers (last 24 hrs) are omitted from this list. </p>
+            <p> Plugins with zero active servers (last 24 hrs) are omitted from this list. </p>
 
             <table>
 
