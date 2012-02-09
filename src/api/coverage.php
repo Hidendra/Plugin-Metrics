@@ -54,11 +54,7 @@ foreach ($servers as $epoch => $count)
         continue;
     }
 
-    $json[] = array(
-        'epoch' => $epoch,
-        'servers' => $count,
-        'players' => $players[$epoch]
-    );
+    $json[] = array(intval($epoch), intval($count), intval($players[$epoch]));
 }
 
 // output the json

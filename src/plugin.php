@@ -24,7 +24,7 @@ $name = $plugin->getName(); ?>
 <html>
     <head>
         <title><?php echo $name; ?> Statistics</title>
-        <link href="/static/css/main.css" rel="stylesheet" type="text/css" />
+        <link href="http://static.griefcraft.com/css/main.css" rel="stylesheet" type="text/css" />
 
         <script>
             // Plugin-specific bindings
@@ -32,9 +32,10 @@ $name = $plugin->getName(); ?>
         </script>
 
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-        <script src="/static/javascript/highcharts/highcharts.js" type="text/javascript"></script>
-        <script src="/static/javascript/highcharts/themes/gray.js" type="text/javascript"></script>
-        <script src="/static/javascript/charts.js" type="text/javascript"></script>
+        <script src="http://static.griefcraft.com/javascript/highcharts/highcharts.js" type="text/javascript"></script>
+        <script src="http://static.griefcraft.com/javascript/highcharts/highstock.js" type="text/javascript"></script>
+        <script src="http://static.griefcraft.com/javascript/highcharts/themes/gray.js" type="text/javascript"></script>
+        <script src="http://static.griefcraft.com/javascript/charts.js" type="text/javascript"></script>
     </head>
 
 <?php

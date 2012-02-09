@@ -24,7 +24,7 @@ function epochToDate(epoch)
 
 function generateCustomData()
 {
-    $.getJSON('/timeline-custom/' + pluginName + '/144', function(json) {
+    $.getJSON('/timeline-custom/' + pluginName + '/744', function(json) {
         var columnNames = {};
         var columnData = {}; // columnData[id] = [date, xx, yy...]
 
@@ -59,7 +59,7 @@ function generateCustomData()
         });
 
         customGraphOptions.title.text = 'Custom data for ' + pluginName;
-        customGraph = new Highcharts.Chart(customGraphOptions);
+        customGraph = new Highcharts.StockChart(customGraphOptions);
     });
 }
 
@@ -68,7 +68,7 @@ function generateCustomData()
  */
 function generateCoverage()
 {
-    $.getJSON('/coverage/' + pluginName + '/144', function(json) {
+    $.getJSON('/coverage/' + pluginName + '/744', function(json) {
         // Store all of the extracted data in an arrow
         var allServers = [];
         var allPlayers = [];
@@ -76,9 +76,9 @@ function generateCoverage()
         // iterate through the JSON data
         $.each(json, function(i, v) {
             // extract data
-            var date = Date.parse(epochToDate(parseInt(v.epoch)));
-            var servers = parseInt(v.servers);
-            var players = parseInt(v.players);
+            var date = Date.parse(epochToDate(parseInt(v[0])));
+            var servers = parseInt(v[1]);
+            var players = parseInt(v[2]);
 
             // add it to the graph
             allServers.push([date, servers]);
@@ -101,7 +101,7 @@ function generateCoverage()
             data: allPlayers
         });
         globalStatisticsOptions.title.text = 'Global Statistics for ' + pluginName;
-        globalStatistics = new Highcharts.Chart(globalStatisticsOptions);
+        globalStatistics = new Highcharts.StockChart(globalStatisticsOptions);
     });
 }
 
@@ -155,9 +155,45 @@ $(document).ready(function() {
             enabled: false
         },
 
+        rangeSelector: {
+            buttons: [{
+                type: 'hour',
+                count: 2,
+                text: '2h'
+            }, {
+                type: 'hour',
+                count: 12,
+                text: '12h'
+            }, {
+                type: 'day',
+                count: 1,
+                text: '1d'
+            }, {
+                type: 'week',
+                count: 1,
+                text: '1w'
+            }, {
+                type: 'week',
+                count: 2,
+                text: '2y'
+            }, {
+                type: 'month',
+                count: 1,
+                text: '1m'
+            }, {
+                type: 'year',
+                count: 1,
+                text: '1y'
+            }, {
+                type: 'all',
+                text: 'All'
+            }],
+            selected: 2
+        },
+
         xAxis: {
             type: 'datetime',
-            maxZoom: 1 * 3600000,
+            maxZoom: 2 * 60,
             dateTimeLabelFormats: { // don't display the dummy year
                 month: '%e. %b',
                 year: '%b'
@@ -243,9 +279,45 @@ $(document).ready(function() {
             enabled: false
         },
 
+        rangeSelector: {
+            buttons: [{
+                type: 'hour',
+                count: 2,
+                text: '2h'
+            }, {
+                type: 'hour',
+                count: 12,
+                text: '12h'
+            }, {
+                type: 'day',
+                count: 1,
+                text: '1d'
+            }, {
+                type: 'week',
+                count: 1,
+                text: '1w'
+            }, {
+                type: 'week',
+                count: 2,
+                text: '2y'
+            }, {
+                type: 'month',
+                count: 1,
+                text: '1m'
+            }, {
+                type: 'year',
+                count: 1,
+                text: '1y'
+            }, {
+                type: 'all',
+                text: 'All'
+            }],
+            selected: 2
+        },
+
         xAxis: {
             type: 'datetime',
-            maxZoom: 1 * 3600000,
+            maxZoom: 2 * 60,
             dateTimeLabelFormats: { // don't display the dummy year
                 month: '%e. %b',
                 year: '%b'
