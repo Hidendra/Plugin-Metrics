@@ -58,9 +58,9 @@ foreach ($plugin->getCustomColumns() as $id => $name)
 
     foreach ($dataPoints as $epoch => $dataPoint)
     {
-        $json['data'][intval($epoch)][intval($id)] = intval($dataPoint);
+        $json['data'][$epoch][$id] = $dataPoint;
     }
 }
 
 // output the json
-echo json_encode($json);
+echo json_encode($json, JSON_NUMERIC_CHECK);
