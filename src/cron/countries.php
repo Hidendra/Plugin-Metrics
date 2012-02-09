@@ -19,7 +19,7 @@ foreach (loadPlugins() as $plugin)
     $baseEpoch = normalizeTime();
 
     // we want the data for the last hour
-    $minimum = strtotime('-1 hour', $baseEpoch);
+    $minimum = strtotime('-30 minutes', $baseEpoch);
 
     foreach ($countries as $shortCode => $fullName)
     {

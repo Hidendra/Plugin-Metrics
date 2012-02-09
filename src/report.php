@@ -62,7 +62,7 @@ if ($server->getServerVersion() != $serverVersion)
 }
 
 // Check the player count
-if ($server->getPlayers() != $players)
+if ($players >= 0)
 {
     $server->setPlayers($players);
 }
