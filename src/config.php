@@ -4,7 +4,7 @@ error_reporting(0);
 @ini_set('display_errors', 0);
 
 // The amount of minutes between graphing intervals
-$config['graph']['interval'] = 10;
+$config['graph']['interval'] = 30;
 
 // main database info
 $config['database']['driver'] = 'mysql';

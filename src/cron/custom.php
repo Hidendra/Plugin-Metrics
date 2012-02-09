@@ -17,7 +17,7 @@ foreach (loadPlugins() as $plugin)
     $baseEpoch = normalizeTime();
 
     // we want the data for the last hour
-    $minimum = strtotime('-1 hour', $baseEpoch);
+    $minimum = strtotime('-30 minutes', $baseEpoch);
 
     // Loop through all of the possible columns
     foreach ($plugin->getCustomColumns() as $id => $name)

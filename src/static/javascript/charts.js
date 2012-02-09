@@ -139,7 +139,8 @@ $(document).ready(function() {
 
         chart: {
             renderTo: 'coverage_timeline',
-            type: 'spline'
+            type: 'spline',
+            zoomType: 'x'
         },
 
         title: {
@@ -156,6 +157,7 @@ $(document).ready(function() {
 
         xAxis: {
             type: 'datetime',
+            maxZoom: 1 * 3600000,
             dateTimeLabelFormats: { // don't display the dummy year
                 month: '%e. %b',
                 year: '%b'
@@ -224,7 +226,9 @@ $(document).ready(function() {
     customGraphOptions = {
 
         chart: {
-            renderTo: 'custom_timeline'
+            renderTo: 'custom_timeline',
+            type: 'spline',
+            zoomType: 'x'
         },
 
         title: {
@@ -241,6 +245,7 @@ $(document).ready(function() {
 
         xAxis: {
             type: 'datetime',
+            maxZoom: 1 * 3600000,
             dateTimeLabelFormats: { // don't display the dummy year
                 month: '%e. %b',
                 year: '%b'
