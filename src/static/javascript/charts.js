@@ -188,7 +188,7 @@ $(document).ready(function() {
                 type: 'all',
                 text: 'All'
             }],
-            selected: 2
+            selected: 3
         },
 
         xAxis: {
@@ -312,7 +312,7 @@ $(document).ready(function() {
                 type: 'all',
                 text: 'All'
             }],
-            selected: 2
+            selected: 3
         },
 
         xAxis: {
