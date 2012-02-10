@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -228,7 +229,15 @@ public class Metrics {
         URL url = new URL(BASE_URL + String.format(REPORT_URL, plugin.getDescription().getName()));
 
         // Connect to the website
-        URLConnection connection = url.openConnection();
+        URLConnection connection;
+
+        // Mineshafter creates a socks proxy, so we can safely bypass it
+        if (isMineshafterPresent()) {
+            connection = url.openConnection(Proxy.NO_PROXY);
+        } else {
+            connection = url.openConnection();
+        }
+
         connection.setDoOutput(true);
 
         // Write the data
@@ -257,6 +266,20 @@ public class Metrics {
             }
         }
         //if (response.startsWith("OK")) - We should get "OK" followed by an optional description if everything goes right
+    }
+
+    /**
+     * Check if mineshafter is present. If it is, we need to bypass it to send POST requests
+     *
+     * @return
+     */
+    private boolean isMineshafterPresent() {
+        try {
+            Class.forName("mineshafter.MineServer");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

@@ -99,11 +99,11 @@ if (count(($data = extractCustomData())) > 0) {
     }
 }
 
-// Get the timestamp for the last hour
-$lastHour = getLastHour();
+// Get the timestamp for the last graphing period
+$lastGraphUpdate = normalizeTime();
 
 // Is this the first time they updated this hour?
-if ($lastHour > $server->getUpdated())
+if ($lastGraphUpdate > $server->getUpdated())
 {
     echo 'OK This is your first update this hour.';
 } else
