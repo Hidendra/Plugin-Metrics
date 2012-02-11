@@ -20,10 +20,7 @@ function try_connect_database()
 
     try
     {
-        $pdo = new PDO("{$db['driver']}:host={$db['host']};dbname={$db['dbname']}", $db['username'], $db['password'], array(
-            PDO::ATTR_PERSISTENT => true
-        ));
-
+        $pdo = new PDO("{$db['driver']}:host={$db['host']};dbname={$db['dbname']}", $db['username'], $db['password']);
         return TRUE;
     } catch (PDOException $e)
     {

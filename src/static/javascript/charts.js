@@ -175,7 +175,7 @@ $(document).ready(function() {
             }, {
                 type: 'week',
                 count: 2,
-                text: '2y'
+                text: '2w'
             }, {
                 type: 'month',
                 count: 1,
@@ -299,7 +299,7 @@ $(document).ready(function() {
             }, {
                 type: 'week',
                 count: 2,
-                text: '2y'
+                text: '2w'
             }, {
                 type: 'month',
                 count: 1,
