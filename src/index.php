@@ -51,7 +51,7 @@ require_once ROOT . 'includes/func.php';
         <!-- Footer -->
         <div align="center" style="font-size: 11px; margin-top: 30px;">
             <p> Created by Hidendra. Plugins are owned by their respective authors, I simply provide statistical data. <br/>
-            <a href="http://forums.bukkit.org/threads/53449/">Bukkit thread</a>. Can't access the thread? irc.esper.net #metrics </p>
+            <a href="http://forums.bukkit.org/threads/53449/">Bukkit thread</a> | <a href="http://github.com/Hidendra/metrics.griefcraft.com">github</a> | IRC: irc.esper.net #metrics</p>
         </div>
     </body>
 </html>
