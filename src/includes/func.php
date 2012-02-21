@@ -4,12 +4,16 @@ if (!defined('ROOT')) exit('For science.');
 // Include classes
 require 'Server.class.php';
 require 'Plugin.class.php';
+require 'Cache.class.php';
 
 // Some constants
 define('SECONDS_IN_HOUR', 60 * 60);
 define('SECONDS_IN_HALFDAY', 60 * 60 * 12);
 define('SECONDS_IN_DAY', 60 * 60 * 24);
 define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
+
+// Connect to the caching daemon
+$cache = new Cache();
 
 /**
  * Get the epoch of the closest hour (downwards, never up)
@@ -18,6 +22,18 @@ define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
 function getLastHour()
 {
     return strtotime(date('F d Y H:00'));
+}
+
+/**
+ * Calculate the time until the next graph will be calculated
+ * @return int the unix timestamp of the next graph
+ */
+function timeUntilNextGraph()
+{
+    global $config;
+
+    $interval = $config['graph']['interval'];
+    return normalizeTime() + ($interval * 60);
 }
 
 /**

@@ -22,6 +22,15 @@ if ($plugin === NULL)
     exit('ERR Invalid plugin.');
 }
 
+// The key to use in the cache
+$cache_key = 'plugin-' . $plugin->getID() . '-country-piechart';
+
+// Is it cached?
+if ($ret = $cache->get($cache_key))
+{
+    exit($ret);
+}
+
 $json = array();
 $countries = loadCountries();
 
@@ -78,4 +87,6 @@ foreach ($servers as $epoch => $data)
 }
 
 // output the json
-echo json_encode($json);
+$output = json_encode($json);
+echo $output;
+$cache->set($cache_key, $output, timeUntilNextGraph() - time());

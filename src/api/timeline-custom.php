@@ -20,6 +20,15 @@ if ($plugin === NULL)
     exit('ERR Invalid plugin.');
 }
 
+// The key to use in the cache
+$cache_key = 'plugin-' . $plugin->getID() . '-timeline-custom';
+
+// Is it cached?
+if ($ret = $cache->get($cache_key))
+{
+    exit($ret);
+}
+
 if (!isset($_GET['hours']))
 {
     exit('ERR No amount of hours provided.');
@@ -63,4 +72,6 @@ foreach ($plugin->getCustomColumns() as $id => $name)
 }
 
 // output the json
-echo json_encode($json, JSON_NUMERIC_CHECK);
+$output = json_encode($json, JSON_NUMERIC_CHECK);
+echo $output;
+$cache->set($cache_key, $output, timeUntilNextGraph() - time());
