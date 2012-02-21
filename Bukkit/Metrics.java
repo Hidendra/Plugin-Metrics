@@ -56,14 +56,25 @@ public class Metrics {
      * Interface used to collect custom data for a plugin
      */
     public static abstract class Plotter {
-
+        String ColumnName;
+        
+        /**
+         * Set the column name for the plotted point
+         * 
+         * @param ColumnName
+         */
+    	public Plotter(String ColumnName) {
+    		this.ColumnName = ColumnName;
+    	}
+    	
         /**
          * Get the column name for the plotted point
          *
          * @return the plotted point's column name
          */
-        public abstract String getColumnName();
-
+        public String getColumnName() {
+        	return ColumnName;
+        }
         /**
          * Get the current value for the plotted point
          *
