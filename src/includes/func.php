@@ -41,7 +41,7 @@ function normalizeTime($time = -1)
     $denom = $interval * 60;
 
     // Round to the closest one
-    return round($time / $denom) * $denom;
+    return round(($time - ($denom / 2)) / $denom) * $denom;
 }
 
 /**
