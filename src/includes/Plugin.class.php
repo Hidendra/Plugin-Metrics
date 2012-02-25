@@ -19,7 +19,7 @@ class Plugin
      * The plugin's author
      * @var string
      */
-    private $author;
+    private $authors;
 
     /**
      * If the plugin is hidden from the main page
@@ -391,7 +391,7 @@ class Plugin
         $statement = $pdo->prepare('INSERT INTO Plugin (Name, Author, Hidden, GlobalHits) VALUES (:Name, :Author, :Hidden, :GlobalHits)');
 
         // Execute
-        $statement->execute(array(':Name' => $this->name, ':Author' => $this->author, ':Hidden' => $this->hidden,
+        $statement->execute(array(':Name' => $this->name, ':Author' => $this->authors, ':Hidden' => $this->hidden,
             ':GlobalHits' => $this->globalHits));
     }
 
@@ -406,7 +406,7 @@ class Plugin
         $statement = $pdo->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':Author' => $this->author,
+        $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':Author' => $this->authors,
             ':Hidden' => $this->hidden, ':GlobalHits' => $this->globalHits));
     }
 
@@ -439,14 +439,14 @@ class Plugin
         $this->name = $name;
     }
 
-    public function getAuthor()
+    public function getAuthors()
     {
-        return $this->author;
+        return $this->authors;
     }
 
-    public function setAuthor($author)
+    public function setAuthors($author)
     {
-        $this->author = $author;
+        $this->authors = $author;
     }
 
     public function isHidden()

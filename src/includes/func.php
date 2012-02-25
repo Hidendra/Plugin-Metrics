@@ -79,10 +79,63 @@ function getPostArgument($key)
 }
 
 /**
- * Extract custom data from the post request
+ * Extract custom data from the post request. Used in R5 and above
+ * Array format:
+ * {
+ *      "GraphName": {
+ *          "ColumnName": Value
+ *      },
+ *      ...
+ * }
  * @return array
  */
 function extractCustomData()
+{
+    global $config;
+
+    // What custom data is separated by
+    $separator = $config['graph']['separator'];
+
+    // Array of data to return
+    $data = array();
+
+    foreach ($_POST as $key => $value)
+    {
+        // verify we have a number as the key
+        if (!is_numeric($value)) {
+            continue;
+        }
+
+        // Haters gonna regex
+        // By default, something like this will match: C~~Percentages_for_blah~~Blah_blah
+        if (preg_match("/C{$separator}([a-zA-Z0-9_ ]+){$separator}([a-zA-Z0-9_ ]+)/", $key, $matches) == 0)
+        {
+            // No match found
+            continue;
+        }
+
+        // Extract the data :-)
+        $graphName = str_replace('_', ' ', $matches[1]);
+        $columnName = str_replace('_', ' ', $matches[2]);
+
+        // Set it :-)
+        $data[$graphName][$columnName] = $value;
+    }
+
+    return $data;
+}
+
+/**
+ * Extract custom data from the post request. Used in R4 and lower.
+ * Array format:
+ * {
+ *      "ColumnName": Value,
+ *      ...
+ * }
+ *
+ * @return array
+ */
+function extractCustomDataLegacy()
 {
     $custom = array();
 
@@ -158,7 +211,7 @@ function loadPlugins()
         $plugin = new Plugin();
         $plugin->setID($row['ID']);
         $plugin->setName($row['Name']);
-        $plugin->setAuthor($row['Author']);
+        $plugin->setAuthors($row['Author']);
         $plugin->setHidden($row['Hidden']);
         $plugin->setGlobalHits($row['GlobalHits']);
         $plugins[] = $plugin;
@@ -185,7 +238,7 @@ function loadPlugin($plugin)
         $plugin = new Plugin();
         $plugin->setID($row['ID']);
         $plugin->setName($row['Name']);
-        $plugin->setAuthor($row['Author']);
+        $plugin->setAuthors($row['Author']);
         $plugin->setHidden($row['Hidden']);
         $plugin->setGlobalHits($row['GlobalHits']);
         return $plugin;

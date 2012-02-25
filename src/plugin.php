@@ -43,7 +43,7 @@ echo '    <body>
         <h3>Plugin information</h3>
         <table>
             <tr> <td> Name </td> <td> ' . $name . ' </td> </tr>
-            <tr> <td> Author </td> <td> ' . $plugin->getAuthor() . ' </td> </tr>
+            <tr> <td> Author </td> <td> ' . $plugin->getAuthors() . ' </td> </tr>
             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
         </table>
 
