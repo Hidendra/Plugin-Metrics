@@ -370,7 +370,7 @@ public class Metrics {
      * Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first
      * key/value pair MUST be included manually, e.g:
      * <p>
-     *     String httpData = encode("guid") + "=" + encode("1234") + encodeDataPair("authors") + "..";
+     *     String httpData = encode("guid") + '=' + encode("1234") + encodeDataPair("authors") + "..";
      * </p>
      *
      * @param key
@@ -378,7 +378,7 @@ public class Metrics {
      * @return
      */
     private static String encodeDataPair(String key, String value) throws UnsupportedEncodingException {
-        return "&" + encode(key) + "=" + encode(value);
+        return '&' + encode(key) + '=' + encode(value);
     }
 
     /**
