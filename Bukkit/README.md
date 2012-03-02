@@ -11,7 +11,10 @@ Submitting stats to metrics is extremely easy. Add the `Metrics.java` file found
 
 ## Creating a plugin on the website
 
-When your plugin first connects it will create it automatically on the website. If you want the author tag set or your plugin hidden from the main page, please contact me.
+When your plugin first connects it will create it automatically on the website.
+
+To be able to access your plugin through the [admin panel](http://metrics.griefcraft.com/admin/) you will need to contact Hidendra to get your account linked to your plugin. The best place to do this is irc: `irc.esper.net #metrics`
+
 
 ## Usage
 
