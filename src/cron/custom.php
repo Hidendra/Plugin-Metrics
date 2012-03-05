@@ -5,7 +5,7 @@
 // stores the custom data obtained in the last hour into a graphable format
 
 define('ROOT', '../');
-define('MAX_COLUMNS', 30); // soft limit of max amount of columns to loop through per plugin
+define('MAX_COLUMNS', 50); // soft limit of max amount of columns to loop through per plugin
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
@@ -28,6 +28,7 @@ foreach (loadPlugins() as $plugin)
             break;
         }
 
+        // Sum the data for the current graphing period
         $sum = $plugin->sumCustomData($id, $minimum);
 
         $statement = $pdo->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, DataPoint, Epoch) VALUES (:Plugin, :ColumnID, :DataPoint, :Epoch)');

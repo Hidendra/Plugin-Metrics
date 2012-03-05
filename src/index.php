@@ -4,28 +4,27 @@ define('ROOT', './');
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
-?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+/// Templating
+$page_title = 'Plugin Metrics';
+$container_class = 'container';
+send_header();
 
-    <head>
-        <title>Metrics</title>
-        <link href="/static/css/main.css" rel="stylesheet" type="text/css" />
-    </head>
+echo '
+            <div class="row">
 
-    <body>
+                <div class="span6 offset3" style="text-align: center">
+                    <h2> Plugin Metrics </h2>
+                    <p> Plugins with zero active servers (last 24 hrs) are omitted from this list. </p>
 
-        <div align="center">
-            <h2> Plugin Metrics </h2>
-            <p> Plugins with zero active servers (last 24 hrs) are omitted from this list. </p>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <thead>
+                            <tr> <th> Plugin </th> <th> Servers (last 24 hrs) </th> </tr>
+                        </thead>
 
-            <table>
+                        <tbody>
+';
 
-                <tr> <th> Plugin </th> <th> Servers (last 24 hrs) </th> </tr>
-
-<?php
     foreach (loadPlugins() as $plugin)
     {
         if ($plugin->isHidden())
@@ -42,16 +41,14 @@ require_once ROOT . 'includes/func.php';
             continue;
         }
 
-        echo '<tr> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . number_format($servers) . ' </td> </tr>';
+        echo '                          <tr> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . number_format($servers) . ' </td> </tr>
+';
     }
-?>
-            </table>
-        </div>
+echo '
+                        </tbody>
+                    </table>
+                </div>
+            </div>';
 
-        <!-- Footer -->
-        <div align="center" style="font-size: 11px; margin-top: 30px;">
-            <p> Created by Hidendra. Plugins are owned by their respective authors, I simply provide statistical data. <br/>
-            <a href="http://forums.bukkit.org/threads/53449/">Bukkit thread</a> | <a href="http://github.com/Hidendra/metrics.griefcraft.com">github</a> | IRC: irc.esper.net #metrics</p>
-        </div>
-    </body>
-</html>
+/// Templating
+send_footer();

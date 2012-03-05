@@ -58,7 +58,7 @@ function generateCustomData()
             );
         });
 
-        customGraphOptions.title.text = 'Custom data for ' + pluginName;
+        customGraphOptions.subtitle.text = 'for ' + pluginName + ' via http://metrics.griefcraft.com';
         customGraph = new Highcharts.StockChart(customGraphOptions);
     });
 }
@@ -100,7 +100,8 @@ function generateCoverage()
             },
             data: allPlayers
         });
-        globalStatisticsOptions.title.text = 'Global Statistics for ' + pluginName;
+
+        globalStatisticsOptions.subtitle.text = 'for ' + pluginName + ' via http://metrics.griefcraft.com';
         globalStatistics = new Highcharts.StockChart(globalStatisticsOptions);
     });
 }
@@ -127,7 +128,7 @@ function generateCountryPieChart()
             data: data
         });
 
-        countryPieChartOptions.title.text = 'Country Statistics for ' + pluginName;
+        countryPieChartOptions.subtitle.text = 'for ' + pluginName + ' via http://metrics.griefcraft.com';
         countryPieChart = new Highcharts.Chart(countryPieChartOptions);
     });
 }
@@ -268,7 +269,7 @@ $(document).ready(function() {
         },
 
         title: {
-            text: 'Custom Graphing'
+            text: 'Custom Data'
         },
 
         subtitle: {
@@ -390,7 +391,7 @@ $(document).ready(function() {
             plotShadow: false
         },
         title: {
-            text: 'Country Statistics'
+            text: 'Server Locations'
         },
         subtitle: {
             text: 'via http://metrics.griefcraft.com'

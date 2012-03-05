@@ -1,7 +1,7 @@
 <?php
 
-error_reporting(0);
-@ini_set('display_errors', 0);
+// Caching
+$config['cache']['enabled'] = true;
 
 // The amount of minutes between graphing intervals
 $config['graph']['interval'] = 30;
@@ -12,7 +12,7 @@ $config['graph']['separator'] = '~~';
 // main database info
 $config['database']['driver'] = 'mysql';
 $config['database']['host'] = 'localhost';
-$config['database']['dbname'] = 'lwc';
+$config['database']['dbname'] = 'metrics';
 
 // auth credentials for the database if it requires it
 $config['database']['username'] = 'root';

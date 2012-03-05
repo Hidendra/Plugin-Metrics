@@ -1,3 +1,18 @@
+CREATE TABLE IF NOT EXISTS Author (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  -- Their username
+  Name VARCHAR(30) NOT NULL,
+
+  -- Sha1 hashed password
+  Password VARCHAR(40) NOT NULL,
+
+  -- The unix timestamp when the author was registered at
+  Created INT NOT NULL,
+
+  PRIMARY KEY (ID)
+) ENGINE = InnoDB;
+
 CREATE TABLE IF NOT EXISTS Plugin (
   ID INT NOT NULL AUTO_INCREMENT,
 
@@ -15,6 +30,20 @@ CREATE TABLE IF NOT EXISTS Plugin (
 
   --
   PRIMARY KEY (ID)
+) ENGINE = InnoDB;
+
+-- Plugins an author can access
+CREATE TABLE IF NOT EXISTS AuthorACL (
+  -- FK -> Author.ID
+  Author INT NOT NULL,
+
+  -- FK -> Plugin.ID
+  Plugin INT NOT NULL,
+
+  FOREIGN KEY (Author) REFERENCES Author (ID),
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
+
+  PRIMARY KEY (Author, Plugin)
 ) ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS Server (
@@ -116,6 +145,29 @@ CREATE TABLE IF NOT EXISTS CustomColumn (
 
   --
   INDEX (Name),
+
+  PRIMARY KEY (ID)
+);
+
+-- Custom graphs
+CREATE TABLE IF NOT EXISTS Graph (
+  ID INT NOT NULL AUTO_INCREMENT,
+
+  --
+  Plugin INT NOT NULL,
+
+  -- The type of graph (ordinal value mapped to the enum)
+  Type INT NOT NULL,
+
+  -- The graph's name
+  Name VARCHAR(50) NOT NULL,
+
+  -- Indexes
+  INDEX(Plugin),
+  INDEX(Type),
+  INDEX(Name),
+
+  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
 
   PRIMARY KEY (ID)
 );

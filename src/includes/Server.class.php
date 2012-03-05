@@ -132,6 +132,7 @@ class Server
      *
      * @param $columnName string
      * @return int
+     * @deprecated
      */
     public function getCustomColumnID($columnName, $attemptedToCreate = false) {
         global $pdo;
@@ -148,7 +149,7 @@ class Server
 
         if ($attemptedToCreate)
         {
-            throw new Exception("Failed to create custom column: $columnName");
+            error_fquit("Failed to create custom column: $columnName");
         }
 
         // Nope...
@@ -163,6 +164,7 @@ class Server
      *
      * @param $columnName string
      * @param $value int
+     * @deprecated
      */
     public function addCustomData($columnName, $value) {
         global $pdo;
@@ -188,7 +190,7 @@ class Server
         $statement->execute(array(
             ':Server' => $this->id,
             ':Plugin' => $this->plugin,
-            ':ColumnID' => $this->getCustomColumnID($columnName),
+            ':ColumnID' => $columnID,
             ':DataPoint' => $value,
             ':Updated' => time()
         ));

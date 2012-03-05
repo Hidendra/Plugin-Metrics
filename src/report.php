@@ -17,7 +17,8 @@ if (!preg_match('/[a-zA-Z0-9 ]/', $_GET['plugin']))
 }
 
 // Load the plugin
-$plugin = loadPlugin($_GET['plugin']);
+$pluginName = preg_replace('/[^a-zA-Z0-9_. ]+/', '', $_GET['plugin']);
+$plugin = loadPlugin($pluginName);
 
 // Begin extracting arguments
 $guid = getPostArgument('guid');
@@ -31,16 +32,11 @@ $revision = isset($_POST['revision']) ? $_POST['revision'] : 4;
 // Added in R5
 $authors = isset($_POST['authors']) ? $_POST['authors'] : '';
 
-// Validate the authors text
-if (!preg_match('/[a-zA-Z0-9_, ]/', $authors))
-{
-    // The authors text is considered to be INVALID and potentially dangerous
-    // Just set to to be empty and get on with our day
-    $authors = '';
-} else
-{
-    $authors = str_replace('_', ' ', $authors);
-}
+// Cleanse the authors text
+$authors = preg_replace('/[^a-zA-Z0-9_,\- ]+/', '', $authors);
+
+// replace underscores with spaces
+$authors = str_replace('_', ' ', $authors);
 
 // simple user agent check to block the lazy
 if (!preg_match('/Java/', $_SERVER['HTTP_USER_AGENT'])) {
@@ -51,7 +47,7 @@ if (!preg_match('/Java/', $_SERVER['HTTP_USER_AGENT'])) {
 if ($plugin === NULL)
 {
     $plugin = new Plugin();
-    $plugin->setName($_GET['plugin']);
+    $plugin->setName($pluginName);
     $plugin->setAuthors('');
     $plugin->setHidden(0);
     $plugin->setGlobalHits(0);
@@ -129,24 +125,33 @@ if (isset($_SERVER['GEOIP_COUNTRY_CODE']))
 if ($revision >= 5)
 {
     if (count(($data = extractCustomData())) > 0) {
-        foreach ($data as $graph => $plotters)
+        foreach ($data as $graphName => $plotters)
         {
-            foreach ($plotters as $k => $v)
+            // Get or create the graph
+            $graph = $plugin->getOrCreateGraph($graphName);
+
+            foreach ($plotters as $columnName => $value)
             {
-                // TODO add the data to graph $graph instead
-                $server->addCustomData($k, $v);
+                // Ensure the column is set to this graph
+                // and also ensure it's even in the graph
+                $result = $graph->verifyColumn($columnName);
+
+                // Now add the data to the given column
+                $graph->addCustomData($server, $columnName, $value);
             }
-            // $server->addCustomData($k, $v);
         }
     }
 }
 // R4 and below
-elseif ($revision == 4)
+else
 {
     if (count(($data = extractCustomDataLegacy())) > 0) {
-        foreach ($data as $k => $v)
+        $graph = $plugin->getOrCreateGraph('Default', false, 1);
+
+        foreach ($data as $columnName => $value)
         {
-            $server->addCustomData($k, $v);
+            $graph->verifyColumn($columnName, false, false);
+            $graph->addCustomData($server, $columnName, $value);
         }
     }
 }

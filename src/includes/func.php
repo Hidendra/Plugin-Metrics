@@ -1,10 +1,22 @@
 <?php
 if (!defined('ROOT')) exit('For science.');
 
+session_start();
+
 // Include classes
 require 'Server.class.php';
 require 'Plugin.class.php';
+require 'DataGenerator.class.php';
 require 'Cache.class.php';
+
+// graphing libs
+require 'Graph.class.php';
+require 'highroller/HighRoller.php';
+require 'highroller/HighRollerSeriesData.php';
+require 'highroller/HighRollerSplineChart.php';
+require 'highroller/HighRollerAreaChart.php';
+require 'highroller/HighRollerColumnChart.php';
+require 'highroller/HighRollerPieChart.php';
 
 // Some constants
 define('SECONDS_IN_HOUR', 60 * 60);
@@ -14,6 +26,35 @@ define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
 
 // Connect to the caching daemon
 $cache = new Cache();
+
+/**
+ * Log an error and force end the process
+ * @param $message
+ */
+function error_fquit($message)
+{
+    error_log($message);
+    exit;
+}
+
+/**
+ * Checks a PDO statement for errors and if any exist, the script will exist and log to the error log
+ *
+ * @param $statement PDOStatement
+ */
+function check_statement($statement)
+{
+    $errorInfo = $statement->errorInfo();
+
+    // If the first element is 0, it's good
+    if ($errorInfo[0] == 0)
+    {
+        return;
+    }
+
+    // Some error has occurred, log it and quit
+    error_fquit('FQUIT Statement \"' . $statement->queryString . '" errorInfo() => ' . print_r($errorInfo, true));
+}
 
 /**
  * Get the epoch of the closest hour (downwards, never up)
@@ -72,7 +113,7 @@ function getPostArgument($key)
     // check
     if (!isset($_POST[$key]))
     {
-        exit('ERR Missing arguments.');
+        exit('ERR Missing arguments');
     }
 
     return $_POST[$key];
@@ -108,7 +149,7 @@ function extractCustomData()
 
         // Haters gonna regex
         // By default, something like this will match: C~~Percentages_for_blah~~Blah_blah
-        if (preg_match("/C{$separator}([a-zA-Z0-9_ ]+){$separator}([a-zA-Z0-9_ ]+)/", $key, $matches) == 0)
+        if (preg_match("/C$separator([a-zA-Z0-9_ ]+)$separator([a-zA-Z0-9_ ]+)/", $key, $matches) == 0)
         {
             // No match found
             continue;
@@ -194,27 +235,46 @@ function loadCountries()
 }
 
 /**
+ * Resolve a plugin object from a row
+ *
+ * @param $row
+ * @return Plugin
+ */
+function resolvePlugin($row)
+{
+    $plugin = new Plugin();
+    $plugin->setID($row['ID']);
+    $plugin->setName($row['Name']);
+    $plugin->setAuthors($row['Author']);
+    $plugin->setHidden($row['Hidden']);
+    $plugin->setGlobalHits($row['GlobalHits']);
+
+    return $plugin;
+}
+
+/**
  * Loads all of the plugins from the database
  *
  * @return Plugin[]
  */
-function loadPlugins()
+function loadPlugins($alphabetical = false)
 {
     global $pdo;
     $plugins = array();
 
-    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY (SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = Plugin.ID AND Updated >= ?) DESC');
+    if ($alphabetical)
+    {
+        $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY Name ASC');
+    } else
+    {
+        $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY (SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = Plugin.ID AND Updated >= ?) DESC');
+    }
     $statement->execute(array(time() - SECONDS_IN_DAY));
 
     while ($row = $statement->fetch())
     {
-        $plugin = new Plugin();
-        $plugin->setID($row['ID']);
-        $plugin->setName($row['Name']);
-        $plugin->setAuthors($row['Author']);
-        $plugin->setHidden($row['Hidden']);
-        $plugin->setGlobalHits($row['GlobalHits']);
-        $plugins[] = $plugin;
+
+        $plugins[] = resolvePlugin($row);
     }
 
     return $plugins;
@@ -235,14 +295,218 @@ function loadPlugin($plugin)
 
     if ($row = $statement->fetch())
     {
-        $plugin = new Plugin();
-        $plugin->setID($row['ID']);
-        $plugin->setName($row['Name']);
-        $plugin->setAuthors($row['Author']);
-        $plugin->setHidden($row['Hidden']);
-        $plugin->setGlobalHits($row['GlobalHits']);
-        return $plugin;
+        return resolvePlugin($row);
     }
 
     return NULL;
+}
+
+/////////////////////////////////
+/// User interface functions  ///
+/////////////////////////////////
+
+/**
+ * Checks if a string ends with the given string
+ *
+ * @param $needle
+ * @param $haystack
+ * @return bool TRUE if the haystack ends with the given needle
+ */
+function str_endswith($needle, $haystack)
+{
+    return strrpos($haystack, $needle) === strlen($haystack)-strlen($needle);
+}
+
+/**
+ * Sender the header html file to the user
+ */
+function send_header()
+{
+    include ROOT . 'assets/template/header.php';
+}
+
+/**
+ * Send the footer html file to the user
+ */
+function send_footer()
+{
+    include ROOT . 'assets/template/footer.php';
+}
+
+
+/////////////////////////////////
+/// Admin interface functions ///
+/////////////////////////////////
+
+/**
+ * Output a formatted error
+ *
+ * @param $msg the error to send
+ */
+function err($msg)
+{
+    echo '
+    <div class="row-fluid">
+        <span class="alert alert-error">
+            ' . $msg . '
+        </span>
+    </div>';
+}
+
+function send_admin_sidebar()
+{
+    echo '
+                <script type="text/javascript">
+
+                    $(function() {
+                        // pjaxify
+                        $("a").pjax("#plugin-content");
+                    });
+
+                </script>
+
+                <div class="span2">
+                    <div class="well sidebar-nav">
+                        <ul class="nav nav-list">
+                            <li class="nav-header">Your plugins</li>';
+
+    // Go through each of the plugins they can access
+    foreach (get_accessible_plugins() as $plugin)
+    {
+        // The plugin's name
+        $pluginName = $plugin->getName();
+
+        echo '
+                            <li><a href="/admin/plugin/' . $pluginName . '/view">' . $pluginName . '</a></li>';
+    }
+
+echo '
+                        </ul>
+                    </div>
+                </div>
+    ';
+}
+
+/**
+ * Check if the given plugin can be accessed.
+ *
+ * @param $plugin Plugin or string
+ * @return TRUE if the player can administrate the plugin
+ */
+function can_admin_plugin($plugin)
+{
+    if ($plugin instanceof Plugin)
+    {
+        $plugin_obj = $plugin;
+    } else if ($plugin instanceof string)
+    {
+        $plugin_obj = loadPlugin($plugin);
+    }
+
+    // is it null??
+    if ($plugin_obj == null)
+    {
+        return FALSE;
+    }
+
+    // iterate through our accessible plugins
+    foreach (get_accessible_plugins() as $a_plugin)
+    {
+        if ($a_plugin->getName() == $plugin_obj->getName())
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/**
+ * Get all of the plugins the currently logged in user can access
+ *
+ * @return array Plugin
+ */
+function get_accessible_plugins()
+{
+    global $_SESSION , $pdo;
+
+    // The plugins we can access
+    $plugins = array();
+
+    // Make sure they are plugged in
+    if (!is_loggedin())
+    {
+        return $plugins;
+    }
+
+    // Query for all of the plugins
+    $statement = $pdo->prepare('SELECT Plugin, ID, Name, Plugin.Author, Hidden, GlobalHits FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
+    $statement->execute(array($_SESSION['uid']));
+
+    while ($row = $statement->fetch())
+    {
+        $plugins[] = resolvePlugin($row);
+    }
+
+    return $plugins;
+}
+
+/**
+ * Check a login if it is correct
+ *
+ * @param $username
+ * @param $password
+ * @return string their correct username if the login is correct, otherwise FALSE
+ */
+function check_login($username, $password)
+{
+    global $pdo , $_SESSION;
+
+    // Create the query
+    $statement = $pdo->prepare('SELECT ID, Name, Password FROM Author WHERE Name = ?');
+    $statement->execute(array($username));
+
+    if ($row = $statement->fetch())
+    {
+        $real_username = $row['Name'];
+        $hashed_password = $row['Password'];
+
+        // Verify the password
+        if (sha1($password) != $hashed_password)
+        {
+            return FALSE;
+        }
+
+        // Set some stuff
+        $_SESSION['uid'] = $row['ID'];
+
+        // Authenticated
+        return $real_username;
+    }
+
+    return FALSE;
+}
+
+/**
+ * Check if the user is logged in
+ * @return bool TRUE if the user is logged in
+ */
+function is_loggedin()
+{
+    global $_SESSION;
+    return isset($_SESSION['loggedin']);
+}
+
+/**
+ * Ensure the user is logged in
+ */
+function ensure_loggedin()
+{
+    global $_SESSION;
+
+    if (!isset($_SESSION['loggedin']))
+    {
+        header('Location: /admin/login.php');
+        exit;
+    }
 }

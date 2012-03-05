@@ -1,0 +1,14 @@
+
+
+A thank you towards the authors of the following libraries and technologies that have been utilized in one way or another:
+-Backend:
+ - memcached
+ - mysql
+ - php
+ - highroller (php wrapper for highcharts)
+-Frontend:
+ - highcharts and highstock
+ - jquery
+ - jqueryui
+ - pjax
+ - bootstrap, by twitter

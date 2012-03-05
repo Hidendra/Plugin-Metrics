@@ -1,6 +1,9 @@
 <?php
 if (!defined('ROOT')) exit('For science.');
 
+// Minimum countries required to display 'Others'
+define('MINIMUM_FOR_OTHERS', 15);
+
 class Plugin
 {
     /**
@@ -34,6 +37,152 @@ class Plugin
     private $globalHits;
 
     /**
+     * Get the key is prefixed to entries stored in the cache
+     * @return string
+     */
+    private function cacheKey()
+    {
+        return 'plugin-' . $this->id;
+    }
+
+    /**
+     * Loads a graph from the database and if it does not exist, initialize an empty graph in the
+     * database and return it
+     *
+     * @param $name
+     * @return Graph
+     */
+    public function getOrCreateGraph($name, $attemptedToCreate = false, $active = 0)
+    {
+        global $pdo;
+
+        // Try to get it from the database
+        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Active Name FROM Graph WHERE Plugin = ? AND Name = ?');
+        $statement->execute(array($this->id, $name));
+
+        if ($row = $statement->fetch())
+        {
+            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['Active']);
+        }
+
+        if ($attemptedToCreate)
+        {
+            error_fquit('Failed to create graph for "' . $name . '"');
+        }
+
+        $statement = $pdo->prepare('INSERT INTO Graph (Plugin, Type, Name, Active) VALUES(:Plugin, :Type, :Name, :Active)');
+        $statement->execute(array(':Plugin' => $this->id, ':Type' => GraphType::Line, ':Name' => $name, ':Active' => $active));
+
+        // reselect it
+        return $this->getOrCreateGraph($name, TRUE);
+    }
+
+    /**
+     * Gets all of the active graphs for the plugin
+     * @return Graph[]
+     */
+    public function getActiveGraphs()
+    {
+        global $pdo;
+
+        // The graphs to return
+        $graphs = array();
+
+        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ? AND Active = 1');
+        $statement->execute(array($this->id));
+
+        while ($row = $statement->fetch())
+        {
+            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['Active']);
+        }
+
+        return $graphs;
+    }
+
+    /**
+     * Set a key and value unique to this plugin into the caching daemon
+     *
+     * @param $key
+     * @param $value
+     * @param $expire Seconds to expire the cached value in. Defaults to the next caching interval
+     * @return TRUE on success and FALSE on failure
+     */
+    public function cacheSet($key, $value, $expire = CACHE_UNTIL_NEXT_GRAPH)
+    {
+        global $cache;
+        return $cache->set($this->cacheKey() . $key, $value, $expire);
+    }
+
+    /**
+     * Get a key from the caching daemon
+     *
+     * @param $key
+     * @return the object returned from the cache
+     */
+    public function cacheGet($key)
+    {
+        global $cache;
+        return $cache->get($this->cacheKey() . $key);
+    }
+
+    /**
+     * Get a server by its GUID. If not found, this will create it.
+     * @param $guid
+     * @param $attemptedToCreate
+     */
+    public function getOrCreateServer($guid, $attemptedToCreate = false)
+    {
+        global $pdo;
+
+        // Try to select it first
+        $statement = $pdo->prepare('SELECT ID, GUID, ServerVersion, Version, Country, Hits, Created, ServerPlugin.Plugin, ServerPlugin.Version, ServerPlugin.Updated FROM Server
+                                    LEFT OUTER JOIN ServerPlugin ON (ServerPlugin.Server = Server.ID AND ServerPlugin.Plugin = :Plugin)
+                                    WHERE GUID = :GUID');
+        $statement->execute(array(':GUID' => $guid, ':Plugin' => $this->id));
+
+        if ($row = $statement->fetch())
+        {
+            // Exists, begin creating it
+            $server = new Server();
+            $server->setID($row['ID']);
+            $server->setPlugin($this->id);
+            $server->setGUID($row['GUID']);
+            $server->setCountry($row['Country']);
+            $server->setPlayers($row['Players']);
+            $server->setServerVersion($row['ServerVersion']);
+            $server->setCurrentVersion($row['Version']);
+            $server->setHits($row['Hits']);
+            $server->setCreated($row['Created']);
+            $server->setUpdated($row['Updated']);
+
+            // verify we have the plugin
+            $server->verifyPlugin($this->id);
+
+            return $server;
+        }
+
+        // Did we already try to create it?
+        if ($attemptedToCreate)
+        {
+            error_fquit($this->name . ': Failed to create server for "' . $guid . '"');
+        }
+
+        // It doesn't exist so we are going to create it ^^
+        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, Country, ServerVersion, Hits, Created) VALUES(:Plugin, :GUID, :Players, :Country, :ServerVersion, :Hits, :Created)');
+        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':Country' => 'ZZ', ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
+
+        // get the last id
+        $serverId = $pdo->lastInsertId();
+
+        // insert it into ServerPlugin
+        $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
+        $statement->execute(array(':Server' => $serverId, ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
+
+        // reselect it
+        return $this->getOrCreateServer($guid, TRUE);
+    }
+
+    /**
      * Get an array of possible versions
      * @return array
      */
@@ -56,6 +205,7 @@ class Plugin
     /**
      * Get all of the custom columns available for grapinh for this plugin
      * @return array, [id] => name
+     * @deprecated
      */
     public function getCustomColumns()
     {
@@ -80,6 +230,7 @@ class Plugin
      * @param $columnID int
      * @param $min int
      * @return int
+     * @deprecated
      */
     public function sumCustomData($columnID, $min, $max = -1)
     {
@@ -91,12 +242,11 @@ class Plugin
             $max = time();
         }
 
-        $data = array();
         $statement = $pdo->prepare('SELECT SUM(DataPoint) FROM CustomData WHERE ColumnID = ? AND Plugin = ? AND Updated >= ? AND Updated <= ?');
         $statement->execute(array($columnID, $this->id, $min, $max));
 
         $row = $statement->fetch();
-        return $row != null ? $row[0] : 0;
+        return is_numeric($row[0]) ? $row[0] : 0;
     }
 
     /**
@@ -116,7 +266,7 @@ class Plugin
         }
 
         $ret = array();
-        $statement = $pdo->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement = $pdo->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -254,7 +404,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $pdo->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement = $pdo->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -283,7 +433,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $pdo->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement = $pdo->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -312,7 +462,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $pdo->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ?');
+        $statement = $pdo->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -321,63 +471,6 @@ class Plugin
         }
 
         return $ret;
-    }
-
-    /**
-     * Get a server by its GUID. If not found, this will create it.
-     * @param $guid
-     * @param $attemptedToCreate
-     */
-    public function getOrCreateServer($guid, $attemptedToCreate = false)
-    {
-        global $pdo;
-
-        // Try to select it first
-        $statement = $pdo->prepare('SELECT ID, GUID, ServerVersion, Version, Country, Hits, Created, ServerPlugin.Plugin, ServerPlugin.Version, ServerPlugin.Updated FROM Server
-                                    LEFT OUTER JOIN ServerPlugin ON (ServerPlugin.Server = Server.ID AND ServerPlugin.Plugin = :Plugin)
-                                    WHERE GUID = :GUID');
-        $statement->execute(array(':GUID' => $guid, ':Plugin' => $this->id));
-
-        if ($row = $statement->fetch())
-        {
-            // Exists, begin creating it
-            $server = new Server();
-            $server->setID($row['ID']);
-            $server->setPlugin($this->id);
-            $server->setGUID($row['GUID']);
-            $server->setCountry($row['Country']);
-            $server->setPlayers($row['Players']);
-            $server->setServerVersion($row['ServerVersion']);
-            $server->setCurrentVersion($row['Version']);
-            $server->setHits($row['Hits']);
-            $server->setCreated($row['Created']);
-            $server->setUpdated($row['Updated']);
-
-            // verify we have the plugin
-            $server->verifyPlugin($this->id);
-
-            return $server;
-        }
-
-        // Did we already try to create it?
-        if ($attemptedToCreate)
-        {
-            exit('ERR Failed to create server for GUID.');
-        }
-
-        // It doesn't exist so we are going to create it ^^
-        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, Country, ServerVersion, Hits, Created) VALUES(:Plugin, :GUID, :Players, :Country, :ServerVersion, :Hits, :Created)');
-        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':Country' => 'ZZ', ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
-
-        // get the last id
-        $serverId = $pdo->lastInsertId();
-
-        // insert it into ServerPlugin
-        $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
-        $statement->execute(array(':Server' => $serverId, ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
-
-        // reselect it
-        return $this->getOrCreateServer($guid, TRUE);
     }
 
     /**
