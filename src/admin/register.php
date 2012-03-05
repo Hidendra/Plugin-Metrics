@@ -15,7 +15,7 @@ if (isset($_POST['submit']))
     $password = $_POST['password'];
     $password2 = $_POST['password2'];
 
-    if (strlen($password) < 3 || $password != $password2  || $password != $username || !preg_match('/[a-zA-Z0-9 ]/', $username))
+    if (strlen($password) < 3 || $password != $password2  || $password == $username || !preg_match('/[a-zA-Z0-9 ]/', $username))
     {
         err ('Care to try again? :-)');
         send_registration();
