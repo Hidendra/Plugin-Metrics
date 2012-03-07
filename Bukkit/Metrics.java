@@ -327,11 +327,11 @@ public class Metrics {
     }
 
     /**
-     * Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first
-     * key/value pair MUST be included manually, e.g:
-     * <p>
+     * <p>Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first
+     * key/value pair MUST be included manually, e.g:</p>
+     * <code>
      * String httpData = encode("guid") + '=' + encode("1234") + encodeDataPair("authors") + "..";
-     * </p>
+     * </code>
      *
      * @param key
      * @param value
