@@ -184,7 +184,9 @@ public class Metrics {
     }
 
     /**
-     * Begin measuring statistics for the plugin
+     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
+     * the initial data to the metrics backend, and then after that it will post in increments of
+     * PING_INTERVAL * 1200 ticks.
      */
     public void start() {
         // Did we opt out?
@@ -201,7 +203,7 @@ public class Metrics {
                     // We use the inverse of firstPost because if it is the first time we are posting,
                     // it is not a interval ping, so it evaluates to FALSE
                     // Each time thereafter it will evaluate to TRUE, i.e PING!
-                    postPlugin(plugin, !firstPost);
+                    postPlugin(!firstPost);
 
                     // After the first post we set firstPost to false
                     // Each post thereafter will be a ping
@@ -215,10 +217,8 @@ public class Metrics {
 
     /**
      * Generic method that posts a plugin to the metrics website
-     *
-     * @param plugin
      */
-    private void postPlugin(Plugin plugin, boolean isPing) throws IOException {
+    private void postPlugin(boolean isPing) throws IOException {
         // The plugin's description file containg all of the plugin data such as name, version, author, etc
         PluginDescriptionFile description = plugin.getDescription();
 
@@ -263,7 +263,7 @@ public class Metrics {
         }
 
         // Create the url
-        URL url = new URL(BASE_URL + String.format(REPORT_URL, plugin.getDescription().getName()));
+        URL url = new URL(BASE_URL + String.format(REPORT_URL, description.getName()));
 
         // Connect to the website
         URLConnection connection;
