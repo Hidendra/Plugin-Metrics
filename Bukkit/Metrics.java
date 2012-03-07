@@ -42,14 +42,25 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * <p>
+ * The metrics class obtains data about a plugin and submits statistics about it to the metrics backend.
+ * </p>
+ * <p>
+ * Public methods provided by this class:
+ * </p>
+ * <code>
+ * Graph createGraph(String name); <br/>
+ * void addCustomData(Metrics.Plotter plotter); <br/>
+ * void start(); <br/>
+ * </code>
+ */
 public class Metrics {
 
     /**
@@ -84,14 +95,19 @@ public class Metrics {
     private final static int PING_INTERVAL = 10;
 
     /**
-     * A map of all of the graphs for each plugin
+     * The plugin this metrics submits for
      */
-    private Map<Plugin, Set<Graph>> graphs = Collections.synchronizedMap(new HashMap<Plugin, Set<Graph>>());
+    private final Plugin plugin;
 
     /**
-     * A convenient map of the default Graph objects (used by addCustomData mainly)
+     * All of the custom graphs to submit to metrics
      */
-    private Map<Plugin, Graph> defaultGraphs = Collections.synchronizedMap(new HashMap<Plugin, Graph>());
+    private final Set<Graph> graphs = Collections.synchronizedSet(new HashSet<Graph>());
+
+    /**
+     * The default graph, used for addCustomData when you don't want a specific graph
+     */
+    private final Graph defaultGraph = new Graph("Default");
 
     /**
      * The plugin configuration file
@@ -101,9 +117,15 @@ public class Metrics {
     /**
      * Unique server id
      */
-    private String guid;
+    private final String guid;
 
-    public Metrics() throws IOException {
+    public Metrics(Plugin plugin) throws IOException {
+        if (plugin == null) {
+            throw new IllegalArgumentException("Plugin cannot be null");
+        }
+
+        this.plugin = plugin;
+
         // load the config
         File file = new File(CONFIG_FILE);
         configuration = YamlConfiguration.loadConfiguration(file);
@@ -126,21 +148,16 @@ public class Metrics {
      * Construct and create a Graph that can be used to separate specific plotters to their own graphs
      * on the metrics website. Plotters can be added to the graph object returned.
      *
-     * @param plugin
-     * @param type
      * @param name
      * @return Graph object created. Will never return NULL under normal circumstances unless bad parameters are given
      */
-    public Graph createGraph(Plugin plugin, Graph.Type type, String name) {
-        if (plugin == null || type == null || name == null) {
-            throw new IllegalArgumentException("All arguments must not be null");
+    public Graph createGraph(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Graph name cannot be null");
         }
 
         // Construct the graph object
-        Graph graph = new Graph(type, name);
-
-        // Get the graphs for the plugin
-        Set<Graph> graphs = getOrCreateGraphs(plugin);
+        Graph graph = new Graph(name);
 
         // Now we can add our graph
         graphs.add(graph);
@@ -150,28 +167,26 @@ public class Metrics {
     }
 
     /**
-     * Adds a custom data plotter for a given plugin
+     * Adds a custom data plotter to the default graph
      *
-     * @param plugin
      * @param plotter
      */
-    public void addCustomData(Plugin plugin, Plotter plotter) {
-        // The default graph for the plugin
-        Graph graph = getOrCreateDefaultGraph(plugin);
+    public void addCustomData(Plotter plotter) {
+        if (plotter == null) {
+            throw new IllegalArgumentException("Plotter cannot be null");
+        }
 
         // Add the plotter to the graph o/
-        graph.addPlotter(plotter);
+        defaultGraph.addPlotter(plotter);
 
         // Ensure the default graph is included in the submitted graphs
-        getOrCreateGraphs(plugin).add(graph);
+        graphs.add(defaultGraph);
     }
 
     /**
-     * Begin measuring a plugin
-     *
-     * @param plugin
+     * Begin measuring statistics for the plugin
      */
-    public void beginMeasuringPlugin(final Plugin plugin) {
+    public void start() {
         // Did we opt out?
         if (configuration.getBoolean("opt-out", false)) {
             return;
@@ -219,12 +234,9 @@ public class Metrics {
             data += encodeDataPair("ping", "true");
         }
 
-        // Add any custom data available for the plugin
-        Set<Graph> graphs = getOrCreateGraphs(plugin);
-
         // Acquire a lock on the graphs, which lets us make the assumption we also lock everything
         // inside of the graph (e.g plotters)
-        synchronized(graphs) {
+        synchronized (graphs) {
             Iterator<Graph> iter = graphs.iterator();
 
             while (iter.hasNext()) {
@@ -301,42 +313,6 @@ public class Metrics {
     }
 
     /**
-     * Get or create the Set of graphs for a specific plugin
-     *
-     * @param plugin
-     * @return
-     */
-    private Set<Graph> getOrCreateGraphs(Plugin plugin) {
-        Set<Graph> theGraphs = graphs.get(plugin);
-
-        // Create the Set if it does not already exist
-        if (theGraphs == null) {
-            theGraphs = Collections.synchronizedSet(new HashSet<Graph>());
-            graphs.put(plugin, theGraphs);
-        }
-
-        return theGraphs;
-    }
-
-    /**
-     * Get the default graph for a plugin and if it does not exist, create one
-     *
-     * @param plugin
-     * @return
-     */
-    private Graph getOrCreateDefaultGraph(Plugin plugin) {
-        Graph graph = defaultGraphs.get(plugin);
-
-        // Not yet created :(
-        if (graph == null) {
-            graph = new Graph(Graph.Type.Line, "Default");
-            defaultGraphs.put(plugin, graph);
-        }
-
-        return graph;
-    }
-
-    /**
      * Check if mineshafter is present. If it is, we need to bypass it to send POST requests
      *
      * @return
@@ -354,7 +330,7 @@ public class Metrics {
      * Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first
      * key/value pair MUST be included manually, e.g:
      * <p>
-     *     String httpData = encode("guid") + '=' + encode("1234") + encodeDataPair("authors") + "..";
+     * String httpData = encode("guid") + '=' + encode("1234") + encodeDataPair("authors") + "..";
      * </p>
      *
      * @param key
@@ -381,41 +357,6 @@ public class Metrics {
     public static class Graph {
 
         /**
-         * The graph's type that will be visible on the website
-         */
-        public static enum Type {
-
-            /**
-             * A simple line graph which also includes a scrollable timeline viewer to view
-             * as little or as much of the data as possible.
-             */
-            Line,
-
-            /**
-             * An area graph. This is the same as a line graph except the area under the curve is shaded
-             */
-            Area,
-
-            /**
-             * A column graph, which is a graph where the data is represented by columns on the vertical axis,
-             * i.e they go up and down.
-             */
-            Column,
-
-            /**
-             * A pie graph. The graph is generated by taking the data for the last hour and summing it
-             * together. Then the percentage for each plotter is calculated via round( (plot / total) * 100, 2 )
-             */
-            Pie
-
-        }
-
-        /**
-         * What the graph should be plotted as
-         */
-        private final Type type;
-
-        /**
          * The graph's name, alphanumeric and spaces only :)
          * If it does not comply to the above when submitted, it is rejected
          */
@@ -426,8 +367,7 @@ public class Metrics {
          */
         private final Set<Plotter> plotters = new LinkedHashSet<Plotter>();
 
-        private Graph(Type type, String name) {
-            this.type = type;
+        private Graph(String name) {
             this.name = name;
         }
 
@@ -460,6 +400,7 @@ public class Metrics {
 
         /**
          * Gets an <b>unmodifiable</b> set of the plotter objects in the graph
+         *
          * @return
          */
         public Set<Plotter> getPlotters() {
@@ -468,7 +409,7 @@ public class Metrics {
 
         @Override
         public int hashCode() {
-            return (type.hashCode() * 17) ^ name.hashCode();
+            return name.hashCode();
         }
 
         @Override
@@ -478,7 +419,7 @@ public class Metrics {
             }
 
             Graph graph = (Graph) object;
-            return graph.type == type && graph.name.equals(name);
+            return graph.name.equals(name);
         }
 
     }
