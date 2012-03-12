@@ -4,6 +4,7 @@
 /// Todo for the old way of generating graphs :D
 
 define('ROOT', './');
+session_start();
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';

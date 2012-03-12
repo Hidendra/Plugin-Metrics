@@ -1,8 +1,6 @@
 <?php
 if (!defined('ROOT')) exit('For science.');
 
-session_start();
-
 // Include classes
 require 'Server.class.php';
 require 'Plugin.class.php';
