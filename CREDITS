@@ -8,6 +8,7 @@ A thank you towards the authors of the following libraries and technologies that
  - highroller (php wrapper for highcharts)
 -Frontend:
  - highcharts and highstock
+ - pChart, for dynamic signature image generation
  - jquery
  - jqueryui
  - pjax
