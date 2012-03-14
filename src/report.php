@@ -10,14 +10,8 @@ if (!isset($_GET['plugin']))
     exit('ERR No plugin provided.');
 }
 
-// Check that we have a valid plugin name
-if (!preg_match('/[a-zA-Z0-9 ]/', $_GET['plugin']))
-{
-    exit('ERR Invalid plugin name.');
-}
-
 // Load the plugin
-$pluginName = preg_replace('/[^a-zA-Z0-9_. ]+/', '', $_GET['plugin']);
+$pluginName = $_GET['plugin'];
 $plugin = loadPlugin($pluginName);
 
 // Begin extracting arguments

@@ -46,11 +46,14 @@ if ($is_in_admin_ui || is_loggedin())
                         <li' . ($is_in_admin_ui ? ' class="active"' : '') . '>
                             <a href="/admin/">Admin</a>
                         </li>
-                    </ul>
+                    </ul> ';
 
+if (is_loggedin())
+    echo '
                     <ul class="nav pull-right">
                         <li><a href="/admin/logout.php" >Logout</a></li>
-                    </ul>
+                    </ul> ';
+echo '
                 </div>
             </div>
 

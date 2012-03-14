@@ -72,13 +72,35 @@ $graph_data = array(); // epoch => [ "servers" => v, "players" => v ]
 
 foreach ($globalData['data']['players'] as $data)
 {
-    $playersX[] = $data[1];
+    $epoch = $data[0];
+    $value = $data[1];
+
+    $graph_data[$epoch]['players'] = $value;
 }
 
 foreach ($globalData['data']['servers'] as $data)
 {
-    $serversX[] = $data[1];
+    $epoch = $data[0];
+    $value = $data[1];
+
+    $graph_data[$epoch]['servers'] = $value;
 }
+
+foreach ($graph_data as $epoch => $data)
+{
+    // Ignore missing data
+    if (count($data) != 2)
+    {
+        continue;
+    }
+
+    // Add it
+    $playersX[] = $data['players'];
+    $serversX[] = $data['servers'];
+}
+
+// Free up some memory
+unset($graph_data);
 
 // Add the data to the graph
 $dataSet->AddPoint($playersX, 'Serie1');
