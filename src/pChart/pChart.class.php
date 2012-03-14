@@ -461,8 +461,14 @@
         { $this->VMin = 0; $this->VMax = 2; $Scale = 1; $Divisions = 2;}
        elseif ($MaxDivs > 1)
         {
+            $tries = 0; // Hidendra
          while(!$ScaleOk)
           {
+              if ($tries >= 100)
+              {
+                  break;
+              }
+
            $Scale1 = ( $this->VMax - $this->VMin ) / $Factor;
            $Scale2 = ( $this->VMax - $this->VMin ) / $Factor / 2;
            $Scale4 = ( $this->VMax - $this->VMin ) / $Factor / 4;
@@ -474,6 +480,8 @@
              if ( $Scale2 > 1 ) { $Factor = $Factor * 10; }
              if ( $Scale2 < 1 ) { $Factor = $Factor / 10; }
             }
+
+              $tries ++;
           }
 
          if ( floor($this->VMax / $Scale / $Factor) != $this->VMax / $Scale / $Factor)
@@ -3324,7 +3332,7 @@
      if ( $Mode == "CLI" )
       {
        foreach($this->Errors as $key => $Value)
-        echo $Value."\r\n";
+        error_log($Value."\r\n");
       }
      elseif ( $Mode == "GD" )
       {

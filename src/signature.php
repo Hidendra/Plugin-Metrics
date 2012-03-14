@@ -46,12 +46,6 @@ if ($cached_image != NULL)
     exit ($cached_image);
 }
 
-// The servers plot
-$serversX = array();
-
-// The players plot
-$playersX = array();
-
 // Load the json data from the api
 // First, basic plugin data
 $pluginData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . $pluginName), true);
@@ -68,6 +62,13 @@ if (count($pluginData) == 0 || $pluginData['status'] == 'err')
 
 // Create a new data set
 $dataSet = new pData();
+
+// The servers plot
+$serversX = array();
+
+// The players plot
+$playersX = array();
+$graph_data = array(); // epoch => [ "servers" => v, "players" => v ]
 
 foreach ($globalData['data']['players'] as $data)
 {
@@ -95,19 +96,18 @@ $dataSet->AddAllSeries();
 
 // Set us up the bomb
 $graph = new pChart(IMAGE_WIDTH, IMAGE_HEIGHT);
-// $graph->ReportWarnings('GD');
 $graph->setFontProperties('tahoma.ttf', 8);
 $graph->setGraphArea(60, 30, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 30);
 $graph->drawFilledRoundedRectangle(7, 7, IMAGE_WIDTH - 7, IMAGE_HEIGHT - 7, 5, 240, 240, 240);
 $graph->drawRoundedRectangle(5, 5, IMAGE_WIDTH - 5, IMAGE_HEIGHT - 5, 5, 230, 230, 230);
 $graph->drawGraphArea(250, 250, 250, true);
-$graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_NORMAL, 150, 150, 150, true, 0, 2);
+$graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_NORMAL, 150, 150, 150, true, 0, 0);
 // $graph->drawGrid(4, true, 230, 230, 230, 100);
 
 // Draw the footer
 $graph->setFontProperties('pf_arma_five.ttf', 6);
-$title = sprintf('%s servers in the last 24 hours with %s all-time server starts  ', number_format($pluginData['servers'][24]), number_format($pluginData['starts']));
-$graph->drawTextBox(60, IMAGE_HEIGHT - 25, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 7, $title, 0, 255, 255, 255, ALIGN_RIGHT, true, 0, 0, 0, 30);
+$footer = sprintf('%s servers in the last 24 hours with %s all-time server starts  ', number_format($pluginData['servers'][24]), number_format($pluginData['starts']));
+$graph->drawTextBox(60, IMAGE_HEIGHT - 25, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 7, $footer, 0, 255, 255, 255, ALIGN_RIGHT, true, 0, 0, 0, 30);
 
 // Draw the data
 $graph->drawFilledLineGraph($dataSet->GetData(), $dataSet->GetDataDescription(), 75, true);
@@ -116,13 +116,18 @@ $graph->drawFilledLineGraph($dataSet->GetData(), $dataSet->GetDataDescription(),
 $graph->drawLegend(65, 35, $dataSet->GetDataDescription(), 255, 255, 255);
 
 // Get the center of the image
+if (!empty($pluginData['author']))
+    $title = $pluginData['name'] . ' - ' . $pluginData['author'];
+else
+    $title = $pluginData['name'];
+
 $font = 'tahoma.ttf';
-$bounding_box = imagettfbbox(11, 0, $font, $pluginData['name']);
+$bounding_box = imagettfbbox(11, 0, $font, $title);
 $center_x = ceil((IMAGE_WIDTH - $bounding_box[2]) / 2);
 
 // Draw the title there
 $graph->setFontProperties($font, 11); // Switch to font size 10
-$graph->drawTitle($center_x, 22, $pluginData['name'], 50, 50, 50);
+$graph->drawTitle($center_x, 22, $title, 50, 50, 50);
 
 // Stroke the image
 $graphImage = $graph->Render('__handle');
