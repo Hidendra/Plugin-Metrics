@@ -48,11 +48,9 @@ if ($cached_image != NULL)
 
 // The servers plot
 $serversX = array();
-$serversY = array();
 
 // The players plot
 $playersX = array();
-$playersY = array();
 
 // Load the json data from the api
 // First, basic plugin data
@@ -74,13 +72,11 @@ $dataSet = new pData();
 foreach ($globalData['data']['players'] as $data)
 {
     $playersX[] = $data[1];
-    $playersY[] = $data[0];
 }
 
 foreach ($globalData['data']['servers'] as $data)
 {
     $serversX[] = $data[1];
-    $serversY[] = $data[0];
 }
 
 // Add the data to the graph
