@@ -656,7 +656,6 @@ class HighRollerPlotLines {
 
 }
 ?>
-
 <?php
 /**
  * Author: jmac

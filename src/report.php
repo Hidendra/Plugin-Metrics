@@ -128,7 +128,7 @@ if ($revision >= 5)
         foreach ($data as $graphName => $plotters)
         {
             // Get or create the graph
-            $graph = $plugin->getOrCreateGraph($graphName);
+            $graph = $plugin->getOrCreateGraph($graphName, false, 1); // Todo make it not active when authors can modify graphs
 
             foreach ($plotters as $columnName => $value)
             {

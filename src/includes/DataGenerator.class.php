@@ -14,12 +14,12 @@ class DataGenerator
      */
     public static function generateCustomChartData($graph, $columnID, $hours = 144)
     {
-        $_cacheid = 'CustomChart' . $columnID;
+        $_cacheid = 'CustomChart' . $columnID . $hours;
 
         // Check the cache
         if ($data = $graph->getPlugin()->cacheGet($_cacheid))
         {
-            // return $data;
+            return $data;
         }
 
         $generatedData = array();
@@ -50,7 +50,7 @@ class DataGenerator
      */
     public static function generateServerChartData($plugin, $hours = 744)
     {
-        if (($cache = $plugin->cacheGet('server-chart-data')) != NULL)
+        if (($cache = $plugin->cacheGet('server-chart-data' . $hours)) != NULL)
         {
             return $cache;
         }
@@ -72,7 +72,7 @@ class DataGenerator
         }
 
         // Cache it!
-        $plugin->cacheSet('server-chart-data', $generatedData);
+        $plugin->cacheSet('server-chart-data' . $hours, $generatedData);
 
         return $generatedData;
     }
@@ -83,7 +83,7 @@ class DataGenerator
      */
     public static function generatePlayerChartData($plugin, $hours = 744)
     {
-        if (($cache = $plugin->cacheGet('player-chart-data')) != NULL)
+        if (($cache = $plugin->cacheGet('player-chart-data-' . $hours)) != NULL)
         {
             return $cache;
         }
@@ -105,7 +105,7 @@ class DataGenerator
         }
 
         // Cache it!
-        $plugin->cacheSet('player-chart-data', $generatedData);
+        $plugin->cacheSet('player-chart-data' . $hours, $generatedData);
 
         return $generatedData;
     }
