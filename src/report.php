@@ -14,6 +14,19 @@ if (!isset($_GET['plugin']))
 $pluginName = $_GET['plugin'];
 $plugin = loadPlugin($pluginName);
 
+// We want to allow square brackets so we decode $_post ourselves
+$raw_post = urldecode(file_get_contents('php://input'));
+
+// Empty out $_POST
+$_POST = array();
+
+// Create the new $_POST
+foreach (explode('&', $raw_post) as $v)
+{
+    $a = explode('=', $v);
+    $_POST[$a[0]] = $a[1];
+}
+
 // Begin extracting arguments
 $guid = getPostArgument('guid');
 $serverVersion = getPostArgument('server');
@@ -22,15 +35,6 @@ $ping = isset($_POST['ping']); // if they're pinging us, we don't update the hit
 
 // Revision, added in R4, so default to R4
 $revision = isset($_POST['revision']) ? $_POST['revision'] : 4;
-
-// Added in R5
-$authors = isset($_POST['authors']) ? $_POST['authors'] : '';
-
-// Cleanse the authors text
-$authors = preg_replace('/[^a-zA-Z0-9_,\- ]+/', '', $authors);
-
-// replace underscores with spaces
-$authors = str_replace('_', ' ', $authors);
 
 // simple user agent check to block the lazy
 if (!preg_match('/Java/', $_SERVER['HTTP_USER_AGENT'])) {
@@ -79,13 +83,6 @@ if ($server->getServerVersion() != $serverVersion)
 if ($players >= 0)
 {
     $server->setPlayers($players);
-}
-
-// Update the authors for the plugin if the one set in the database is blank
-if ($plugin->getAuthors() == '' && $authors != '')
-{
-    $plugin->setAuthors($authors);
-    $plugin->save();
 }
 
 // increment the hits if it's a fresh server start

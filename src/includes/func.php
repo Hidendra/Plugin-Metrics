@@ -145,17 +145,18 @@ function extractCustomData()
             continue;
         }
 
-        // Haters gonna regex
-        // By default, something like this will match: C~~Percentages_for_blah~~Blah_blah
-        if (preg_match("/C$separator([a-zA-Z0-9_ ]+)$separator([a-zA-Z0-9_ ]+)/", $key, $matches) == 0)
+        // Find the first position of the separator
+        $r_index = strrpos($key, $separator);
+
+        // Did we not match one?
+        if ($r_index === FALSE)
         {
-            // No match found
             continue;
         }
 
         // Extract the data :-)
-        $graphName = str_replace('_', ' ', $matches[1]);
-        $columnName = str_replace('_', ' ', $matches[2]);
+        $graphName = str_replace('_', ' ', substr($key, 3, $r_index - 3));
+        $columnName = str_replace('_', ' ', substr($key, $r_index + 2));
 
         // Set it :-)
         $data[$graphName][$columnName] = $value;

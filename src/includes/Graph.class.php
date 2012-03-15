@@ -145,15 +145,15 @@ class Graph
      *
      * @param $columName
      */
-    public function verifyColumn($columnName, $attemptedToCreate = false, $updateColumn = true) {
+    public function verifyColumn($columnName, $attemptedToCreate = false, $updateColumn = true)
+    {
         global $pdo;
 
-        $statement = $pdo->prepare('SELECT ID, Graph FROM CustomColumn WHERE Plugin = ? AND Name = ?');
-        $statement->execute(array($this->plugin->getID(), $columnName));
+        $statement = $pdo->prepare('SELECT ID, Graph FROM CustomColumn WHERE Plugin = ? AND Graph = ? AND Name = ?');
+        $statement->execute(array($this->plugin->getID(), $this->id, $columnName));
 
         // Did we get it?
-        if ($row = $statement->fetch())
-        {
+        if ($row = $statement->fetch()) {
             $id = $row['ID'];
             $graphID = $row['Graph'];
 
