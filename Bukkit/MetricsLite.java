@@ -86,11 +86,13 @@ public class MetricsLite {
      * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
      * the initial data to the metrics backend, and then after that it will post in increments of
      * PING_INTERVAL * 1200 ticks.
+     *
+     * @return True if statistics measuring is now running, otherwise false.
      */
-    public void start() {
+    public boolean start() {
         // Did we opt out?
         if (configuration.getBoolean("opt-out", false)) {
-            return;
+            return false;
         }
 
         // Begin hitting the server with glorious data
@@ -112,6 +114,8 @@ public class MetricsLite {
                 }
             }
         }, 0, PING_INTERVAL * 1200);
+
+        return true;
     }
 
     /**
