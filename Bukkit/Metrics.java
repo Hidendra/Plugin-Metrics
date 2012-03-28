@@ -205,13 +205,18 @@ public class Metrics {
      * the initial data to the metrics backend, and then after that it will post in increments of
      * PING_INTERVAL * 1200 ticks.
      *
-     * @return True if statistics measuring is now running, otherwise false.
+     * @return True if statistics measuring is running, otherwise false.
      */
     public boolean start() {
         synchronized (optOutLock) {
             // Did we opt out?
             if (isOptOut()) {
                 return false;
+            }
+
+            // Is metrics already running?
+            if (taskId >= 0) {
+                return true;
             }
 
             // Begin hitting the server with glorious data
@@ -274,8 +279,7 @@ public class Metrics {
     *
     * @throws IOException
     */
-    public void enable() throws IOException
-    {
+    public void enable() throws IOException {
         // This has to be synchronized or it can collide with the check in the task.
         synchronized (optOutLock) {
         	// Check if the server owner has already set opt-out, if not, set it.

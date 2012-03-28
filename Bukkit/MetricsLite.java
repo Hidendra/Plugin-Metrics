@@ -1,4 +1,5 @@
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -14,6 +15,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class MetricsLite {
 
@@ -53,9 +55,24 @@ public class MetricsLite {
     private final YamlConfiguration configuration;
 
     /**
+     * The plugin configuration file
+     */
+    private final File configurationFile;
+
+    /**
      * Unique server id
      */
     private final String guid;
+
+    /**
+     * Lock for synchronization
+     */
+    private final Object optOutLock = new Object();
+
+    /**
+     * Id of the scheduled task
+     */
+    private volatile int taskId = -1;
 
     public MetricsLite(Plugin plugin) throws IOException {
         if (plugin == null) {
@@ -65,8 +82,8 @@ public class MetricsLite {
         this.plugin = plugin;
 
         // load the config
-        File file = new File(CONFIG_FILE);
-        configuration = YamlConfiguration.loadConfiguration(file);
+        configurationFile = new File(CONFIG_FILE);
+        configuration = YamlConfiguration.loadConfiguration(configurationFile);
 
         // add some defaults
         configuration.addDefault("opt-out", false);
@@ -75,47 +92,129 @@ public class MetricsLite {
         // Do we need to create the file?
         if (configuration.get("guid", null) == null) {
             configuration.options().header("http://metrics.griefcraft.com").copyDefaults(true);
-            configuration.save(file);
+            configuration.save(configurationFile);
         }
 
         // Load the guid then
         guid = configuration.getString("guid");
     }
 
+
     /**
      * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
      * the initial data to the metrics backend, and then after that it will post in increments of
      * PING_INTERVAL * 1200 ticks.
      *
-     * @return True if statistics measuring is now running, otherwise false.
+     * @return True if statistics measuring is running, otherwise false.
      */
     public boolean start() {
-        // Did we opt out?
-        if (configuration.getBoolean("opt-out", false)) {
-            return false;
-        }
-
-        // Begin hitting the server with glorious data
-        plugin.getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
-            private boolean firstPost = true;
-
-            public void run() {
-                try {
-                    // We use the inverse of firstPost because if it is the first time we are posting,
-                    // it is not a interval ping, so it evaluates to FALSE
-                    // Each time thereafter it will evaluate to TRUE, i.e PING!
-                    postPlugin(!firstPost);
-
-                    // After the first post we set firstPost to false
-                    // Each post thereafter will be a ping
-                    firstPost = false;
-                } catch (IOException e) {
-                    System.err.println("[Metrics] " + e.getMessage());
-                }
+        synchronized (optOutLock) {
+            // Did we opt out?
+            if (isOptOut()) {
+                return false;
             }
-        }, 0, PING_INTERVAL * 1200);
 
-        return true;
+            // Is metrics already running?
+            if (taskId >= 0) {
+                return true;
+            }
+
+            // Begin hitting the server with glorious data
+            taskId = plugin.getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
+
+                private boolean firstPost = true;
+
+                public void run() {
+                    try {
+                        // This has to be synchronized or it can collide with the disable method.
+                        synchronized (optOutLock) {
+                            // Disable Task, if it is running and the server owner decided to opt-out
+                            if (isOptOut() && taskId > 0) {
+                                plugin.getServer().getScheduler().cancelTask(taskId);
+                                taskId = -1;
+                            }
+                        }
+
+                        // We use the inverse of firstPost because if it is the first time we are posting,
+                        // it is not a interval ping, so it evaluates to FALSE
+                        // Each time thereafter it will evaluate to TRUE, i.e PING!
+                        postPlugin(!firstPost);
+
+                        // After the first post we set firstPost to false
+                        // Each post thereafter will be a ping
+                        firstPost = false;
+                    } catch (IOException e) {
+                        Bukkit.getLogger().log(Level.INFO, "[Metrics] {0}", e.getMessage());
+                    }
+                }
+            }, 0, PING_INTERVAL * 1200);
+
+            return true;
+        }
+    }
+
+    /**
+     * Has the server owner denied plugin metrics?
+     *
+     * @return
+     */
+    public boolean isOptOut() {
+        synchronized(optOutLock) {
+            try {
+                // Reload the metrics file
+                configuration.load(CONFIG_FILE);
+            } catch (IOException ex) {
+                Bukkit.getLogger().log(Level.INFO, "[Metrics] {0}", ex.getMessage());
+                return true;
+            } catch (InvalidConfigurationException ex) {
+                Bukkit.getLogger().log(Level.INFO, "[Metrics] {0}", ex.getMessage());
+                return true;
+            }
+            return configuration.getBoolean("opt-out", false);
+        }
+    }
+
+    /**
+     * Enables metrics for the server by setting "opt-out" to false in the config file and starting the metrics task.
+     *
+     * @throws IOException
+     */
+    public void enable() throws IOException {
+        // This has to be synchronized or it can collide with the check in the task.
+        synchronized (optOutLock) {
+            // Check if the server owner has already set opt-out, if not, set it.
+            if (isOptOut()) {
+                configuration.set("opt-out", false);
+                configuration.save(configurationFile);
+            }
+
+            // Enable Task, if it is not running
+            if (taskId < 0) {
+                start();
+            }
+        }
+    }
+
+    /**
+     * Disables metrics for the server by setting "opt-out" to true in the config file and canceling the metrics task.
+     *
+     * @throws IOException
+     */
+    public void disable() throws IOException {
+        // This has to be synchronized or it can collide with the check in the task.
+        synchronized (optOutLock) {
+            // Check if the server owner has already set opt-out, if not, set it.
+            if (!isOptOut()) {
+                configuration.set("opt-out", true);
+                configuration.save(configurationFile);
+            }
+
+            // Disable Task, if it is running
+            if (taskId > 0) {
+                this.plugin.getServer().getScheduler().cancelTask(taskId);
+                taskId = -1;
+            }
+        }
     }
 
     /**
@@ -123,22 +222,23 @@ public class MetricsLite {
      */
     private void postPlugin(boolean isPing) throws IOException {
         // The plugin's description file containg all of the plugin data such as name, version, author, etc
-        PluginDescriptionFile description = plugin.getDescription();
+        final PluginDescriptionFile description = plugin.getDescription();
 
         // Construct the post data
-        String data = encode("guid") + '=' + encode(guid)
-                + encodeDataPair("version", description.getVersion())
-                + encodeDataPair("server", Bukkit.getVersion())
-                + encodeDataPair("players", Integer.toString(Bukkit.getServer().getOnlinePlayers().length))
-                + encodeDataPair("revision", String.valueOf(REVISION));
+        final StringBuilder data = new StringBuilder();
+        data.append(encode("guid")).append('=').append(encode(guid));
+        encodeDataPair(data, "version", description.getVersion());
+        encodeDataPair(data, "server", Bukkit.getVersion());
+        encodeDataPair(data, "players", Integer.toString(Bukkit.getServer().getOnlinePlayers().length));
+        encodeDataPair(data, "revision", String.valueOf(REVISION));
 
         // If we're pinging, append it
         if (isPing) {
-            data += encodeDataPair("ping", "true");
+            encodeDataPair(data, "ping", "true");
         }
 
         // Create the url
-        URL url = new URL(BASE_URL + String.format(REPORT_URL, plugin.getDescription().getName()));
+        final URL url = new URL(BASE_URL + String.format(REPORT_URL, description.getName()));
 
         // Connect to the website
         URLConnection connection;
@@ -154,19 +254,19 @@ public class MetricsLite {
         connection.setDoOutput(true);
 
         // Write the data
-        OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-        writer.write(data);
+        final OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
+        writer.write(data.toString());
         writer.flush();
 
         // Now read the response
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String response = reader.readLine();
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        final String response = reader.readLine();
 
         // close resources
         writer.close();
         reader.close();
 
-        if (response.startsWith("ERR")) {
+        if (response == null || response.startsWith("ERR")) {
             throw new IOException(response); //Throw the exception
         }
         //if (response.startsWith("OK")) - We should get "OK" followed by an optional description if everything goes right
@@ -190,15 +290,18 @@ public class MetricsLite {
      * <p>Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first
      * key/value pair MUST be included manually, e.g:</p>
      * <code>
-     * String httpData = encode("guid") + '=' + encode("1234") + encodeDataPair("authors") + "..";
+     * StringBuffer data = new StringBuffer();
+     * data.append(encode("guid")).append('=').append(encode(guid));
+     * encodeDataPair(data, "version", description.getVersion());
      * </code>
      *
+     * @param buffer
      * @param key
      * @param value
      * @return
      */
-    private static String encodeDataPair(String key, String value) throws UnsupportedEncodingException {
-        return '&' + encode(key) + '=' + encode(value);
+    private static void encodeDataPair(final StringBuilder buffer, final String key, final String value) throws UnsupportedEncodingException {
+        buffer.append('&').append(encode(key)).append('=').append(encode(value));
     }
 
     /**
