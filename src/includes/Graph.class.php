@@ -399,8 +399,66 @@ class Graph
             $chart->addSeries($series);
         }
 
+        // Some raw javascript
+        $rawJavascript = '';
+
+        if ($this->type != GraphType::Pie)
+        {
+
+            $rawJavascript = "
+                $renderTo.tooltip =
+                {
+                    \"shared\": true,
+                    \"crosshairs\": true,
+                    \"formatter\": function() {
+                        var points = this.points;
+                        var series = points[0].series;
+                        var s = series.tooltipHeaderFormatter(points[0].key);
+
+                        var sortedPoints = points.sort(function(a, b){
+                            return ((a.y < b.y) ? 1 : ((a.y > b.y) ? -1 : 0));
+                        });
+
+                        $.each(sortedPoints , function(i, point) {
+                            s += point.point.tooltipFormatter(series.tooltipOptions.pointFormat);
+                        });
+
+                        return s;
+                    }
+                };
+            ";
+
+        } else
+        { // Pie chart
+
+            $rawJavascript = "
+                $renderTo.plotOptions =
+                {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            color: '#000000',
+                            connectorColor: '#000000',
+                            formatter: function() {
+                                return '<b>' + this.point.name + '</b>: ' + ( Math.round(this.percentage * 10) / 10 ) + ' %';
+                            }
+                        }
+                    }
+                };
+                $renderTo.tooltip =
+                {
+                    \"formatter\": function() {
+                        return '<b>' + this.point.name + '</b>: ' + ( Math.round(this.percentage * 100) / 100 ) + ' %';
+                    }
+                };
+            ";
+
+        }
+
         // Render it!!
-        return $chart->renderChart($classname);
+        return $chart->renderChart($classname, $rawJavascript);
     }
 
     /**
