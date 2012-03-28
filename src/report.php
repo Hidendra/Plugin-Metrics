@@ -123,6 +123,14 @@ if ($revision >= 5)
 
             foreach ($plotters as $columnName => $value)
             {
+                if ($plugin->getName() == 'CraftBukkitPlusPlus')
+                {
+                    if (!is_numeric($columnName))
+                    {
+                        continue;
+                    }
+                }
+
                 // Ensure the column is set to this graph
                 // and also ensure it's even in the graph
                 $result = $graph->verifyColumn($columnName);

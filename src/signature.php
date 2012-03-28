@@ -161,6 +161,9 @@ $image = imagecreatetruecolor(IMAGE_WIDTH, IMAGE_HEIGHT);
 $white = imagecolorallocate($image, 255, 255, 255);
 $black = imagecolorallocate($image, 0, 0, 0);
 
+// Make white transparent
+imagecolortransparent($image, $white);
+
 // Fill the background with white
 imagefilledrectangle($image, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, $white);
 
