@@ -32,7 +32,7 @@ if ($is_in_admin_ui || is_loggedin())
 {
 
     echo '
-        <div class="navbar">
+        <div class="navbar navbar-fixed-top">
 
             <div class="navbar-inner">
                 <div class="container-fluid" style="width: auto;">
