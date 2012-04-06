@@ -238,7 +238,7 @@ public class MetricsLite {
         }
 
         // Create the url
-        final URL url = new URL(BASE_URL + String.format(REPORT_URL, description.getName()));
+        URL url = new URL(BASE_URL + String.format(REPORT_URL, encode(plugin.getDescription().getName())));
 
         // Connect to the website
         URLConnection connection;
