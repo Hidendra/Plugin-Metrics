@@ -14,6 +14,7 @@ require_once ROOT . 'includes/func.php';
 // iterate through all of the plugins
 foreach (loadPlugins() as $plugin)
 {
+    if ($plugin->getID() == GLOBAL_PLUGIN_ID) continue;
     $baseEpoch = normalizeTime();
 
     // we want the data for the last hour

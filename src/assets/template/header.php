@@ -1,3 +1,16 @@
+<?php
+
+// Find out our current working directory
+$cwd = getcwd();
+
+// Are we on the admin ui?
+// if we are on the admin ui we want to always send the navbar
+$is_in_admin_ui = str_endswith('admin', $cwd);
+
+$show_navbar = $is_in_admin_ui || is_loggedin();
+
+?>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -16,19 +29,13 @@
         <script src="http://static.griefcraft.com/javascript/jquery.js" type="text/javascript"></script>
         <script src="http://static.griefcraft.com/javascript/jquery.pjax.js" type="text/javascript"></script>
         <script src="http://static.griefcraft.com/javascript/jquery-ui.js" type="text/javascript"></script>
+        <script src="http://static.griefcraft.com/javascript/main.js" type="text/javascript"></script>
     </head> <?php flush(); ?>
 
-    <body>
+    <body<?php if ($show_navbar) echo ' style="padding-top: 50px;"';?>>
 <?php
 
-// Find out our current working directory
-$cwd = getcwd();
-
-// Are we on the admin ui?
-// if we are on the admin ui we want to always send the navbar
-$is_in_admin_ui = str_endswith('admin', $cwd);
-
-if ($is_in_admin_ui || is_loggedin())
+if ($show_navbar)
 {
 
     echo '
@@ -51,7 +58,7 @@ if ($is_in_admin_ui || is_loggedin())
 if (is_loggedin())
     echo '
                     <ul class="nav pull-right">
-                        <li><a href="/admin/logout.php" >Logout</a></li>
+                        <li><a href="/admin/logout.php" >Logout (' . htmlentities($_SESSION['username']) . ')</a></li>
                     </ul> ';
 echo '
                 </div>

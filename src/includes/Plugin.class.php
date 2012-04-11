@@ -100,6 +100,28 @@ class Plugin
     }
 
     /**
+     * Gets all of the graphs for the plugin
+     * @return Graph[]
+     */
+    public function getAllGraphs()
+    {
+        global $pdo;
+
+        // The graphs to return
+        $graphs = array();
+
+        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ?');
+        $statement->execute(array($this->id));
+
+        while ($row = $statement->fetch())
+        {
+            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['Active']);
+        }
+
+        return $graphs;
+    }
+
+    /**
      * Set a key and value unique to this plugin into the caching daemon
      *
      * @param $key

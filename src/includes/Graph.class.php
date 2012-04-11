@@ -372,6 +372,15 @@ class Graph
                 ),
                 'showFirstLabel' => false
             );
+
+            // Essentials
+            // TODO add scale internally
+            if ($this->id == 133)
+            {
+                $chart->yAxis['type'] = 'logarithmic';
+                $chart->yAxis['minorTickInterval'] = 'auto';
+                unset($chart->yAxis['min']);
+            }
         }
 
         // Tooltip + plotOptions
@@ -549,6 +558,15 @@ class Graph
     public function getType()
     {
         return $this->type;
+    }
+
+    /**
+     * Get the graph's name
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**

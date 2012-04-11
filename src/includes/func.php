@@ -22,6 +22,10 @@ define('SECONDS_IN_HALFDAY', 60 * 60 * 12);
 define('SECONDS_IN_DAY', 60 * 60 * 24);
 define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
 
+// Global plugin ID, used to store global stats so
+// we can easily re-use our own methods
+define('GLOBAL_PLUGIN_ID', -1);
+
 // Connect to the caching daemon
 $cache = new Cache();
 
@@ -272,7 +276,6 @@ function loadPlugins($alphabetical = false)
 
     while ($row = $statement->fetch())
     {
-
         $plugins[] = resolvePlugin($row);
     }
 
@@ -291,6 +294,27 @@ function loadPlugin($plugin)
 
     $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Name = :Name');
     $statement->execute(array(':Name' => $plugin));
+
+    if ($row = $statement->fetch())
+    {
+        return resolvePlugin($row);
+    }
+
+    return NULL;
+}
+
+/**
+ * Load a plugin using its internal ID
+ *
+ * @param $plugin integer
+ * @return Plugin if it exists otherwise NULL
+ */
+function loadPluginByID($id)
+{
+    global $pdo;
+
+    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE ID = :ID');
+    $statement->execute(array(':ID' => $id));
 
     if ($row = $statement->fetch())
     {

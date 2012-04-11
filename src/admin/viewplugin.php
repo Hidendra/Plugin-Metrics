@@ -54,7 +54,7 @@ else
 
                         <form action="/admin/plugin/<?php echo $plugin->getName(); ?>/update" method="post" class="form-horizontal">
                             <legend>
-                                Plugin information
+                                Basic information
                             </legend>
 
                             <div class="control-group">
@@ -72,81 +72,83 @@ else
                                     <input type="text" name="authors" value="<?php echo $plugin->getAuthors(); ?>" id="authors" />
                                 </div>
                             </div>
-                            <?php
-                            <<< END
+<?php
+
+$graphs = $plugin->getAllGraphs();
+$index = 0;
+foreach ($graphs as $graph)
+{
+    $index ++ ; // start at 1 as well
+
+    // convenient data so we aren't constantly using accessors
+    $id = $graph->getID();
+    $name = htmlentities($graph->getName());
+    $displayName = $name; // TODO
+    $type = $graph->getType();
+    $isActive = $graph->isActive();
+echo '
+                            <legend>
+                                Custom graph #' . $index . '
+                            </legend>
+
                             <div class="control-group">
-                                <label class="control-label">Graphs</label>
+                                <label class="control-label" for="' . $id . '-name">Internal Name</label>
 
                                 <div class="controls">
-
-                                    <div class="row-fluid">
-                                        <div class="btn-toolbar">
-
-                                            <div class="btn-group">
-                                                <a class="btn btn-info dropdown-toggle" data-toggle="dropdown" href="#">
-                                                    Default
-                                                    <span class="caret"></span>
-                                                </a>
-
-                                                <ul class="dropdown-menu">
-                                                    <li><a href="#"><i class="icon-ok" /> Line</a></li>
-                                                    <li><a href="#">Area</a></li>
-                                                    <li><a href="#">Column</a></li>
-                                                    <li><a href="#">Pie</a></li>
-                                                </ul>
-                                            </div>
-
-                                        </div>
-
-                                        <ul id="sort1" class="sort">
-                                            <li class="ui-state-default">Total protections</li>
-                                            <li class="ui-state-default">Private protections</li>
-                                        </ul>
-                                    </div>
-
-                                    <div class="row-fluid">
-                                        <div class="btn-toolbar">
-
-                                            <div class="btn-group">
-                                                <a class="btn btn-info dropdown-toggle" data-toggle="dropdown" href="#">
-                                                    Percentage of server using Economy
-                                                    <span class="caret"></span>
-                                                </a>
-
-                                                <ul class="dropdown-menu">
-                                                    <li><a href="#"><i class="icon-ok" /> Line</a></li>
-                                                    <li><a href="#">Area</a></li>
-                                                    <li><a href="#">Column</a></li>
-                                                    <li><a href="#">Pie</a></li>
-                                                </ul>
-                                            </div>
-
-                                        </div>
-
-                                        <ul id="sort2" class="sort">
-                                            <li class="ui-state-default">Password protections</li>
-                                            <li class="ui-state-default">Public protections</li>
-                                        </ul>
-                                    </div>
-
-                                    <style>
-                                        #sort1, #sort2 { font-size: 85%; list-style-type: none; margin: 0; padding: 0 0 1em; float: left; margin-right: 10px; }
-                                        #sort1 li, #sort2 li { margin: 0 5px 5px 5px; padding: 5px; font-size: 1.2em; width: 120px; }
-                                    </style>
-                                    <script>
-                                        $(function() {
-                                            $("#sort1, #sort2").sortable({
-                                                connectWith: ".sort"
-                                            }).disableSelection();
-                                        });
-                                    </script>
-
+                                    <input type="text" id="' . $id . '-name" value="' . $name . '" disabled />
                                 </div>
                             </div>
-END;
+
+                            <div class="control-group">
+                                <label class="control-label" for="' . $id . '-displayname">Display Name</label>
+
+                                <div class="controls">
+                                    <input type="text" name="' . $id . '-displayname" id="' . $id . '-displayname" value="' . $displayName . '" />
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label" for="' . $id . '-type">Type</label>
+
+                                <div class="controls">
+                                    <select name="' . $id . '-type" id="' . $id . '-type">
+                                        <option value="' . GraphType::Line . '"' . ($type == GraphType::Line ? ' selected' : '') . '>Line</option>
+                                        <option value="' . GraphType::Area . '"' . ($type == GraphType::Area ? ' selected' : '') . '>Area</option>
+                                        <option value="' . GraphType::Column . '"' . ($type == GraphType::Column ? ' selected' : '') . '>Column</option>
+                                        <option value="' . GraphType::Pie . '"' . ($type == GraphType::Pie ? ' selected' : '') . '>Pie</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label" for="' . $id . '-active">Active</label>
+
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="' . $id . '-active" id="' . $id . '-active" value="1"' . ($isActive ? ' selected' : '') . '>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label" for="' . $id . '-scale">Scale</label>
+
+                                <div class="controls">
+                                    <label class="checkbox inline">
+                                        <input type="checkbox" name="' . $id . '-scale" id="' . $id . '-scale" value="linear"> Linear
+                                    </label>
+                                    <label class="checkbox inline">
+                                        <input type="checkbox" name="' . $id . '-scale" value="log"> Logarithmic
+                                    </label>
+                                </div>
+                            </div>
+
+';
+}
 ?>
+
                             <div class="form-actions">
-                                <input type="submit" name="submit" value="Save" class="btn btn-primary" />
+                                <input type="submit" name="submit" value="Save changes" class="btn btn-primary" />
                                 <a href="/admin/" class="btn">Cancel</a>
                             </div>
 

@@ -48,11 +48,11 @@ if ($cached_image != NULL)
 
 // Load the json data from the api
 // First, basic plugin data
-$pluginData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . $pluginName), true);
+$pluginData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . urlencode($pluginName)), true);
 
 // And secondly, player/server status
 // returned in the format of $json['data']['players'] = [ [epoch, v], .. ] and also $json['data']['servers']
-$globalData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . $pluginName . '/graph/global'), true);
+$globalData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . urlencode($pluginName) . '/graph/global'), true);
 
 // Is the plugin invalid?
 if (count($pluginData) == 0 || $pluginData['status'] == 'err')

@@ -23,8 +23,24 @@ foreach (loadPlugins() as $plugin)
 
     foreach ($countries as $shortCode => $fullName)
     {
+        $servers = 0;
+
         // load the players online in the last hour
-        $servers = $plugin->countServersLastUpdatedFromCountry($shortCode, $minimum);
+        if ($plugin->getID() != GLOBAL_PLUGIN_ID)
+        {
+            $servers = $plugin->countServersLastUpdatedFromCountry($shortCode, $minimum);
+        } else
+        {
+            $statement = $pdo->prepare('SELECT COUNT(distinct Server) AS Count FROM ServerPlugin
+                                    LEFT OUTER JOIN Server ON (ServerPlugin.Server = Server.ID)
+                                    WHERE Country = ? AND ServerPlugin.Updated >= ?');
+            $statement->execute(array($shortCode, $minimum));
+
+            if ($row = $statement->fetch())
+            {
+                $servers = $row['Count'];
+            }
+        }
 
         if ($servers == 0)
         {

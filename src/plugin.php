@@ -26,6 +26,7 @@ if ($plugin === NULL)
 
 // Get the plugin name
 $pluginName = $plugin->getName();
+$encodedName = urlencode($pluginName); // encoded name, for use in signature url
 
 /// Template hook
 $page_title = $pluginName . ' Statistics';
@@ -53,7 +54,7 @@ echo '
                             <tr> <td> Name </td> <td> ' . $pluginName . ' </td> </tr>
                             <tr> <td> Author </td> <td> ' . $plugin->getAuthors() . ' </td> </tr>
                             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
-                            <tr> <td> Signature </td> <td> <a href="/signature/' . strtolower($pluginName) . '.png" target="_blank">/signature/' . strtolower($pluginName) . '.png</a> </td> </tr>
+                            <tr> <td> Signature </td> <td> <a href="/signature/' . strtolower($encodedName) . '.png" target="_blank">/signature/' . strtolower($encodedName) . '.png</a> </td> </tr>
                         </tbody>
                     </table>
 
