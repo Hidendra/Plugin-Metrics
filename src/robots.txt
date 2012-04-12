@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /signature/
+Disallow: /includes/
+Disallow: /assets/
+Disallow: /cron/
+Disallow: /pChart/
+Allow: /
+Allow: /api/
