@@ -280,12 +280,12 @@ class Graph
         if ($this->plugin != null)
         {
             $chart->subtitle = array(
-                'text' => 'for ' . $this->plugin->getName() . ' via http://metrics.griefcraft.com'
+                'text' => 'for ' . $this->plugin->getName() . ' via http://mcstats.org'
             );
         } else
         {
             $chart->subtitle = array(
-                'text' => 'via http://metrics.griefcraft.com'
+                'text' => 'via http://mcstats.org'
             );
         }
 

@@ -9,7 +9,7 @@ require ROOT . 'config.php';
 require ROOT . 'includes/func.php';
 
 // The location of the metrics backend
-define ('METRICS_BACKEND', 'http://metrics.griefcraft.com');
+define ('METRICS_BACKEND', 'http://mcstats.org');
 
 // The url of the API to use on the backend
 define ('API_URL', '/api/1.0/');

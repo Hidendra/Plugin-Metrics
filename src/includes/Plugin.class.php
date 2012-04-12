@@ -88,7 +88,7 @@ class Plugin
         // The graphs to return
         $graphs = array();
 
-        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ? AND Active = 1');
+        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY ID asc');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
