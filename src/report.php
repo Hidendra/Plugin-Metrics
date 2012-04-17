@@ -102,12 +102,6 @@ if (isset($_SERVER['GEOIP_COUNTRY_CODE']))
     if ($server->getCountry() != $shortCode)
     {
         $server->setCountry($shortCode);
-
-        // Insert it into the Country table
-        // The Country table is used to keep track of the full name for countries if it does
-        // not exist in the database yet, instead of storing the full name elsewhere
-        $statement = $pdo->prepare('INSERT INTO Country (ShortCode, FullName) VALUES (:ShortCode, :FullName)');
-        $statement->execute(array(':ShortCode' => $shortCode, ':FullName' => $fullName));
     }
 }
 

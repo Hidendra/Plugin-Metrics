@@ -1,410 +1,374 @@
-CREATE TABLE IF NOT EXISTS Author (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  -- Their username
-  Name VARCHAR(30) NOT NULL,
-
-  -- Sha1 hashed password
-  Password VARCHAR(40) NOT NULL,
-
-  -- The unix timestamp when the author was registered at
-  Created INT NOT NULL,
-
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
-
-CREATE TABLE IF NOT EXISTS Plugin (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  -- Name of the plugin
-  Name VARCHAR(20) NOT NULL,
-
-  -- Author of the plugin
-  Author VARCHAR(20) NOT NULL,
-
-  -- If the plugin should be hidden from the main page
-  Hidden BOOLEAN NOT NULL,
-
-  -- The total amount of hits for the plugin since time started
-  GlobalHits INTEGER NOT NULL,
-
-  --
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
-
--- Plugins an author can access
-CREATE TABLE IF NOT EXISTS AuthorACL (
-  -- FK -> Author.ID
-  Author INT NOT NULL,
-
-  -- FK -> Plugin.ID
-  Plugin INT NOT NULL,
-
-  FOREIGN KEY (Author) REFERENCES Author (ID),
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  PRIMARY KEY (Author, Plugin)
-) ENGINE = InnoDB;
-
-CREATE TABLE IF NOT EXISTS Server (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  -- Foreign key to the related plugin
-  Plugin INT NOT NULL,
-
-  -- GUID
-  GUID VARCHAR(40) NOT NULL,
-
-  -- The server's country, 2 letter country code
-  Country CHAR(2) NOT NULL,
-
-  -- Last known amount of players to be on the server
-  Players INT NOT NULL,
-
-  -- Current server version
-  ServerVersion VARCHAR(100) NOT NULL,
-
-  -- Incremented each time the server pings us
-  Hits INT NOT NULL,
-
-  -- When the server was created on our end; epoch
-  Created INTEGER NOT NULL,
-
-  --
-  INDEX (GUID),
-
-  --
-  INDEX (Country),
-
-  --
-  INDEX (ServerVersion),
-
-  --
-  INDEX (Hits),
-
-  --
-  INDEX (Created),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
-
--- Stores which plugins a server is using
--- note: no primary key, only relation between Server <-> Plugin
-CREATE TABLE IF NOT EXISTS ServerPlugin (
-  -- FK to Server
-  Server INT NOT NULL,
-
-  -- FK to Plugin
-  Plugin INT NOT NULL,
-
-  -- The last known version of LWC the server was using
-  Version VARCHAR(40) NOT NULL,
-
-  -- epoch of when the plugin last pinged us
-  Updated INTEGER NOT NULL,
-
-  -- We only want one of each
-  UNIQUE INDEX (Server, Plugin),
-
-  -- FK
-  INDEX (Server),
-
-  -- FK
-  INDEX (Plugin),
-
-  --
-  INDEX (Version),
-
-  --
-  INDEX (Updated),
-
-  --
-  INDEX (Plugin, Version, Updated),
-
-  FOREIGN KEY (Server) REFERENCES Server (ID),
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID)
-);
-
--- Custom plugin-created columns
-CREATE TABLE IF NOT EXISTS CustomColumn (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  --
-  Name VARCHAR(100) NOT NULL,
-
-  -- FK
-  INDEX (Plugin),
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  INDEX (Name),
-
-  PRIMARY KEY (ID)
-);
-
--- Custom graphs
-CREATE TABLE IF NOT EXISTS Graph (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  -- The type of graph (ordinal value mapped to the enum)
-  Type INT NOT NULL,
-
-  -- The graph's name
-  Name VARCHAR(50) NOT NULL,
-
-  -- Indexes
-  INDEX(Plugin),
-  INDEX(Type),
-  INDEX(Name),
-
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  PRIMARY KEY (ID)
-);
-
--- Custom plugin data
--- This is unique per Server / Plugin / Column. Every hour, the data for the past hour
--- is collected into CustomDataTimeline which is graphed
-CREATE TABLE IF NOT EXISTS CustomData (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Server INT NOT NULL,
-
-  --
-  Plugin INT NOT NULL,
-
-  --
-  ColumnID INT NOT NULL,
-
-  --
-  DataPoint INT NOT NULL,
-
-  --
-  Updated INTEGER NOT NULL,
-
-  -- FK
-  INDEX (Server),
-
-  -- FK
-  INDEX (Plugin),
-
-  -- FK
-  INDEX (ColumnID),
-
-  --
-  INDEX (Updated),
-
-  FOREIGN KEY (Server) REFERENCES Server (ID),
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-  FOREIGN KEY (ColumnID) REFERENCES CustomColumn (ID),
-
-  PRIMARY KEY (ID)
-);
-
-CREATE TABLE IF NOT EXISTS CustomDataTimeline (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  --
-  ColumnID INT NOT NULL,
-
-  --
-  DataPoint INT NOT NULL,
-
-  -- The unix timestamp this timeline entry refers to
-  Epoch INTEGER NOT NULL,
-
-  --
-  Index (Plugin),
-
-  -- FK
-  INDEX (ColumnID),
-
-  --
-  UNIQUE INDEX (Plugin, ColumnID, Epoch),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-  FOREIGN KEY (ColumnID) REFERENCES CustomColumn (ID),
-
-  --
-  PRIMARY KEY (ID)
-);
-
-CREATE TABLE IF NOT EXISTS Country (
-  -- 2char representation of the country e.g CA
-  ShortCode CHAR(2) NOT NULL,
-
-  -- The full name of the country e.g Canada
-  FullName VARCHAR(40) NOT NULL,
-
-  PRIMARY KEY (ShortCode)
-);
-INSERT INTO Country (ShortCode, FullName) VALUES ('ZZ' , 'Unknown');
-
---
-CREATE TABLE IF NOT EXISTS Versions (
-  --
-  Plugin INT NOT NULL,
-
-  -- The version they changed to
-  Version VARCHAR(40) NOT NULL,
-
-  -- The epoch time they changed at
-  Created INTEGER NOT NULL,
-
-  --
-  INDEX (Plugin),
-
-  --
-  INDEX (Created),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  PRIMARY KEY (Version)
-);
-
--- deprecated
-CREATE TABLE IF NOT EXISTS VersionHistory (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  -- Name of the plugin
-  Server INT NOT NULL,
-
-  -- The version they changed to
-  Version VARCHAR(40) NOT NULL,
-
-  -- The epoch time they changed at
-  Created INTEGER NOT NULL,
-
-  --
-  INDEX (Plugin),
-
-  --
-  INDEX (Server),
-
-  --
-  INDEX (Version),
-
-  --
-  INDEX (Created),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  FOREIGN KEY (Server) REFERENCES Server (ID),
-
-  --
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
-
--- These tables are using for post-processing raw data into easy to use data
--- for example, getting the amount of servers that were online in the last hour and storing that
-CREATE TABLE IF NOT EXISTS PlayerTimeline (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  --
-  Players INT NOT NULL,
-
-  -- The unix timestamp this timeline entry refers to
-  Epoch INTEGER NOT NULL,
-
-  --
-  Index (Plugin),
-
-  --
-  INDEX (Players),
-
-  --
-  UNIQUE INDEX (Plugin, Epoch),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
-
-CREATE TABLE IF NOT EXISTS ServerTimeline (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  --
-  Servers INT NOT NULL,
-
-  -- The unix timestamp this timeline entry refers to
-  Epoch INTEGER NOT NULL,
-
-  --
-  Index (Plugin),
-
-  --
-  INDEX (Servers),
-
-  --
-  UNIQUE INDEX (Plugin, Epoch),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
-
-CREATE TABLE IF NOT EXISTS CountryTimeline (
-  ID INT NOT NULL AUTO_INCREMENT,
-
-  --
-  Plugin INT NOT NULL,
-
-  --
-  Country CHAR(2) NOT NULL,
-
-  --
-  Servers INT NOT NULL,
-
-  -- The unix timestamp this timeline entry refers to
-  Epoch INTEGER NOT NULL,
-
-  --
-  Index (Plugin),
-
-  --
-  INDEX (Servers),
-
-  --
-  UNIQUE INDEX (Plugin, Country, Epoch),
-
-  --
-  FOREIGN KEY (Plugin) REFERENCES Plugin (ID),
-
-  --
-  FOREIGN KEY (Country) REFERENCES Country (ShortCode),
-
-  --
-  PRIMARY KEY (ID)
-) ENGINE = InnoDB;
+/*
+Navicat MySQL Data Transfer
+
+Source Server         : griefcraft
+Source Server Version : 50161
+Source Host           : 176.31.107.170:3306
+Source Database       : metrics
+
+Target Server Type    : MYSQL
+Target Server Version : 50161
+File Encoding         : 65001
+
+Date: 2012-04-17 16:51:09
+*/
+
+SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for `Author`
+-- ----------------------------
+DROP TABLE IF EXISTS `Author`;
+CREATE TABLE `Author` (
+`ID`  int(11) NOT NULL ,
+`Name`  varchar(30) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Password`  varchar(40) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Created`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `AuthorACL`
+-- ----------------------------
+DROP TABLE IF EXISTS `AuthorACL`;
+CREATE TABLE `AuthorACL` (
+`Author`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+PRIMARY KEY (`Author`, `Plugin`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `Country`
+-- ----------------------------
+DROP TABLE IF EXISTS `Country`;
+CREATE TABLE `Country` (
+`ShortCode`  char(2) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`FullName`  varchar(40) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+PRIMARY KEY (`ShortCode`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `CountryTimeline`
+-- ----------------------------
+DROP TABLE IF EXISTS `CountryTimeline`;
+CREATE TABLE `CountryTimeline` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Country`  char(2) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Servers`  int(11) NOT NULL ,
+`Epoch`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `CustomColumn`
+-- ----------------------------
+DROP TABLE IF EXISTS `CustomColumn`;
+CREATE TABLE `CustomColumn` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Graph`  int(11) NOT NULL ,
+`Name`  varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `CustomData`
+-- ----------------------------
+DROP TABLE IF EXISTS `CustomData`;
+CREATE TABLE `CustomData` (
+`ID`  int(11) NOT NULL ,
+`Server`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`ColumnID`  int(11) NOT NULL ,
+`DataPoint`  int(11) NOT NULL ,
+`Updated`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `CustomDataTimeline`
+-- ----------------------------
+DROP TABLE IF EXISTS `CustomDataTimeline`;
+CREATE TABLE `CustomDataTimeline` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`ColumnID`  int(11) NOT NULL ,
+`DataPoint`  int(11) NOT NULL ,
+`Epoch`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `Graph`
+-- ----------------------------
+DROP TABLE IF EXISTS `Graph`;
+CREATE TABLE `Graph` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Type`  int(11) NOT NULL ,
+`Active`  tinyint(1) NOT NULL ,
+`Name`  varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `PlayerTimeline`
+-- ----------------------------
+DROP TABLE IF EXISTS `PlayerTimeline`;
+CREATE TABLE `PlayerTimeline` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Players`  int(11) NOT NULL ,
+`Epoch`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `Plugin`
+-- ----------------------------
+DROP TABLE IF EXISTS `Plugin`;
+CREATE TABLE `Plugin` (
+`ID`  int(11) NOT NULL ,
+`Name`  varchar(40) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Author`  varchar(75) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ,
+`Hidden`  tinyint(1) NOT NULL ,
+`GlobalHits`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `Server`
+-- ----------------------------
+DROP TABLE IF EXISTS `Server`;
+CREATE TABLE `Server` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`GUID`  varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`ServerVersion`  varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`CurrentVersion`  varchar(60) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ,
+`Hits`  int(11) NOT NULL ,
+`Created`  int(11) NOT NULL ,
+`Updated`  int(11) NOT NULL ,
+`Players`  int(11) NULL DEFAULT NULL ,
+`Country`  char(2) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT 'ZZ' ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `ServerPlugin`
+-- ----------------------------
+DROP TABLE IF EXISTS `ServerPlugin`;
+CREATE TABLE `ServerPlugin` (
+`Server`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Version`  varchar(40) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Updated`  int(11) NOT NULL 
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `ServerTimeline`
+-- ----------------------------
+DROP TABLE IF EXISTS `ServerTimeline`;
+CREATE TABLE `ServerTimeline` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Servers`  int(11) NOT NULL ,
+`Epoch`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `VersionHistory`
+-- ----------------------------
+DROP TABLE IF EXISTS `VersionHistory`;
+CREATE TABLE `VersionHistory` (
+`ID`  int(11) NOT NULL ,
+`Plugin`  int(11) NOT NULL ,
+`Server`  int(11) NOT NULL ,
+`Version`  varchar(60) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ,
+`Created`  int(11) NOT NULL ,
+PRIMARY KEY (`ID`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Table structure for `Versions`
+-- ----------------------------
+DROP TABLE IF EXISTS `Versions`;
+CREATE TABLE `Versions` (
+`Plugin`  int(11) NOT NULL ,
+`Version`  varchar(40) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Created`  int(11) NOT NULL ,
+PRIMARY KEY (`Plugin`, `Version`)
+)
+ENGINE=MyISAM
+DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
+
+;
+
+-- ----------------------------
+-- Indexes structure for table Author
+-- ----------------------------
+CREATE UNIQUE INDEX `name` USING BTREE ON `Author`(`Name`) ;
+
+-- ----------------------------
+-- Indexes structure for table AuthorACL
+-- ----------------------------
+CREATE INDEX `Plugin` USING BTREE ON `AuthorACL`(`Plugin`) ;
+
+-- ----------------------------
+-- Indexes structure for table CountryTimeline
+-- ----------------------------
+CREATE UNIQUE INDEX `Plugin_2` USING BTREE ON `CountryTimeline`(`Plugin`, `Country`, `Epoch`) ;
+CREATE INDEX `Plugin` USING BTREE ON `CountryTimeline`(`Plugin`) ;
+CREATE INDEX `Servers` USING BTREE ON `CountryTimeline`(`Servers`) ;
+CREATE INDEX `Country` USING BTREE ON `CountryTimeline`(`Country`) ;
+CREATE INDEX `Timeline-Country` USING BTREE ON `CountryTimeline`(`Plugin`, `Epoch`) ;
+
+-- ----------------------------
+-- Indexes structure for table CustomColumn
+-- ----------------------------
+CREATE UNIQUE INDEX `getColumnID` USING BTREE ON `CustomColumn`(`Plugin`, `Graph`, `Name`) ;
+CREATE INDEX `Plugin` USING BTREE ON `CustomColumn`(`Plugin`) ;
+CREATE INDEX `Name` USING BTREE ON `CustomColumn`(`Name`) ;
+CREATE INDEX `Graph` USING BTREE ON `CustomColumn`(`Graph`) ;
+CREATE INDEX `Active2` USING BTREE ON `CustomColumn`(`Plugin`) ;
+
+-- ----------------------------
+-- Indexes structure for table CustomData
+-- ----------------------------
+CREATE UNIQUE INDEX `Trikey` USING BTREE ON `CustomData`(`Server`, `Plugin`, `ColumnID`) ;
+CREATE INDEX `Server` USING BTREE ON `CustomData`(`Server`) ;
+CREATE INDEX `Plugin` USING BTREE ON `CustomData`(`Plugin`) ;
+CREATE INDEX `ColumnID` USING BTREE ON `CustomData`(`ColumnID`) ;
+CREATE INDEX `Updated` USING BTREE ON `CustomData`(`Updated`) ;
+CREATE INDEX `crontrikey` USING BTREE ON `CustomData`(`Plugin`, `ColumnID`, `Updated`) ;
+
+-- ----------------------------
+-- Indexes structure for table CustomDataTimeline
+-- ----------------------------
+CREATE UNIQUE INDEX `Plugin_2` USING BTREE ON `CustomDataTimeline`(`Plugin`, `ColumnID`, `Epoch`) ;
+CREATE INDEX `Plugin` USING BTREE ON `CustomDataTimeline`(`Plugin`) ;
+CREATE INDEX `ColumnID` USING BTREE ON `CustomDataTimeline`(`ColumnID`) ;
+CREATE INDEX `Ajax-Timeline` USING BTREE ON `CustomDataTimeline`(`ColumnID`, `Plugin`, `Epoch`) ;
+
+-- ----------------------------
+-- Indexes structure for table Graph
+-- ----------------------------
+CREATE INDEX `Plugin` USING BTREE ON `Graph`(`Plugin`) ;
+CREATE INDEX `Type` USING BTREE ON `Graph`(`Type`) ;
+CREATE INDEX `Name` USING BTREE ON `Graph`(`Name`) ;
+CREATE INDEX `Active` USING BTREE ON `Graph`(`Active`) ;
+CREATE INDEX `Active2` USING BTREE ON `Graph`(`Plugin`, `Active`) ;
+
+-- ----------------------------
+-- Indexes structure for table PlayerTimeline
+-- ----------------------------
+CREATE UNIQUE INDEX `Epoch` USING BTREE ON `PlayerTimeline`(`Plugin`, `Epoch`) ;
+CREATE INDEX `Plugin` USING BTREE ON `PlayerTimeline`(`Plugin`) ;
+CREATE INDEX `Players` USING BTREE ON `PlayerTimeline`(`Players`) ;
+
+-- ----------------------------
+-- Indexes structure for table Plugin
+-- ----------------------------
+CREATE INDEX `Name` USING BTREE ON `Plugin`(`Name`) ;
+
+-- ----------------------------
+-- Indexes structure for table Server
+-- ----------------------------
+CREATE INDEX `GUID` USING BTREE ON `Server`(`GUID`) ;
+CREATE INDEX `ServerVersion` USING BTREE ON `Server`(`ServerVersion`) ;
+CREATE INDEX `CurrentVersion` USING BTREE ON `Server`(`CurrentVersion`) ;
+CREATE INDEX `Hits` USING BTREE ON `Server`(`Hits`) ;
+CREATE INDEX `Created` USING BTREE ON `Server`(`Created`) ;
+CREATE INDEX `Updated` USING BTREE ON `Server`(`Updated`) ;
+CREATE INDEX `Plugin` USING BTREE ON `Server`(`Plugin`) ;
+CREATE INDEX `Country` USING BTREE ON `Server`(`Country`) ;
+
+-- ----------------------------
+-- Indexes structure for table ServerPlugin
+-- ----------------------------
+CREATE UNIQUE INDEX `Server` USING BTREE ON `ServerPlugin`(`Server`, `Plugin`) ;
+CREATE INDEX `Server_2` USING BTREE ON `ServerPlugin`(`Server`) ;
+CREATE INDEX `Plugin` USING BTREE ON `ServerPlugin`(`Plugin`) ;
+CREATE INDEX `Version` USING BTREE ON `ServerPlugin`(`Version`) ;
+CREATE INDEX `Updated` USING BTREE ON `ServerPlugin`(`Updated`) ;
+CREATE INDEX `Count` USING BTREE ON `ServerPlugin`(`Plugin`, `Version`, `Updated`) ;
+CREATE INDEX `Count2` USING BTREE ON `ServerPlugin`(`Plugin`, `Updated`) ;
+
+-- ----------------------------
+-- Indexes structure for table ServerTimeline
+-- ----------------------------
+CREATE UNIQUE INDEX `Epoch` USING BTREE ON `ServerTimeline`(`Plugin`, `Epoch`) ;
+CREATE INDEX `Plugin` USING BTREE ON `ServerTimeline`(`Plugin`) ;
+CREATE INDEX `Servers` USING BTREE ON `ServerTimeline`(`Servers`) ;
+
+-- ----------------------------
+-- Indexes structure for table VersionHistory
+-- ----------------------------
+CREATE INDEX `Plugin` USING BTREE ON `VersionHistory`(`Plugin`) ;
+CREATE INDEX `Server` USING BTREE ON `VersionHistory`(`Server`) ;
+CREATE INDEX `Version` USING BTREE ON `VersionHistory`(`Version`) ;
+CREATE INDEX `Created` USING BTREE ON `VersionHistory`(`Created`) ;
+
+-- ----------------------------
+-- Indexes structure for table Versions
+-- ----------------------------
+CREATE INDEX `Plugin` USING BTREE ON `Versions`(`Plugin`) ;
+CREATE INDEX `Created` USING BTREE ON `Versions`(`Created`) ;

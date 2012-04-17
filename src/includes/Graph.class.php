@@ -116,21 +116,8 @@ class Graph
         // get the id for the column
         $columnID = $this->getColumnID($columnName);
 
-        // Does the server already have a data point for this column?
-        $statement = $pdo->prepare('SELECT ID FROM CustomData WHERE Server = :Server AND Plugin = :Plugin AND ColumnID = :ColumnID');
-        $statement->execute(array(':Server' => $server->getID(), ':Plugin' => $this->plugin->getID(), ':ColumnID' => $columnID));
-
-        // If we found it, update it instead
-        if ($row = $statement->fetch()) {
-            $id = $row['ID'];
-
-            $statement = $pdo->prepare('UPDATE CustomData SET DataPoint = :DataPoint, Updated = :Updated WHERE ID = :ID');
-            $statement->execute(array(':DataPoint' => $value, ':Updated' => time(), ':ID' => $id));
-            return;
-        }
-
-        // Not there yet, insert it
-        $statement = $pdo->prepare('INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)');
+        $statement = $pdo->prepare('INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)
+                                    ON DUPLICATE KEY UPDATE DataPoint = :DataPoint , Updated = :Updated');
         $statement->execute(array(
             ':Server' => $server->getID(),
             ':Plugin' => $this->plugin->getID(),
@@ -145,53 +132,13 @@ class Graph
      *
      * @param $columName
      */
-    public function verifyColumn($columnName, $attemptedToCreate = false, $updateColumn = true)
+    public function verifyColumn($columnName)
     {
         global $pdo;
 
-        $statement = $pdo->prepare('SELECT ID, Graph FROM CustomColumn WHERE Plugin = ? AND Graph = ? AND Name = ?');
-        $statement->execute(array($this->plugin->getID(), $this->id, $columnName));
-
-        // Did we get it?
-        if ($row = $statement->fetch()) {
-            $id = $row['ID'];
-            $graphID = $row['Graph'];
-
-            if (!$updateColumn)
-            {
-                // This is as far as we need to go
-                return;
-            }
-
-            // Is it already assigned to a graph?
-            if ($id > 0)
-            {
-                return;
-            }
-
-            // Update it if it does not match
-            if ($graphID != $this->id)
-            {
-                $statement = $pdo->prepare('UPDATE CustomColumn SET Graph = ? WHERE ID = ?');
-                $statement->execute(array($this->id, $id));
-
-                // Reload the columns
-                $this->loadColumns();
-            }
-
-            return;
-        }
-
-        if ($attemptedToCreate)
-        {
-            error_fquit("Failed to create custom column: $columnName");
-        }
-
-        // Nope...
-        $statement = $pdo->prepare('INSERT INTO CustomColumn (Plugin, Graph, Name) VALUES (:Plugin, :Graph, :Name)');
+        $statement = $pdo->prepare('INSERT INTO CustomColumn (Plugin, Graph, Name) VALUES (:Plugin, :Graph, :Name)
+                                    ON DUPLICATE KEY UPDATE Graph = :Graph');
         $statement->execute(array(':Plugin' => $this->plugin->getID(), ':Graph' => $this->id, ':Name' => $columnName));
-
-        $this->verifyColumn($columnName, TRUE, $updateColumn);
     }
 
     /**
