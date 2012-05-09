@@ -345,10 +345,6 @@ public class Metrics {
             while (iter.hasNext()) {
                 final Graph graph = iter.next();
 
-                // Because we have a lock on the graphs set already, it is reasonable to assume
-                // that our lock transcends down to the individual plotters in the graphs also.
-                // Because our methods are private, no one but us can reasonably access this list
-                // without reflection so this is a safe assumption without adding more code.
                 for (Plotter plotter : graph.getPlotters()) {
                     // The key name to send to the metrics server
                     // The format is C-GRAPHNAME-PLOTTERNAME where separator - is defined at the top
@@ -389,18 +385,6 @@ public class Metrics {
         // Now read the response
         final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         final String response = reader.readLine();
-
-//        // response is ok - We should get "OK" followed by an optional description if everything goes right
-//        if(response.startsWith("OK")) {
-//            Bukkit.getLogger().log(Level.WARNING, "[Metrics] " + response);
-//        }else{
-//            // dump error response to console
-//            Bukkit.getLogger().log(Level.WARNING, "[Metrics] Failed to report in!");
-//            Bukkit.getLogger().log(Level.WARNING, "[Metrics] " + response);
-//            for(String line = null; (line = reader.readLine()) != null;){
-//                Bukkit.getLogger().log(Level.WARNING, "[Metrics] " + line);
-//            }
-//        }
 
         // close resources
         writer.close();
