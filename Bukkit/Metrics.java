@@ -390,6 +390,18 @@ public class Metrics {
         final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         final String response = reader.readLine();
 
+//        // response is ok - We should get "OK" followed by an optional description if everything goes right
+//        if(response.startsWith("OK")) {
+//            Bukkit.getLogger().log(Level.WARNING, "[Metrics] " + response);
+//        }else{
+//            // dump error response to console
+//            Bukkit.getLogger().log(Level.WARNING, "[Metrics] Failed to report in!");
+//            Bukkit.getLogger().log(Level.WARNING, "[Metrics] " + response);
+//            for(String line = null; (line = reader.readLine()) != null;){
+//                Bukkit.getLogger().log(Level.WARNING, "[Metrics] " + line);
+//            }
+//        }
+
         // close resources
         writer.close();
         reader.close();
@@ -412,7 +424,6 @@ public class Metrics {
                 }
             }
         }
-        //if (response.startsWith("OK")) - We should get "OK" followed by an optional description if everything goes right
     }
 
     /**

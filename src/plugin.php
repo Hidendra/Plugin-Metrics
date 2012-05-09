@@ -51,6 +51,19 @@ echo '
 
                 <div class="span4" style="width: 20%">
                     <h3>Plugin information</h3>
+';
+
+// get last updated
+$timelast = getTimeLast();
+
+// display time last
+if($timelast > 0){
+echo '
+                    <p> Minutes since last update: '.floor($timelast/60).' </p>
+';
+}
+
+echo '
                     <table class="table table-striped">
                         <tbody>
                             <tr> <td> Name </td> <td> ' . $pluginName . ' </td> </tr>
