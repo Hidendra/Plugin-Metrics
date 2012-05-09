@@ -35,8 +35,14 @@ $cache = new Cache();
  */
 function error_fquit($message)
 {
-    error_log($message);
-    exit;
+    if (PHP_SAPI == 'cli')
+    {
+        echo $message . PHP_EOL;
+    } else
+    {
+        error_log($message);
+        exit;
+    }
 }
 
 /**
@@ -115,7 +121,13 @@ function getPostArgument($key)
     // check
     if (!isset($_POST[$key]))
     {
-        exit('ERR Missing arguments');
+        if (PHP_SAPI == 'cli')
+        {
+            return NULL;
+        } else
+        {
+            exit('ERR Missing arguments');
+        }
     }
 
     return $_POST[$key];
@@ -135,6 +147,7 @@ function getPostArgument($key)
 function extractCustomData()
 {
     global $config;
+    $start = millitime();
 
     // What custom data is separated by
     $separator = $config['graph']['separator'];
@@ -220,10 +233,9 @@ function extractCustomDataLegacy()
  */
 function loadCountries()
 {
-    global $pdo;
     $countries = array();
 
-    $statement = $pdo->prepare('SELECT ShortCode, FullName FROM Country LIMIT 300'); // hard limit of 300
+    $statement = get_slave_db_handle()->prepare('SELECT ShortCode, FullName FROM Country LIMIT 300'); // hard limit of 300
     $statement->execute();
 
     while ($row = $statement->fetch())
@@ -262,15 +274,15 @@ function resolvePlugin($row)
  */
 function loadPlugins($alphabetical = false)
 {
-    global $pdo;
+    $db_handle = get_slave_db_handle();
     $plugins = array();
 
     if ($alphabetical)
     {
-        $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY Name ASC');
+        $statement = $db_handle->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY Name ASC');
     } else
     {
-        $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY (SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = Plugin.ID AND Updated >= ?) DESC');
+        $statement = $db_handle->prepare('SELECT Plugin.ID, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? GROUP BY Plugin.ID ORDER BY ServerCount DESC');
     }
     $statement->execute(array(time() - SECONDS_IN_DAY));
 
@@ -290,14 +302,13 @@ function loadPlugins($alphabetical = false)
  */
 function loadPlugin($plugin)
 {
-    global $pdo;
-
-    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Name = :Name');
+    $statement = get_slave_db_handle()->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Name = :Name');
     $statement->execute(array(':Name' => $plugin));
 
     if ($row = $statement->fetch())
     {
-        return resolvePlugin($row);
+        $plugin = resolvePlugin($row);
+        return $plugin;
     }
 
     return NULL;
@@ -311,9 +322,7 @@ function loadPlugin($plugin)
  */
 function loadPluginByID($id)
 {
-    global $pdo;
-
-    $statement = $pdo->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE ID = :ID');
+    $statement = get_slave_db_handle()->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE ID = :ID');
     $statement->execute(array(':ID' => $id));
 
     if ($row = $statement->fetch())
@@ -451,7 +460,7 @@ function can_admin_plugin($plugin)
  */
 function get_accessible_plugins()
 {
-    global $_SESSION , $pdo;
+    global $_SESSION , $master_db_handle;
 
     // The plugins we can access
     $plugins = array();
@@ -463,7 +472,7 @@ function get_accessible_plugins()
     }
 
     // Query for all of the plugins
-    $statement = $pdo->prepare('SELECT Plugin, ID, Name, Plugin.Author, Hidden, GlobalHits FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
+    $statement = $master_db_handle->prepare('SELECT Plugin, ID, Name, Plugin.Author, Hidden, GlobalHits FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
     $statement->execute(array($_SESSION['uid']));
 
     while ($row = $statement->fetch())
@@ -483,10 +492,10 @@ function get_accessible_plugins()
  */
 function check_login($username, $password)
 {
-    global $pdo , $_SESSION;
+    global $master_db_handle , $_SESSION;
 
     // Create the query
-    $statement = $pdo->prepare('SELECT ID, Name, Password FROM Author WHERE Name = ?');
+    $statement = $master_db_handle->prepare('SELECT ID, Name, Password FROM Author WHERE Name = ?');
     $statement->execute(array($username));
 
     if ($row = $statement->fetch())
@@ -532,4 +541,30 @@ function ensure_loggedin()
         header('Location: /admin/login.php');
         exit;
     }
+}
+
+
+/**
+ * Profiling
+ */
+
+function function_log($functionName, $elapsed, $desc = '')
+{
+    if (PHP_SAPI == 'cli')
+    {
+        echo " => $functionName: {$elapsed}ms" . ($desc == '' ? '' : " : $desc") . PHP_EOL;
+    } else
+    {
+        error_log(" => $functionName: {$elapsed}ms" . ($desc == '' ? '' : " : $desc"));
+    }
+}
+
+/**
+ * Get the current time in milliseconds
+ * @return long
+ */
+function millitime()
+{
+    $timeparts = explode(" ",microtime());
+    return bcadd(($timeparts[0]*1000),bcmul($timeparts[1],1000));
 }

@@ -12,7 +12,7 @@ require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
 // iterate through all of the plugins
-foreach (loadPlugins() as $plugin)
+foreach (loadPlugins(true) as $plugin)
 {
     if ($plugin->getID() == GLOBAL_PLUGIN_ID) continue;
     $baseEpoch = normalizeTime();
@@ -32,7 +32,7 @@ foreach (loadPlugins() as $plugin)
         // Sum the data for the current graphing period
         $sum = $plugin->sumCustomData($id, $minimum);
 
-        $statement = $pdo->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, DataPoint, Epoch) VALUES (:Plugin, :ColumnID, :DataPoint, :Epoch)');
+        $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, DataPoint, Epoch) VALUES (:Plugin, :ColumnID, :DataPoint, :Epoch)');
         $statement->execute(array(
             ':Plugin' => $plugin->getID(),
             ':ColumnID' => $id,

@@ -14,7 +14,7 @@ require_once ROOT . 'includes/func.php';
 $countries = loadCountries();
 
 // iterate through all of the plugins
-foreach (loadPlugins() as $plugin)
+foreach (loadPlugins(true) as $plugin)
 {
     $baseEpoch = normalizeTime();
 
@@ -31,7 +31,7 @@ foreach (loadPlugins() as $plugin)
             $servers = $plugin->countServersLastUpdatedFromCountry($shortCode, $minimum);
         } else
         {
-            $statement = $pdo->prepare('SELECT COUNT(distinct Server) AS Count FROM ServerPlugin
+            $statement = $master_db_handle->prepare('SELECT COUNT(distinct Server) AS Count FROM ServerPlugin
                                     LEFT OUTER JOIN Server ON (ServerPlugin.Server = Server.ID)
                                     WHERE Country = ? AND ServerPlugin.Updated >= ?');
             $statement->execute(array($shortCode, $minimum));
@@ -48,7 +48,7 @@ foreach (loadPlugins() as $plugin)
         }
 
         // Insert it into the database
-        $statement = $pdo->prepare('INSERT INTO CountryTimeline (Plugin, Country, Servers, Epoch) VALUES (:Plugin, :Country, :Servers, :Epoch)');
+        $statement = $master_db_handle->prepare('INSERT INTO CountryTimeline (Plugin, Country, Servers, Epoch) VALUES (:Plugin, :Country, :Servers, :Epoch)');
         $statement->execute(array(
             ':Plugin' => $plugin->getID(),
             ':Country' => $shortCode,

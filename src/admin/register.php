@@ -26,7 +26,7 @@ if (isset($_POST['submit']))
         $hashed_password = sha1($password);
 
         // Create a database entry
-        $statement = $pdo->prepare('INSERT INTO Author (Name, Password, Created) VALUES (?, ?, ?)');
+        $statement = $master_db_handle->prepare('INSERT INTO Author (Name, Password, Created) VALUES (?, ?, ?)');
         $statement->execute(array($username, $hashed_password, time()));
 
         // Redirect them

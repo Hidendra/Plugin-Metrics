@@ -15,10 +15,24 @@ class Cache
      */
     private $handle;
 
-    public function __construct()
+    public function __construct($handle = null)
     {
-        $this->handle = new Memcache();
-        $this->connect();
+        if ($handle === NULL)
+        {
+            $this->handle = new Memcached('memcached_pool');
+            $this->connect();
+        } else
+        {
+            $this->handle = $handle;
+        }
+    }
+
+    /**
+     * Get the caching daemon handle
+     */
+    public function handle()
+    {
+        return $this->handle;
     }
 
     /**
@@ -40,7 +54,14 @@ class Cache
             return;
         }
 
-        $this->handle->connect('127.0.0.1', 11211);
+        $list = $this->handle->getServerList();
+        if (empty($list))
+        {
+            $this->handle->setOption(Memcached::OPT_RECV_TIMEOUT, 1000);
+            $this->handle->setOption(Memcached::OPT_SEND_TIMEOUT, 3000);
+            $this->handle->setOption(Memcached::OPT_TCP_NODELAY, true);
+            $this->handle->addServer('127.0.0.1', 11211); // TODO configuration
+        }
     }
 
     /**
@@ -55,7 +76,7 @@ class Cache
             return null;
         }
 
-        return $this->handle->get($key);
+        return $this->handle->get(json_decode($key));
     }
 
     /**
@@ -78,7 +99,7 @@ class Cache
             $expire = timeUntilNextGraph() - time();
         }
 
-        return $this->handle->set($key, $value, false, $expire);
+        return $this->handle->setByKey($key, json_encode($value), false, $expire);
     }
 
 }

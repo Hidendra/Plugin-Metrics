@@ -9,11 +9,20 @@ $config['graph']['interval'] = 30;
 // The separator to used in post requests for custom data
 $config['graph']['separator'] = '~~';
 
-// main database info
-$config['database']['driver'] = 'mysql';
-$config['database']['host'] = 'localhost';
-$config['database']['dbname'] = 'metrics';
+// Master database configuration
+$config['database']['master'] = array(
+    'hostname'  => '127.0.0.1',
+    'dbname'    => 'metrics',
+    'username'  => 'metrics',
+    'password'  => ''
+);
 
-// auth credentials for the database if it requires it
-$config['database']['username'] = 'root';
-$config['database']['password'] = '';
+// Slave database configuration
+// Most select queries are offloaded to the slave instead
+$config['database']['slave'] = array(
+    'enabled'   => FALSE,
+    'hostname'  => '10.10.1.8',
+    'dbname'    => 'metrics',
+    'username'  => 'metrics',
+    'password'  => ''
+);

@@ -96,9 +96,9 @@ class Graph
      */
     public function save()
     {
-        global $pdo;
+        global $master_db_handle;
 
-        $statement = $pdo->prepare('UPDATE Graph SET Type = ?, Active = ? WHERE ID = ?');
+        $statement = $master_db_handle->prepare('UPDATE Graph SET Type = ?, Active = ? WHERE ID = ?');
         $statement->execute(array($this->type, $this->active, $this->id));
     }
 
@@ -111,34 +111,19 @@ class Graph
      */
     public function addCustomData($server, $columnName, $value)
     {
-        global $pdo;
+        global $master_db_handle;
 
         // get the id for the column
         $columnID = $this->getColumnID($columnName);
 
-        $statement = $pdo->prepare('INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)
-                                    ON DUPLICATE KEY UPDATE DataPoint = :DataPoint , Updated = :Updated');
-        $statement->execute(array(
-            ':Server' => $server->getID(),
-            ':Plugin' => $this->plugin->getID(),
-            ':ColumnID' => $columnID,
-            ':DataPoint' => $value,
-            ':Updated' => time()
-        ));
-    }
-
-    /**
-     * Verify a column exists and create it if it does not
-     *
-     * @param $columName
-     */
-    public function verifyColumn($columnName)
-    {
-        global $pdo;
-
-        $statement = $pdo->prepare('INSERT INTO CustomColumn (Plugin, Graph, Name) VALUES (:Plugin, :Graph, :Name)
-                                    ON DUPLICATE KEY UPDATE Graph = :Graph');
-        $statement->execute(array(':Plugin' => $this->plugin->getID(), ':Graph' => $this->id, ':Name' => $columnName));
+        $statement = $master_db_handle->prepare('INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)
+                                    ON DUPLICATE KEY UPDATE DataPoint = VALUES(DataPoint) , Updated = VALUES(Updated)');
+        $statement->bindValue(':Server', intval($server->getID()), PDO::PARAM_INT);
+        $statement->bindValue(':Plugin', intval($this->plugin->getID()), PDO::PARAM_INT);
+        $statement->bindValue(':ColumnID', intval($columnID), PDO::PARAM_INT);
+        $statement->bindValue(':DataPoint', intval($value), PDO::PARAM_INT);
+        $statement->bindValue(':Updated', time(), PDO::PARAM_INT);
+        $statement->execute();
     }
 
     /**
@@ -149,26 +134,24 @@ class Graph
      */
     public function getColumnID($columnName, $attemptedToCreate = false)
     {
-        global $pdo;
+        global $master_db_handle;
 
         // It should already be in the database
-        $statement = $pdo->prepare('SELECT ID FROM CustomColumn WHERE Plugin = ? AND Graph = ? AND Name = ?');
+        $statement = get_slave_db_handle()->prepare('SELECT ID FROM CustomColumn WHERE Plugin = ? AND Graph = ? AND Name = ?');
         $statement->execute(array($this->plugin->getID(), $this->id, $columnName));
 
         if ($row = $statement->fetch())
         {
-            return $row['ID'];
+            $id = $row['ID'];
+            return $id;
         }
 
-        $statement = $pdo->prepare('SELECT ID FROM CustomColumn WHERE Plugin = ? AND Name = ?');
-        $statement->execute(array($this->plugin->getID(), $columnName));
+        $statement = $master_db_handle->prepare('INSERT INTO CustomColumn (Plugin, Graph, Name) VALUES (:Plugin, :Graph, :Name)');
+        $statement->execute(array(':Plugin' => $this->plugin->getID(), ':Graph' => $this->id, ':Name' => $columnName));
 
-        if ($row = $statement->fetch())
-        {
-            return $row['ID'];
-        }
-
-        error_fquit('getColumnID() failed : "' . $columnName . '" in graph ' . $this->id);
+        // Now get the last inserted id
+        $id = $master_db_handle->lastInsertId();
+        return $id;
     }
 
     /**
@@ -243,7 +226,7 @@ class Graph
         if ($this->type != GraphType::Pie)
         {
             $chart->rangeSelector = array(
-                'selected' => 3,
+                'selected' => ($this->type == GraphType::Column ? 0 : 3),
                 'buttons' => array(
                     array(
                         'type' => 'hour',
@@ -428,13 +411,13 @@ class Graph
 
     /**
      * Load the columns for this graph
+     * @param $limit_results Only show the most used results, mainly just for displaying in /plugin/
      */
-    private function loadColumns()
+    private function loadColumns($limit_results = false)
     {
-        global $pdo;
         $this->columns = array();
-        $statement = $pdo->prepare('SELECT ID, Name FROM CustomColumn WHERE Graph = ? AND Plugin = ?');
-        $statement->execute(array($this->id, $this->plugin->getID()));
+        $statement = get_slave_db_handle()->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ? AND Graph = ?');
+        $statement->execute(array($this->plugin->getID(), $this->id));
 
         while (($row = $statement->fetch()) != null)
         {

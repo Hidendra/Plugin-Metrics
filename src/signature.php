@@ -41,10 +41,12 @@ $cache_key = 'signature-' . strtolower($pluginName);
 $cached_image = $cache->get($cache_key);
 
 // Image found ?!?!?
-if ($cached_image != NULL)
+if ($cached_image !== FALSE)
 {
     exit ($cached_image);
 }
+
+error_log('generating ' . $pluginName);
 
 // Load the json data from the api
 // First, basic plugin data
@@ -123,7 +125,7 @@ $graph->setGraphArea(60, 30, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 30);
 $graph->drawFilledRoundedRectangle(7, 7, IMAGE_WIDTH - 7, IMAGE_HEIGHT - 7, 5, 240, 240, 240);
 $graph->drawRoundedRectangle(5, 5, IMAGE_WIDTH - 5, IMAGE_HEIGHT - 5, 5, 230, 230, 230);
 $graph->drawGraphArea(250, 250, 250, true);
-$graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_NORMAL, 150, 150, 150, true, 0, 0);
+$graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_START0, 150, 150, 150, true, 0, 0);
 // $graph->drawGrid(4, true, 230, 230, 230, 100);
 
 // Draw the footer

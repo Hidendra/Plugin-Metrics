@@ -1,14 +1,14 @@
 
-
 A thank you towards the authors of the following libraries and technologies that have been utilized in one way or another:
 -Backend:
+ - nginx (before, lighty)
  - memcached
  - mysql
  - php
  - highroller (php wrapper for highcharts)
+ - pChart (dynamic signature image generation)
 -Frontend:
  - highcharts and highstock
- - pChart, for dynamic signature image generation
  - jquery
  - jqueryui
  - pjax

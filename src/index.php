@@ -1,10 +1,12 @@
 <?php
 define('ROOT', './');
-session_start();
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
+
+// Cache until the next interval
+header('Cache-Control: public, s-maxage=' . (timeUntilNextGraph() - time()));
 
 /// Templating
 $page_title = 'Plugin Metrics';
@@ -12,13 +14,10 @@ $container_class = 'container-fluid';
 send_header();
 
 echo '
-            <script>
-                var pluginName = "All Servers";
-            </script>
 
-            <script src="http://static.griefcraft.com/javascript/highcharts/highcharts.js" type="text/javascript"></script>
-            <script src="http://static.griefcraft.com/javascript/highcharts/highstock.js" type="text/javascript"></script>
-            <script src="http://static.griefcraft.com/javascript/highcharts/themes/grid.js" type="text/javascript"></script>
+            <script src="http://static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
+            <script src="http://static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
+            <script src="http://static.mcstats.org/javascript/highcharts/themes/grid.js" type="text/javascript"></script>
 
             <div class="row-fluid" style="text-align: center; margin-bottom: 15px;">
                     <h2> Plugin Metrics </h2>
@@ -58,7 +57,13 @@ foreach (loadPlugins() as $plugin)
         $showMoreServers = true;
     }
 
-    echo '                          <tr' . ($servers < 10 ? ' class="hide-server"' : '') . '> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . number_format($servers) . ' </td> </tr>
+    $format = number_format($servers);
+
+    if ($plugin->getName() == 'VanishNoPacket') {
+        $format = '<b>' . $format . '</b>';
+    }
+
+    echo '                          <tr' . ($servers < 10 ? ' class="hide-server"' : '') . '> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . $format . ' </td> </tr>
 ';
 }
 echo '

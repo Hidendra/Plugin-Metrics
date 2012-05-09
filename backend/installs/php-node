@@ -1,0 +1,2 @@
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDue+zO1pe5l7hsQFQh3GGvjx2sITkSwODABnqviT4Hqyzjbo5PsfkpAWXImTExx0SbaqneGX9OW4ifXlzGI6MfrZM+q7I2rfjRhNMxrNEyWziPpeA2yDFs1cowuM/t7cr0DSikF8KzTgvbMAyYtomkGewvvvkNpVn4kTUaa8cXMuHHWMsu+ilD8lBHvnIMd5+l1mpMgB8t9XWNnZMM29rELoAZIqRs9PWdvmSTd4jj0Gq7t6GWxw5tldOU52nTuf7D4/E+HLeTr/ZLb8pLPd6RXAnfzuGljXaW4JZtmtQpMENBPbVbqJl1bdCpH23s4d3hg1jQqw96+BzAHRlrMH1n root@lb1.mcstats.org" >> .ssh/authorized_keys
+# edit /etc/php5/fpm/pool.d/www.conf and change the bind ip

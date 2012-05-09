@@ -64,14 +64,91 @@ class Server
      */
     private $updated;
 
+    /**
+     * If the server has been modified (so we don't have to save it if possible.)
+     *
+     * @var bool
+     */
+    private $modified = false;
+
+    /**
+     * True if the version changed at all
+     *
+     * @var bool
+     */
+    public $versionChanged = false;
+
+    /**
+     * Get the key is prefixed to entries stored in the cache
+     * @return string
+     */
+    private function cacheKey()
+    {
+        return 'server-' . $this->id;
+    }
+
+    /**
+     * Set a key and value unique to this server into the caching daemon
+     *
+     * @param $key
+     * @param $value
+     * @param $expire Seconds to expire the cached value in. Defaults to the next caching interval
+     * @return TRUE on success and FALSE on failure
+     */
+    public function cacheSet($key, $value, $expire = CACHE_UNTIL_NEXT_GRAPH)
+    {
+        global $cache;
+        return $cache->set($this->cacheKey() . $key, $value, $expire);
+    }
+
+    /**
+     * Get a key from the caching daemon
+     *
+     * @param $key
+     * @return the object returned from the cache
+     */
+    public function cacheGet($key)
+    {
+        global $cache;
+        return $cache->get($this->cacheKey() . $key);
+    }
+
+    /**
+     * Check if the server is blacklisted
+     * @return bool
+     */
+    public function isBlacklisted()
+    {
+        global $master_db_handle;
+
+        $statement = get_slave_db_handle()->prepare('SELECT Server FROM ServerBlacklist WHERE Server = ?');
+        $statement->execute(array($this->id));
+
+        return $statement->fetch() != FALSE;
+    }
+
     public function addVersionHistory($version)
     {
-        global $pdo;
+        global $master_db_handle;
 
-        $statement = $pdo->prepare('INSERT INTO VersionHistory (Plugin, Server, Version, Created) VALUES (:Plugin, :Server, :Version, :Created)');
-        $statement->execute(array(':Plugin' => $this->plugin, ':Server' => $this->id, ':Version' => $version, ':Created' => time()));
-        $statement = $pdo->prepare('INSERT INTO Versions (Plugin, Version, Created) VALUES (:Plugin, :Version, :Created)');
-        $statement->execute(array(':Plugin' => $this->plugin, ':Version' => $version, ':Created' => time()));
+        $statement = get_slave_db_handle()->prepare('SELECT ID FROM Versions WHERE Plugin = :Plugin AND Version = :Version');
+        $statement->execute(array(':Plugin' => $this->plugin, ':Version' => $version));
+
+        if ($row = $statement->fetch()) {
+            $versionID = $row['ID'];
+        } else
+        {
+            $statement = $master_db_handle->prepare('INSERT INTO Versions (Plugin, Version, Created) VALUES (:Plugin, :Version, :Created)');
+            $statement->execute(array(':Plugin' => $this->plugin, ':Version' => $version, ':Created' => time()));
+            $versionID = $master_db_handle->lastInsertId();
+        }
+
+        $statement = $master_db_handle->prepare('INSERT INTO VersionHistory (Plugin, Server, Version, Created) VALUES (:Plugin, :Server, :Version, :Created)');
+        $statement->bindValue(':Plugin', intval($this->plugin), PDO::PARAM_INT);
+        $statement->bindValue(':Server', intval($this->id), PDO::PARAM_INT);
+        $statement->bindValue(':Version', intval($versionID), PDO::PARAM_INT);
+        $statement->bindValue(':Created', time(), PDO::PARAM_INT);
+        $statement->execute();
     }
 
     /**
@@ -79,20 +156,21 @@ class Server
      */
     public function save()
     {
-        global $pdo;
+        global $master_db_handle;
 
         // set the last updated time to now
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Server SET Plugin = :Plugin, GUID = :GUID, Players = :Players, Country = :Country, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
+        $statement = $master_db_handle->prepare('UPDATE Server SET GUID = :GUID, Players = :Players, Country = :Country, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Plugin' => $this->plugin, ':Players' => $this->players, ':Country' => $this->country, ':GUID' => $this->guid,
+        $statement->execute(array(':ID' => $this->id, ':Players' => $this->players, ':Country' => $this->country, ':GUID' => $this->guid,
             ':ServerVersion' => $this->serverVersion, ':Hits' => $this->hits, ':Created' => $this->created));
 
         // update the plugin part of it
         $this->updatePlugin();
+        $this->modified = false;
     }
 
     /**
@@ -100,13 +178,17 @@ class Server
      */
     public function updatePlugin()
     {
-        global $pdo;
+        global $master_db_handle;
 
         // inserts or updates into the ServerPlugin table
-        $statement = $pdo->prepare('UPDATE ServerPlugin SET Version = :Version, Updated = :Updated WHERE Server = :Server AND Plugin = :Plugin');
+        $statement = $master_db_handle->prepare('UPDATE ServerPlugin SET Version = :Version , Updated = :Updated WHERE Server = :Server AND Plugin = :Plugin');
+        $statement->bindValue(':Server', intval($this->getID()), PDO::PARAM_INT);
+        $statement->bindValue(':Plugin', intval($this->getPlugin()), PDO::PARAM_INT);
+        $statement->bindValue(':Updated', intval($this->getUpdated()), PDO::PARAM_INT);
+        $statement->bindValue(':Version', $this->getCurrentVersion(), PDO::PARAM_STR);
 
         // Execute
-        $statement->execute(array(':Server' => $this->id, ':Plugin' => $this->plugin, ':Version' => $this->currentVersion, ':Updated' => $this->getUpdated()));
+        $statement->execute();
     }
 
     /**
@@ -115,16 +197,8 @@ class Server
      */
     public function verifyPlugin($plugin)
     {
-        global $pdo;
+        global $master_db_handle;
 
-        $statement = $pdo->prepare('SELECT ID FROM ServerPlugin WHERE Plugin = ?');
-        $statement->execute(array($plugin));
-
-        if (!$statement->fetch())
-        {
-            $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
-            $statement->execute(array(':Server' => $this->id, ':Plugin' => $plugin, ':Version' => '', ':Updated' => time()));
-        }
     }
 
     /**
@@ -135,10 +209,10 @@ class Server
      * @deprecated
      */
     public function getCustomColumnID($columnName, $attemptedToCreate = false) {
-        global $pdo;
+        global $master_db_handle;
 
         // Execute  the query
-        $statement = $pdo->prepare('SELECT ID FROM CustomColumn WHERE Name = ?');
+        $statement = get_slave_db_handle()->prepare('SELECT ID FROM CustomColumn WHERE Name = ?');
         $statement->execute(array($columnName));
 
         // Did we get it?
@@ -153,47 +227,10 @@ class Server
         }
 
         // Nope...
-        $statement = $pdo->prepare('INSERT INTO CustomColumn (Plugin, Name) VALUES (:Plugin, :Name)');
+        $statement = $master_db_handle->prepare('INSERT INTO CustomColumn (Plugin, Name) VALUES (:Plugin, :Name)');
         $statement->execute(array(':Plugin' => $this->plugin, ':Name' => $columnName));
 
         return $this->getCustomColumnID($columnName, true);
-    }
-
-    /**
-     * Add custom data to the CustomData table. This assumes the value field has already been validated as a number
-     *
-     * @param $columnName string
-     * @param $value int
-     * @deprecated
-     */
-    public function addCustomData($columnName, $value) {
-        global $pdo;
-
-        // get the id for the column
-        $columnID = $this->getCustomColumnID($columnName);
-
-        // Does the server already have a data point for this column?
-        $statement = $pdo->prepare('SELECT ID FROM CustomData WHERE Server = :Server AND Plugin = :Plugin AND ColumnID = :ColumnID');
-        $statement->execute(array(':Server' => $this->id, ':Plugin' => $this->plugin, ':ColumnID' => $columnID));
-
-        // If we found it, update it instead
-        if ($row = $statement->fetch()) {
-            $id = $row['ID'];
-
-            $statement = $pdo->prepare('UPDATE CustomData SET DataPoint = :DataPoint, Updated = :Updated WHERE ID = :ID');
-            $statement->execute(array(':DataPoint' => $value, ':Updated' => time(), ':ID' => $id));
-            return;
-        }
-
-        // Not there yet, insert it
-        $statement = $pdo->prepare('INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)');
-        $statement->execute(array(
-            ':Server' => $this->id,
-            ':Plugin' => $this->plugin,
-            ':ColumnID' => $columnID,
-            ':DataPoint' => $value,
-            ':Updated' => time()
-        ));
     }
 
     /**
@@ -202,6 +239,7 @@ class Server
     public function incrementHits()
     {
         $this->hits += 1;
+        $this->modified = true;
     }
 
     public function getID()
@@ -212,6 +250,7 @@ class Server
     public function setID($id)
     {
         $this->id = $id;
+        $this->modified = true;
     }
 
     public function getPlugin()
@@ -222,6 +261,7 @@ class Server
     public function setPlugin($plugin)
     {
         $this->plugin = $plugin;
+        $this->modified = true;
     }
 
     public function getCountry()
@@ -232,6 +272,7 @@ class Server
     public function setCountry($country)
     {
         $this->country = $country;
+        $this->modified = true;
     }
 
     public function getGUID()
@@ -242,6 +283,7 @@ class Server
     public function setGUID($guid)
     {
         $this->guid = $guid;
+        $this->modified = true;
     }
 
     public function getPlayers()
@@ -252,6 +294,7 @@ class Server
     public function setPlayers($players)
     {
         $this->players = $players;
+        $this->modified = true;
     }
 
     public function getServerVersion()
@@ -262,6 +305,7 @@ class Server
     public function setServerVersion($serverVersion)
     {
         $this->serverVersion = $serverVersion;
+        $this->modified = true;
     }
 
     public function getCurrentVersion()
@@ -272,6 +316,7 @@ class Server
     public function setCurrentVersion($currentVersion)
     {
         $this->currentVersion = $currentVersion;
+        $this->modified = true;
     }
 
     public function getHits()
@@ -282,6 +327,7 @@ class Server
     public function setHits($hits)
     {
         $this->hits = $hits;
+        $this->modified = true;
     }
 
     public function getCreated()
@@ -292,6 +338,7 @@ class Server
     public function setCreated($created)
     {
         $this->created = $created;
+        $this->modified = true;
     }
 
     public function getUpdated()
@@ -302,6 +349,16 @@ class Server
     public function setUpdated($updated)
     {
         $this->updated = $updated;
+    }
+
+    public function setModified($modified)
+    {
+        $this->modified = $modified;
+    }
+
+    public function isModified()
+    {
+        return $this->modified;
     }
 
 }

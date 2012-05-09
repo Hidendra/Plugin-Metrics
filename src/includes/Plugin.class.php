@@ -54,10 +54,10 @@ class Plugin
      */
     public function getOrCreateGraph($name, $attemptedToCreate = false, $active = 0)
     {
-        global $pdo;
+        global $master_db_handle;
 
         // Try to get it from the database
-        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Active Name FROM Graph WHERE Plugin = ? AND Name = ?');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Name FROM Graph WHERE Plugin = ? AND Name = ?');
         $statement->execute(array($this->id, $name));
 
         if ($row = $statement->fetch())
@@ -70,7 +70,7 @@ class Plugin
             error_fquit('Failed to create graph for "' . $name . '"');
         }
 
-        $statement = $pdo->prepare('INSERT INTO Graph (Plugin, Type, Name, Active) VALUES(:Plugin, :Type, :Name, :Active)');
+        $statement = $master_db_handle->prepare('INSERT INTO Graph (Plugin, Type, Name, Active) VALUES(:Plugin, :Type, :Name, :Active)');
         $statement->execute(array(':Plugin' => $this->id, ':Type' => GraphType::Line, ':Name' => $name, ':Active' => $active));
 
         // reselect it
@@ -83,12 +83,12 @@ class Plugin
      */
     public function getActiveGraphs()
     {
-        global $pdo;
+        global $master_db_handle;
 
         // The graphs to return
         $graphs = array();
 
-        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY ID asc');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY ID asc');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
@@ -105,12 +105,12 @@ class Plugin
      */
     public function getAllGraphs()
     {
-        global $pdo;
+        global $master_db_handle;
 
         // The graphs to return
         $graphs = array();
 
-        $statement = $pdo->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ?');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ?');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
@@ -154,32 +154,53 @@ class Plugin
      */
     public function getOrCreateServer($guid, $attemptedToCreate = false)
     {
-        global $pdo;
+        global $master_db_handle;
 
         // Try to select it first
-        $statement = $pdo->prepare('SELECT ID, GUID, ServerVersion, Version, Country, Hits, Created, ServerPlugin.Plugin, ServerPlugin.Version, ServerPlugin.Updated FROM Server
-                                    LEFT OUTER JOIN ServerPlugin ON (ServerPlugin.Server = Server.ID AND ServerPlugin.Plugin = :Plugin)
-                                    WHERE GUID = :GUID');
-        $statement->execute(array(':GUID' => $guid, ':Plugin' => $this->id));
+        $statement = get_slave_db_handle()->prepare('SELECT Server.ID, GUID, ServerVersion, Country, Hits, Created, Players, Plugin, ServerPlugin.Version, ServerPlugin.Updated
+                                                FROM Server
+                                                LEFT OUTER JOIN ServerPlugin ON ServerPlugin.Server = Server.ID
+                                                WHERE GUID = :GUID');
+        $statement->execute(array(':GUID' => $guid));
 
-        if ($row = $statement->fetch())
+        // The server object
+        $server = NULL;
+
+        while ($row = $statement->fetch())
         {
-            // Exists, begin creating it
-            $server = new Server();
-            $server->setID($row['ID']);
-            $server->setPlugin($this->id);
-            $server->setGUID($row['GUID']);
-            $server->setCountry($row['Country']);
-            $server->setPlayers($row['Players']);
-            $server->setServerVersion($row['ServerVersion']);
-            $server->setCurrentVersion($row['Version']);
-            $server->setHits($row['Hits']);
-            $server->setCreated($row['Created']);
-            $server->setUpdated($row['Updated']);
+            if ($server === NULL)
+            {
+                $server = new Server();
+                $server->setID($row['ID']);
+                $server->setPlugin($this->id);
+                $server->setGUID($row['GUID']);
+                $server->setCountry($row['Country']);
+                $server->setPlayers($row['Players']);
+                $server->setServerVersion($row['ServerVersion']);
+                $server->setHits($row['Hits']);
+                $server->setCreated($row['Created']);
+                $server->setModified(false);
+            }
 
-            // verify we have the plugin
-            $server->verifyPlugin($this->id);
+            if (!$found_plugin && $row['Plugin'] == $this->id)
+            {
+                $server->setCurrentVersion($row['Version']);
+                $server->setUpdated($row['Updated']);
+                $server->setModified(false);
+                return $server;
+            }
+        }
 
+        // Do we need to add the plugin?
+        if ($server !== NULL)
+        {
+            $statement = $master_db_handle->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
+            $statement->execute(array(':Server' => $server->getID(), ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
+
+            $server->setUpdated(time());
+            $server->setModified(false);
+
+            // Return the server object
             return $server;
         }
 
@@ -190,15 +211,8 @@ class Plugin
         }
 
         // It doesn't exist so we are going to create it ^^
-        $statement = $pdo->prepare('INSERT INTO Server (Plugin, GUID, Players, Country, ServerVersion, Hits, Created) VALUES(:Plugin, :GUID, :Players, :Country, :ServerVersion, :Hits, :Created)');
-        $statement->execute(array(':Plugin' => $this->id, ':GUID' => $guid, ':Players' => 0, ':Country' => 'ZZ', ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
-
-        // get the last id
-        $serverId = $pdo->lastInsertId();
-
-        // insert it into ServerPlugin
-        $statement = $pdo->prepare('INSERT INTO ServerPlugin (Server, Plugin, Version, Updated) VALUES (:Server, :Plugin, :Version, :Updated)');
-        $statement->execute(array(':Server' => $serverId, ':Plugin' => $this->id, ':Version' => '', ':Updated' => time()));
+        $statement = $master_db_handle->prepare('INSERT INTO Server (GUID, Players, Country, ServerVersion, Hits, Created) VALUES(:GUID, :Players, :Country, :ServerVersion, :Hits, :Created)');
+        $statement->execute(array(':GUID' => $guid, ':Players' => 0, ':Country' => 'ZZ', ':ServerVersion' => '', ':Hits' => 0, ':Created' => time()));
 
         // reselect it
         return $this->getOrCreateServer($guid, TRUE);
@@ -210,15 +224,15 @@ class Plugin
      */
     public function getVersions()
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         $versions = array();
-        $statement = $pdo->prepare('SELECT Version FROM Versions WHERE Plugin = ? ORDER BY Created DESC');
+        $statement = $db_handle->prepare('SELECT ID, Version FROM Versions WHERE Plugin = ? ORDER BY Created DESC');
         $statement->execute(array($this->id));
 
         while (($row = $statement->fetch()) != null)
         {
-            $versions[] = $row['Version'];
+            $versions[$row['ID']] = $row['Version'];
         }
 
         return $versions;
@@ -231,10 +245,10 @@ class Plugin
      */
     public function getCustomColumns()
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         $columns = array();
-        $statement = $pdo->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ?');
+        $statement = $db_handle->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ?');
         $statement->execute(array($this->id));
 
         while (($row = $statement->fetch()) != null)
@@ -256,7 +270,7 @@ class Plugin
      */
     public function sumCustomData($columnID, $min, $max = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($max == -1)
@@ -264,7 +278,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT SUM(DataPoint) FROM CustomData WHERE ColumnID = ? AND Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement = $db_handle->prepare('SELECT SUM(DataPoint) FROM CustomData WHERE ColumnID = ? AND Plugin = ? AND Updated >= ? AND Updated <= ?');
         $statement->execute(array($columnID, $this->id, $min, $max));
 
         $row = $statement->fetch();
@@ -279,7 +293,7 @@ class Plugin
      */
     function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($maxEpoch == -1)
@@ -288,7 +302,7 @@ class Plugin
         }
 
         $ret = array();
-        $statement = $pdo->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -305,7 +319,7 @@ class Plugin
      */
     public function sumPlayersOfServersLastUpdated($min, $max = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($max == -1)
@@ -313,7 +327,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT SUM(Players) FROM ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ? AND ServerPlugin.Updated <= ?');
+        $statement = $db_handle->prepare('SELECT SUM(Players) FROM ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ? AND ServerPlugin.Updated <= ?');
         $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
@@ -321,18 +335,24 @@ class Plugin
     }
 
     /**
-     * Count version changes for epoch times between the min and max
+     * Count version changes for epoch times between the min and max for the given version
      *
+     * @param $version
      * @param $min
      * @param $max
      * @return integer
      */
-    public function countVersionChanges($min, $max)
+    public function countVersionChanges($version, $min, $max = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM VersionHistory WHERE Created >= ? AND Created <= ?');
-        $statement->execute(array($min, $max));
+        if ($max == -1)
+        {
+            $max = time();
+        }
+
+        $statement = $db_handle->prepare('SELECT COUNT(*) FROM VersionHistory WHERE Version = ? AND Created >= ? AND Created <= ?');
+        $statement->execute(array($version, $min, $max));
 
         $row = $statement->fetch();
         return $row != null ? $row[0] : 0;
@@ -343,9 +363,9 @@ class Plugin
      */
     public function countServers()
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ?');
+        $statement = $db_handle->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ?');
         $statement->execute(array($this->id));
 
         $row = $statement->fetch();
@@ -358,7 +378,7 @@ class Plugin
      */
     public function countServersLastUpdated($min, $max = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($max == -1)
@@ -366,7 +386,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement = $db_handle->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Updated >= ? AND Updated <= ?');
         $statement->execute(array($this->id, $min, $max));
 
         $row = $statement->fetch();
@@ -379,7 +399,7 @@ class Plugin
      */
     public function countServersLastUpdatedFromCountry($country, $min, $max = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($max == -1)
@@ -387,7 +407,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin
+        $statement = $db_handle->prepare('SELECT COUNT(*) FROM ServerPlugin
                                     LEFT OUTER JOIN Server ON (ServerPlugin.Server = Server.ID)
                                     WHERE Country = ? AND ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ? AND ServerPlugin.Updated <= ?');
         $statement->execute(array($country, $this->id, $min, $max));
@@ -398,10 +418,10 @@ class Plugin
 
     public function countServersUsingVersion($version)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
         $weekAgo = time() - SECONDS_IN_WEEK;
 
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Version = ? AND Updated >= ?');
+        $statement = $db_handle->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Version = ? AND Updated >= ?');
         $statement->execute(array($this->id, $version, $weekAgo));
 
         $row = $statement->fetch();
@@ -416,7 +436,7 @@ class Plugin
      */
     function getTimelineCountry($minEpoch, $maxEpoch = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($maxEpoch == -1)
@@ -426,7 +446,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $pdo->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -445,7 +465,7 @@ class Plugin
      */
     function getTimelinePlayers($minEpoch, $maxEpoch = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($maxEpoch == -1)
@@ -455,7 +475,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $pdo->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -467,14 +487,14 @@ class Plugin
     }
 
     /**
-     * Get the amount of servers online and using LWC between two epochs
+     * Get the amount of servers online and using the plugin between two epochs
      * @param $minEpoch int
      * @param $maxEpoch int
      * @return array keyed by the epoch
      */
     function getTimelineServers($minEpoch, $maxEpoch = -1)
     {
-        global $pdo;
+        $db_handle = get_slave_db_handle();
 
         // use time() if $max is -1
         if ($maxEpoch == -1)
@@ -484,7 +504,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $pdo->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -496,14 +516,43 @@ class Plugin
     }
 
     /**
+     * Get the amount of servers that used a given version between the given epochs
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return array keyed by the epoch
+     */
+    function getTimelineVersion($versionID, $minEpoch, $maxEpoch = -1)
+    {
+        $db_handle = get_slave_db_handle();
+
+        // use time() if $max is -1
+        if ($maxEpoch == -1)
+        {
+            $maxEpoch = time();
+        }
+
+        $ret = array();
+
+        $statement = $db_handle->prepare('SELECT Count, Epoch FROM VersionTimeline WHERE Plugin = ? AND Version = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement->execute(array($this->id, $versionID, $minEpoch, $maxEpoch));
+
+        while ($row = $statement->fetch())
+        {
+            $ret[$row['Epoch']] = $row['Count'];
+        }
+
+        return $ret;
+    }
+
+    /**
      * Create the plugin in the database
      */
     public function create()
     {
-        global $pdo;
+        global $master_db_handle;
 
         // Prepare it
-        $statement = $pdo->prepare('INSERT INTO Plugin (Name, Author, Hidden, GlobalHits) VALUES (:Name, :Author, :Hidden, :GlobalHits)');
+        $statement = $master_db_handle->prepare('INSERT INTO Plugin (Name, Author, Hidden, GlobalHits) VALUES (:Name, :Author, :Hidden, :GlobalHits)');
 
         // Execute
         $statement->execute(array(':Name' => $this->name, ':Author' => $this->authors, ':Hidden' => $this->hidden,
@@ -515,10 +564,10 @@ class Plugin
      */
     public function save()
     {
-        global $pdo;
+        global $master_db_handle;
 
         // Prepare it
-        $statement = $pdo->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits WHERE ID = :ID');
+        $statement = $master_db_handle->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits WHERE ID = :ID');
 
         // Execute
         $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':Author' => $this->authors,

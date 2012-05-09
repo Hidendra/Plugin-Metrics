@@ -1,35 +1,62 @@
 <?php
 if (!defined('ROOT')) exit('For science.');
 
+// Profiling
+require 'profiler/PDOStatementProfiler.class.php';
+require 'profiler/PDOProfiler.class.php';
+
 /**
  * Global PDO object that is accessible after the database is connected to
  * @var PDO
  */
-$pdo = NULL;
+$master_db_handle = NULL;
+
+/**
+ * The handle to the slave database
+ */
+$slave_db_handle = NULL;
+
+/**
+ * Get the slave database handle if it is connected, otherwise get the master handle.
+ * This is mainly used for SELECT queries that can be offloaded to the slave server
+ * if it is enabled.
+ *
+ * @return PDO
+ */
+function get_slave_db_handle()
+{
+    global $master_db_handle , $slave_db_handle;
+    return $slave_db_handle !== NULL ? $slave_db_handle : $master_db_handle;
+}
 
 /**
  * Attempt to connect to the database
  *
- * @return TRUE if connected, otherwise an error message
+ * @param string database type to connect to in the config, master or slave
+ * @return PDO object if connected, otherwise the error message is sent to the error log and exited
  */
-function try_connect_database()
+function try_connect_database($dbtype)
 {
-    global $pdo , $config;
-
-    $db = $config['database'];
+    global $config;
+    $db = $config['database'][$dbtype];
 
     try
     {
-        $pdo = new PDO("{$db['driver']}:host={$db['host']};dbname={$db['dbname']}", $db['username'], $db['password']);
-        return TRUE;
+        // Profiling:
+        // return new PDOProfiler("mysql:host={$db['hostname']};dbname={$db['dbname']}", $db['username'], $db['password']);
+        return new PDO("mysql:host={$db['hostname']};dbname={$db['dbname']}", $db['username'], $db['password'], array(PDO::ATTR_PERSISTENT => true));
     } catch (PDOException $e)
     {
-        return $e->getMessage();
+        error_log('Error while connecting to the database ' . $dbtype . ': <br/><b>' . $e->getMessage() . '</b>');
+        exit('An error occurred while connecting to the database (' . $dbtype . '). This has been logged.');
     }
 }
 
-// Connect to the database
-if (($e = try_connect_database()) !== TRUE)
+// Attempt to connect to the master database
+$master_db_handle = try_connect_database('master');
+
+// Only connect to the slave database if it is enabled
+if ($config['database']['slave']['enabled'] == TRUE)
 {
-    exit('Error while connecting to the database: <br/><b>' . $e . '</b>');
+    $slave_db_handle = try_connect_database('slave');
 }

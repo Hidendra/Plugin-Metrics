@@ -16,7 +16,7 @@ $baseEpoch = normalizeTime();
 $minimum = strtotime('-30 minutes', $baseEpoch);
 
 // iterate through all of the plugins
-foreach (loadPlugins() as $plugin)
+foreach (loadPlugins(true) as $plugin)
 {
     $players = 0;
 
@@ -26,7 +26,7 @@ foreach (loadPlugins() as $plugin)
         $players = $plugin->sumPlayersOfServersLastUpdated($minimum);
     } else
     {
-        $statement = $pdo->prepare('SELECT SUM(dev.Players) AS Count FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev;');
+        $statement = $master_db_handle->prepare('SELECT SUM(dev.Players) AS Count FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev;');
         $statement->execute(array($minimum));
 
         if ($row = $statement->fetch())
@@ -36,7 +36,7 @@ foreach (loadPlugins() as $plugin)
     }
 
     // Insert it into the database
-    $statement = $pdo->prepare('INSERT INTO PlayerTimeline (Plugin, Players, Epoch) VALUES (:Plugin, :Players, :Epoch)');
+    $statement = $master_db_handle->prepare('INSERT INTO PlayerTimeline (Plugin, Players, Epoch) VALUES (:Plugin, :Players, :Epoch)');
     $statement->execute(array(
         ':Plugin' => $plugin->getID(),
         ':Players' => $players,

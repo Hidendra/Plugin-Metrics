@@ -12,5 +12,5 @@ function showMoreServers() {
     $(".more-servers").hide();
 
     // Show the servers
-    $(".hide-server").show(500);
+    $(".hide-server").show();
 }

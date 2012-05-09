@@ -12,7 +12,7 @@ class DataGenerator
      * @param $columnID int
      * @return array
      */
-    public static function generateCustomChartData($graph, $columnID, $hours = 144)
+    public static function generateCustomChartData($graph, $columnID, $hours = 372)
     {
         $_cacheid = 'CustomChart' . $columnID . $hours;
 
@@ -35,11 +35,67 @@ class DataGenerator
         // Add all of them to the array
         foreach ($dataPoints as $epoch => $dataPoint)
         {
+            if ($dataPoint == 0)
+            {
+                continue;
+            }
+
             $generatedData[] = array($epoch * 1000, $dataPoint);
         }
 
         // Cache it
         $graph->getPlugin()->cacheSet($_cacheid, $generatedData);
+
+        return $generatedData;
+    }
+
+    /**
+     * Generates the version chart data if it is not already cached
+     * @param $version the version ID
+     * @param plugin Plugin
+     * @param hours
+     * @return array
+     */
+    public static function generateVersionChartData($plugin, $versionID, $hours = 744)
+    {
+        if (($cache = $plugin->cacheGet('version-chart-data' . $versionID . $hours)) != NULL)
+        {
+            return $cache;
+        }
+
+        $generatedData = array();
+
+        // calculate the minimum
+        $baseEpoch = normalizeTime();
+        $minimum = strtotime('-' . $hours . ' hours', $baseEpoch);
+        $maximum = $baseEpoch;
+
+        // load the data from mysql
+        $versions = $plugin->getTimelineVersion($versionID, $minimum, $maximum);
+
+        // go through each and add to json
+        $still_zero = TRUE;
+        foreach ($versions as $epoch => $count)
+        {
+            if ($count > 0) {
+                $still_zero = FALSE;
+            }
+
+            // Don't uglify the graph
+            if ($count == 0) {
+                continue;
+            }
+
+            $generatedData[] = array($epoch * 1000, $count);
+        }
+
+        // Ignore versions that have never been used
+        if ($still_zero) {
+            return array();
+        }
+
+        // Cache it!
+        $plugin->cacheSet('version-chart-data' . $hours, $generatedData);
 
         return $generatedData;
     }

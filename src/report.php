@@ -1,5 +1,6 @@
 <?php
 define('ROOT', './');
+define('REPORT', '');
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
@@ -11,7 +12,7 @@ if (!isset($_GET['plugin']))
 }
 
 // Load the plugin
-$pluginName = $_GET['plugin'];
+$pluginName = urldecode($_GET['plugin']);
 $plugin = loadPlugin($pluginName);
 
 // We want to allow square brackets so we decode $_post ourselves
@@ -55,7 +56,7 @@ if ($plugin === NULL)
     $plugin->create();
 
     // Reload the plugin so we have the most up to date data from the database
-    $plugin = loadPlugin($_GET['plugin']);
+    $plugin = loadPlugin($pluginName);
 }
 
 // Some arguments added later in that to remain backwards compatibility
@@ -66,11 +67,12 @@ $players = isset($_POST['players']) ? intval($_POST['players']) : 0;
 $server = $plugin->getOrCreateServer($guid);
 
 // Are they using a different version now?
-if ($server->getCurrentVersion() != $version)
+if (strcmp($server->getCurrentVersion(), $version) !== 0)
 {
     // Log it and update the current version
     $server->addVersionHistory($version);
     $server->setCurrentVersion($version);
+    $server->versionChanged = true;
 }
 
 // Different server version?
@@ -125,10 +127,6 @@ if ($revision >= 5)
                     }
                 }
 
-                // Ensure the column is set to this graph
-                // and also ensure it's even in the graph
-                $result = $graph->verifyColumn($columnName);
-
                 // Now add the data to the given column
                 $graph->addCustomData($server, $columnName, $value);
             }
@@ -143,7 +141,6 @@ else
 
         foreach ($data as $columnName => $value)
         {
-            $graph->verifyColumn($columnName, false, false);
             $graph->addCustomData($server, $columnName, $value);
         }
     }

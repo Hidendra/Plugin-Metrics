@@ -4,11 +4,13 @@
 /// Todo for the old way of generating graphs :D
 
 define('ROOT', './');
-session_start();
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
+
+// Cache until the next interval
+header('Cache-Control: public, s-maxage=' . (timeUntilNextGraph() - time()));
 
 if (!isset($_GET['plugin']))
 {
@@ -75,7 +77,7 @@ echo '
                     <table class="table table-striped">
                         <tbody>';
 
-foreach ($plugin->getVersions() as $version)
+foreach ($plugin->getVersions() as $versionID => $version)
 {
     $count = $plugin->countServersUsingVersion($version);
 
@@ -109,7 +111,8 @@ foreach ($activeGraphs as $activeGraph)
 ';
 }
 
-echo '                    <br/> <div id="CountryPieChart" style="height:500"></div>
+echo '                    <br/> <div id="CountryPieChart" style="height:500"></div> <br/>
+                    <div id="VersionChart" style="height:500"></div>
                 </div>
 
             </div>';
@@ -121,6 +124,18 @@ flush();
 echo '
 
             <script>';
+
+/// Version chart
+$versionChart = new Graph(-1, $plugin, GraphType::Area);
+$versionChart->setName('Version trends');
+
+// Add data
+foreach ($plugin->getVersions() as $versionID => $name) {
+    $safeName = htmlentities($name);
+
+    $versionSeries = new HighRollerSeriesData();
+    $versionChart->addSeries($versionSeries->addName($safeName)->addData(DataGenerator::generateVersionChartData($plugin, $versionID)));
+}
 
 /// Players/Servers chart
 $playersAndServersChart = new Graph(-1, $plugin, GraphType::Area);
@@ -206,7 +221,8 @@ echo $playersAndServersChart->generateGraph('PlayerServerChart');
 flush();
 echo $countryChart->generateGraph('CountryPieChart');
 flush();
-
+echo $versionChart->generateGraph('VersionChart');
+flush();
 
 
 echo '
