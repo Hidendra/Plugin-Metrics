@@ -46,6 +46,22 @@ function error_fquit($message)
 }
 
 /**
+ * Gets seconds since crons last ran
+ * @return integer
+ */
+function getTimeLast()
+{
+    global $pdo;
+    $timelast = -1;
+    $statement = $pdo->prepare('SELECT UNIX_TIMESTAMP(NOW()) - MAX(Epoch) FROM CustomDataTimeline');
+    $statement->execute();
+    if ($row = $statement->fetch()) $timelast = (int)$row[0];
+    // max 2 hours
+    if($timelast > 7200) $timelast = 0;
+    return($timelast);
+}
+
+/**
  * Checks a PDO statement for errors and if any exist, the script will exist and log to the error log
  *
  * @param $statement PDOStatement
