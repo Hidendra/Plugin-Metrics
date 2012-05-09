@@ -51,9 +51,8 @@ function error_fquit($message)
  */
 function getTimeLast()
 {
-    global $master_db_handle;
     $timelast = -1;
-    $statement = $master_db_handle->prepare('SELECT UNIX_TIMESTAMP(NOW()) - MAX(Epoch) FROM CustomDataTimeline');
+    $statement = get_slave_db_handle()->prepare('SELECT UNIX_TIMESTAMP(NOW()) - MAX(Epoch) FROM CustomDataTimeline');
     $statement->execute();
     if ($row = $statement->fetch()) $timelast = (int)$row[0];
     // max 2 hours
