@@ -27,10 +27,14 @@ echo '
 // get last updated
 $timelast = getTimeLast();
 
-// display time last
-if($timelast > 0){
+// display the time since the last graph update
+if($timelast > 0) {
+    $lastUpdate = floor($timelast / 60);
+    $nextUpdate = $config['graph']['interval'] - $lastUpdate;
+
 echo '
-                    <p> Minutes since last update: '.floor($timelast/60).' </p>
+                    <p> Last update: ' . $lastUpdate . ' minutes ago <br/>
+                        Next update in: ' . $nextUpdate . ' minutes</p>
 ';
 }
 
