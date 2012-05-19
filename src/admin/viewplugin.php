@@ -83,13 +83,17 @@ foreach ($graphs as $graph)
     // convenient data so we aren't constantly using accessors
     $id = $graph->getID();
     $name = htmlentities($graph->getName());
-    $displayName = $name; // TODO
+    $displayName = htmlentities($graph->getDisplayName());
     $type = $graph->getType();
     $isActive = $graph->isActive();
+    $scale = $graph->getScale();
 echo '
                             <legend>
                                 Custom graph #' . $index . '
                             </legend>
+
+                            <!-- Register this graph -->
+                            <input type="hidden" name="graph[' . $id . ']" value="1" />
 
                             <div class="control-group">
                                 <label class="control-label" for="' . $id . '-name">Internal Name</label>
@@ -103,7 +107,7 @@ echo '
                                 <label class="control-label" for="' . $id . '-displayname">Display Name</label>
 
                                 <div class="controls">
-                                    <input type="text" name="' . $id . '-displayname" id="' . $id . '-displayname" value="' . $displayName . '" />
+                                    <input type="text" name="displayName[' . $id . ']" id="' . $id . '-displayname" value="' . $displayName . '" />
                                 </div>
                             </div>
 
@@ -111,7 +115,7 @@ echo '
                                 <label class="control-label" for="' . $id . '-type">Type</label>
 
                                 <div class="controls">
-                                    <select name="' . $id . '-type" id="' . $id . '-type">
+                                    <select name="type[' . $id . ']" id="' . $id . '-type">
                                         <option value="' . GraphType::Line . '"' . ($type == GraphType::Line ? ' selected' : '') . '>Line</option>
                                         <option value="' . GraphType::Area . '"' . ($type == GraphType::Area ? ' selected' : '') . '>Area</option>
                                         <option value="' . GraphType::Column . '"' . ($type == GraphType::Column ? ' selected' : '') . '>Column</option>
@@ -125,7 +129,7 @@ echo '
 
                                 <div class="controls">
                                     <label class="checkbox">
-                                        <input type="checkbox" name="' . $id . '-active" id="' . $id . '-active" value="1"' . ($isActive ? ' selected' : '') . '>
+                                        <input type="checkbox" name="active[' . $id . ']" id="' . $id . '-active" value="1"' . ($isActive ? ' CHECKED' : '') . '>
                                     </label>
                                 </div>
                             </div>
@@ -134,11 +138,11 @@ echo '
                                 <label class="control-label" for="' . $id . '-scale">Scale</label>
 
                                 <div class="controls">
-                                    <label class="checkbox inline">
-                                        <input type="checkbox" name="' . $id . '-scale" id="' . $id . '-scale" value="linear"> Linear
+                                    <label class="radio inline">
+                                        <input type="radio" name="scale[' . $id . ']" id="' . $id . '-scale" value="linear"' . ($scale == GraphScale::Linear ? ' CHECKED' : '') . '> Linear
                                     </label>
-                                    <label class="checkbox inline">
-                                        <input type="checkbox" name="' . $id . '-scale" value="log"> Logarithmic
+                                    <label class="radio inline">
+                                        <input type="radio" name="scale[' . $id . ']" value="log"' . ($scale == GraphScale::Logarithmic ? ' CHECKED' : '') . '> Logarithmic
                                     </label>
                                 </div>
                             </div>

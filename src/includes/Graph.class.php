@@ -30,6 +30,24 @@ abstract class GraphType
 
 }
 
+/**
+ * The graph scale a graph should use
+ */
+abstract class GraphScale
+{
+
+    /**
+     * Linear graph scale
+     */
+    const Linear = 'linear';
+
+    /**
+     * Logarithmic graph scale
+     */
+    const Logarithmic = 'log';
+
+}
+
 /// TODO save()
 class Graph
 {
@@ -71,6 +89,12 @@ class Graph
     private $active;
 
     /**
+     * The graph's scale
+     * @var string
+     */
+    private $scale;
+
+    /**
      * The columns present in this graph
      * @var array
      */
@@ -82,7 +106,7 @@ class Graph
      */
     private $series = array();
 
-    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0)
+    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0, $scale = 'linear')
     {
         $this->id = $id;
         $this->plugin = $plugin;
@@ -90,6 +114,7 @@ class Graph
         $this->name = $name;
         $this->displayName = $displayName;
         $this->active = $active;
+        $this->scale = $scale;
 
         // If the display name is blank, use the internal name
         if ($displayName == '')
@@ -111,8 +136,8 @@ class Graph
     {
         global $master_db_handle;
 
-        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ? WHERE ID = ?');
-        $statement->execute(array($this->displayName, $this->type, $this->active, $this->id)); // TODO
+        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ?, Scale = ? WHERE ID = ?');
+        $statement->execute(array($this->displayName, $this->type, $this->active, $this->scale, $this->id)); // TODO
     }
 
     /**
@@ -316,9 +341,8 @@ class Graph
                 'showFirstLabel' => false
             );
 
-            // Essentials
-            // TODO add scale internally
-            if ($this->id == 133)
+            // Should we make the graph log?
+            if ($this->scale == GraphScale::Logarithmic)
             {
                 $chart->yAxis['type'] = 'logarithmic';
                 $chart->yAxis['minorTickInterval'] = 'auto';
@@ -492,6 +516,15 @@ class Graph
     }
 
     /**
+     * Get the graph's scale
+     * @param $scale string
+     */
+    public function setScale($scale)
+    {
+        $this->scale = $scale;
+    }
+
+    /**
      * Get the graph's internal id
      * @return int
      */
@@ -542,7 +575,16 @@ class Graph
      */
     public function isActive()
     {
-        return $this->active == 1 ? true : false;
+        return $this->active == 1;
+    }
+
+    /**
+     * Get the graph's scale
+     * @return string
+     */
+    public function getScale()
+    {
+        return $this->scale;
     }
 
 }
