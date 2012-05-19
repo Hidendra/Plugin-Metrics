@@ -57,12 +57,12 @@ class Plugin
         global $master_db_handle;
 
         // Try to get it from the database
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Name FROM Graph WHERE Plugin = ? AND Name = ?');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Name, DisplayName FROM Graph WHERE Plugin = ? AND Name = ?');
         $statement->execute(array($this->id, $name));
 
         if ($row = $statement->fetch())
         {
-            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['Active']);
+            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active']);
         }
 
         if ($attemptedToCreate)
@@ -88,12 +88,12 @@ class Plugin
         // The graphs to return
         $graphs = array();
 
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY ID asc');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Name, DisplayName FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY ID asc');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
         {
-            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['Active']);
+            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active']);
         }
 
         return $graphs;
@@ -110,12 +110,12 @@ class Plugin
         // The graphs to return
         $graphs = array();
 
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Name FROM Graph WHERE Plugin = ?');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Name, DisplayName FROM Graph WHERE Plugin = ?');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
         {
-            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['Active']);
+            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active']);
         }
 
         return $graphs;
@@ -182,7 +182,7 @@ class Plugin
                 $server->setModified(false);
             }
 
-            if (!$found_plugin && $row['Plugin'] == $this->id)
+            if ($row['Plugin'] == $this->id)
             {
                 $server->setCurrentVersion($row['Version']);
                 $server->setUpdated($row['Updated']);

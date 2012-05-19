@@ -53,6 +53,12 @@ class Graph
     private $name;
 
     /**
+     * The graph's display name
+     * @var string
+     */
+    private $displayName;
+
+    /**
      * The type of graph to generate
      * @var GraphType
      */
@@ -76,12 +82,13 @@ class Graph
      */
     private $series = array();
 
-    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $active = 0)
+    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0)
     {
         $this->id = $id;
         $this->plugin = $plugin;
         $this->type = $type;
         $this->name = $name;
+        $this->displayName = $displayName;
         $this->active = $active;
 
         if ($this->id >= 0)
@@ -98,8 +105,8 @@ class Graph
     {
         global $master_db_handle;
 
-        $statement = $master_db_handle->prepare('UPDATE Graph SET Type = ?, Active = ? WHERE ID = ?');
-        $statement->execute(array($this->type, $this->active, $this->id));
+        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ? WHERE ID = ?');
+        $statement->execute(array($this->displayName, $this->type, $this->active, $this->id)); // TODO
     }
 
     /**
@@ -204,7 +211,7 @@ class Graph
         $chart->chart->zoomType = 'x';
 
         // The title
-        $chart->title->text = $this->name;
+        $chart->title->text = $this->displayName; // $this->name;
 
         // Subtitle
         if ($this->plugin != null)
@@ -438,11 +445,20 @@ class Graph
 
     /**
      * Set the name of the graph
-     * @param $name
+     * @param $name string
      */
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * Set the display name for the graph
+     * @param $displayName string
+     */
+    public function setDisplayName($displayName)
+    {
+        $this->displayName = $displayName;
     }
 
     /**
@@ -497,6 +513,15 @@ class Graph
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Get the graph's display name
+     * @return string
+     */
+    public function getDisplayName()
+    {
+        return $this->displayName;
     }
 
     /**
