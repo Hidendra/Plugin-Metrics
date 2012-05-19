@@ -91,6 +91,12 @@ class Graph
         $this->displayName = $displayName;
         $this->active = $active;
 
+        // If the display name is blank, use the internal name
+        if ($displayName == '')
+        {
+            $this->displayName = $name;
+        }
+
         if ($this->id >= 0)
         {
             // Load the columns present in the graph
@@ -211,13 +217,13 @@ class Graph
         $chart->chart->zoomType = 'x';
 
         // The title
-        $chart->title->text = $this->displayName; // $this->name;
+        $chart->title->text = htmlentities($this->displayName); // $this->name;
 
         // Subtitle
         if ($this->plugin != null)
         {
             $chart->subtitle = array(
-                'text' => 'for ' . $this->plugin->getName() . ' via http://mcstats.org'
+                'text' => 'for ' . htmlentities($this->displayName) . ' via http://mcstats.org'
             );
         } else
         {
@@ -450,6 +456,12 @@ class Graph
     public function setName($name)
     {
         $this->name = $name;
+
+        // Set the display name if the internal name is blank
+        if ($this->displayName == '')
+        {
+            $this->displayName = $name;
+        }
     }
 
     /**

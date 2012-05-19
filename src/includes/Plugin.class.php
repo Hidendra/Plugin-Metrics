@@ -70,8 +70,8 @@ class Plugin
             error_fquit('Failed to create graph for "' . $name . '"');
         }
 
-        $statement = $master_db_handle->prepare('INSERT INTO Graph (Plugin, Type, Name, Active) VALUES(:Plugin, :Type, :Name, :Active)');
-        $statement->execute(array(':Plugin' => $this->id, ':Type' => GraphType::Line, ':Name' => $name, ':Active' => $active));
+        $statement = $master_db_handle->prepare('INSERT INTO Graph (Plugin, Type, Name, DisplayName, Active) VALUES(:Plugin, :Type, :Name, :DisplayName, :Active)');
+        $statement->execute(array(':Plugin' => $this->id, ':Type' => GraphType::Line, ':Name' => $name, ':DisplayName' => $name, ':Active' => $active));
 
         // reselect it
         return $this->getOrCreateGraph($name, TRUE);
