@@ -112,6 +112,11 @@ if (isset($_SERVER['GEOIP_COUNTRY_CODE']))
 if ($revision >= 5)
 {
     if (count(($data = extractCustomData())) > 0) {
+        // start building our query
+        $query = 'INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES ';
+        //INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)
+         //                           ON DUPLICATE KEY UPDATE DataPoint = VALUES(DataPoint) , Updated = VALUES(Updated)
+
         foreach ($data as $graphName => $plotters)
         {
             // Get or create the graph
@@ -127,10 +132,19 @@ if ($revision >= 5)
                     }
                 }
 
+                $columnID = $graph->getColumnID($columnName);
+
                 // Now add the data to the given column
-                $graph->addCustomData($server, $columnName, $value);
+                $query .= '(' . $server->getID() . ', ' . $plugin->getID() . ', ' . $columnID . ', ' . mysql_real_escape_string($value) . ', ' . time() . '),';
             }
         }
+
+        // remove the last comma
+        $query = substr($query, 0, 1);
+        $query .= ' ON DUPLICATE KEY UPDATE DataPoint = VALUES(DataPoint) , Updated = VALUES(Updated)';
+
+        // execute the query
+        $master_db_handle->query($query);
     }
 }
 // R4 and below

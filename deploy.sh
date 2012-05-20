@@ -4,7 +4,7 @@
 RSYNC="rsync -avzq --progress"
 
 # nginx load balancer
-NGINX_BALANCER="root@lb1.mcstats.org"
+NGINX_BALANCER="root@mcstats.org"
 
 cd src
 chmod -R 755 .
