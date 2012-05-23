@@ -162,10 +162,10 @@ class Server
         $this->setUpdated(time());
 
         // Prepare it
-        $statement = $master_db_handle->prepare('UPDATE Server SET GUID = :GUID, Players = :Players, Country = :Country, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
+        $statement = $master_db_handle->prepare('UPDATE Server SET Players = :Players, Country = :Country, ServerVersion = :ServerVersion, Hits = :Hits, Created = :Created WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Players' => $this->players, ':Country' => $this->country, ':GUID' => $this->guid,
+        $statement->execute(array(':ID' => $this->id, ':Players' => $this->players, ':Country' => $this->country,
             ':ServerVersion' => $this->serverVersion, ':Hits' => $this->hits, ':Created' => $this->created));
 
         // update the plugin part of it

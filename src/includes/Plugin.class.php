@@ -439,7 +439,7 @@ class Plugin
     public function countServersUsingVersion($version)
     {
         $db_handle = get_slave_db_handle();
-        $weekAgo = time() - SECONDS_IN_WEEK;
+        $weekAgo = time() - SECONDS_IN_DAY;
 
         $statement = $db_handle->prepare('SELECT COUNT(*) FROM ServerPlugin WHERE Plugin = ? AND Version = ? AND Updated >= ?');
         $statement->execute(array($this->id, $version, $weekAgo));

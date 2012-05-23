@@ -297,7 +297,7 @@ function loadPlugins($alphabetical = false)
         $statement = $db_handle->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY Name ASC');
     } else
     {
-        $statement = $db_handle->prepare('SELECT Plugin.ID, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? GROUP BY Plugin.ID ORDER BY ServerCount DESC');
+        $statement = $db_handle->prepare('SELECT Plugin.ID, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin FORCE INDEX (Count) ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? GROUP BY Plugin.ID ORDER BY ServerCount DESC');
     }
     $statement->execute(array(time() - SECONDS_IN_DAY));
 

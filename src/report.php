@@ -113,7 +113,7 @@ if ($revision >= 5)
 {
     if (count(($data = extractCustomData())) > 0) {
         // start building our query
-        $query = 'INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES ';
+        $query = 'INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES';
         //INSERT INTO CustomData (Server, Plugin, ColumnID, DataPoint, Updated) VALUES (:Server, :Plugin, :ColumnID, :DataPoint, :Updated)
          //                           ON DUPLICATE KEY UPDATE DataPoint = VALUES(DataPoint) , Updated = VALUES(Updated)
 
@@ -135,12 +135,12 @@ if ($revision >= 5)
                 $columnID = $graph->getColumnID($columnName);
 
                 // Now add the data to the given column
-                $query .= '(' . $server->getID() . ', ' . $plugin->getID() . ', ' . $columnID . ', ' . mysql_real_escape_string($value) . ', ' . time() . '),';
+                $query .= ' (' . $server->getID() . ', ' . $plugin->getID() . ', ' . $columnID . ', ' . $master_db_handle->quote($value) . ', ' . time() . '),';
             }
         }
 
         // remove the last comma
-        $query = substr($query, 0, 1);
+        $query = substr($query, 0, -1);
         $query .= ' ON DUPLICATE KEY UPDATE DataPoint = VALUES(DataPoint) , Updated = VALUES(Updated)';
 
         // execute the query

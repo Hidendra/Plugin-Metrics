@@ -198,7 +198,7 @@ class DataGenerator
         foreach ($servers as $epoch => $data)
         {
             // Sort the server counts
-            arsort(&$data);
+            asort(&$data);
 
             // Get the amount of servers we have
             $server_total = array_sum($data);
@@ -208,16 +208,15 @@ class DataGenerator
             if ($count >= MINIMUM_FOR_OTHERS)
             {
                 $others_total = 0;
-                $index = 0;
 
                 foreach ($data as $country => $amount)
                 {
-                    $index ++;
-                    if ($index <= MINIMUM_FOR_OTHERS)
+                    if ($count <= MINIMUM_FOR_OTHERS)
                     {
-                        continue;
+                        break;
                     }
 
+                    $count--;
                     $others_total += $amount;
                     unset($data[$country]);
                 }

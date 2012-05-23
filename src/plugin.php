@@ -205,7 +205,6 @@ foreach ($activeGraphs as $activeGraph)
 
             foreach ($dataPoints as $epoch => $dataPoint)
             {
-                $generatedData[] = array($epoch, $dataPoint);
                 $columnAmounts[$columnName] = $dataPoint;
 
                 // We only want 1 :)
@@ -214,15 +213,47 @@ foreach ($activeGraphs as $activeGraph)
         }
 
         // Now begin our magic
-        arsort(&$columnAmounts);
+        asort(&$columnAmounts);
 
         // Sum all of the points
         $data_sum = array_sum($columnAmounts);
 
+        $count = count($columnAmounts);
+        if ($count >= MINIMUM_FOR_OTHERS)
+        {
+            $others_total = 0;
+
+            foreach ($columnAmounts as $columnName => $amount)
+            {
+                if ($count <= MINIMUM_FOR_OTHERS)
+                {
+                    break;
+                }
+
+                $count--;
+                $others_total += $amount;
+                unset($columnAmounts[$columnName]);
+            }
+
+            // Set the 'Others' stat
+            $columnAmounts['Others'] = $others_total;
+
+            // Sort again
+            arsort(&$columnAmounts);
+        }
+
         // Now convert it to %
         foreach ($columnAmounts as $columnName => $dataPoint)
         {
-            $seriesData[] = array($columnName, round(($dataPoint / $data_sum) * 100, 2));
+            $percent = round(($dataPoint / $data_sum) * 100, 2);
+
+            // Leave out 0%s !
+            if ($percent == 0)
+            {
+                continue;
+            }
+
+            $seriesData[] = array($columnName, $percent);
         }
 
         // Finalize

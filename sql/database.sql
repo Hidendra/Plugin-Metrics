@@ -206,7 +206,7 @@ DROP TABLE IF EXISTS `ServerPlugin`;
 CREATE TABLE `ServerPlugin` (
 `Server`  int(11) NOT NULL ,
 `Plugin`  int(11) NOT NULL ,
-`Version`  varchar(40) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
+`Version`  varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ,
 `Updated`  int(11) NOT NULL
 )
 ENGINE=MyISAM
