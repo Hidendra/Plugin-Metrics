@@ -43,9 +43,9 @@ echo '
             </script>
 
             <!-- Important scripts we want just for this page -->
-            <script src="http://static.griefcraft.com/javascript/highcharts/highcharts.js" type="text/javascript"></script>
-            <script src="http://static.griefcraft.com/javascript/highcharts/highstock.js" type="text/javascript"></script>
-            <script src="http://static.griefcraft.com/javascript/highcharts/themes/grid.js" type="text/javascript"></script>
+            <script src="http://static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
+            <script src="http://static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
+            <script src="http://static.mcstats.org/javascript/highcharts/themes/grid.js" type="text/javascript"></script>
 
             <div id="row-fluid" style="width: 100%">
 

@@ -9,8 +9,8 @@
         </div>
 
         <!-- Load Javascript later, something about magic ponies and loading faster -->
-        <script src="http://static.griefcraft.com/javascript/admin.js" type="text/javascript"></script>
-        <script src="http://static.griefcraft.com/javascript/bootstrap.js" type="text/javascript"></script>
+        <script src="http://static.mcstats.org/javascript/admin.js" type="text/javascript"></script>
+        <script src="http://static.mcstats.org/javascript/bootstrap.min.js" type="text/javascript"></script>
 
     </body>
 

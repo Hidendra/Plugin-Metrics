@@ -1,18 +1,11 @@
 <?php
 
-// while this can be ran from anywhere very easily and uses the public api because of that,
-// we need func.php for caching to only cache until the next graphing interval
-// when setup in other locations caching can be implemented and required instead of func.php
-// just CACHE_UNTIL_NEXT_GRAPH would have to be replaced with your own expiry.
+define ('HOURS', 168);
+
 define ('ROOT', './');
-require ROOT . 'config.php';
-require ROOT . 'includes/func.php';
-
-// The location of the metrics backend
-define ('METRICS_BACKEND', 'http://mcstats.org');
-
-// The url of the API to use on the backend
-define ('API_URL', '/api/1.0/');
+require_once ROOT . 'config.php';
+require_once ROOT . 'includes/database.php';
+require_once ROOT . 'includes/func.php';
 
 // The image's height
 define('IMAGE_HEIGHT', 124);
@@ -33,7 +26,7 @@ require 'pChart/pData.class.php';
 require 'pChart/pChart.class.php';
 
 // The plugin we are graphing
-$pluginName = $_GET['plugin'];
+$pluginName = urldecode($_GET['plugin']);
 
 // Check the cache for the signature
 // If it already exists we can simply imagepng that shit
@@ -46,21 +39,19 @@ if ($cached_image !== FALSE)
     exit ($cached_image);
 }
 
-error_log('generating ' . $pluginName);
-
 // Load the json data from the api
 // First, basic plugin data
-$pluginData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . urlencode($pluginName)), true);
-
-// And secondly, player/server status
-// returned in the format of $json['data']['players'] = [ [epoch, v], .. ] and also $json['data']['servers']
-$globalData = json_decode(file_get_contents(METRICS_BACKEND . API_URL . urlencode($pluginName) . '/graph/global'), true);
+$plugin = loadPlugin($pluginName);
 
 // Is the plugin invalid?
-if (count($pluginData) == 0 || $pluginData['status'] == 'err')
+if ($plugin == null)
 {
-    error_image('Error: ' . $pluginData['msg']);
+    // no plugin found
+    error_image('Invalid plugin');
 }
+
+// case-correct plugin name
+$pluginName = $plugin->getName();
 
 // Create a new data set
 $dataSet = new pData();
@@ -72,7 +63,7 @@ $serversX = array();
 $playersX = array();
 $graph_data = array(); // epoch => [ "servers" => v, "players" => v ]
 
-foreach ($globalData['data']['players'] as $data)
+foreach (DataGenerator::generatePlayerChartData($plugin, HOURS) as $data)
 {
     $epoch = $data[0];
     $value = $data[1];
@@ -80,7 +71,7 @@ foreach ($globalData['data']['players'] as $data)
     $graph_data[$epoch]['players'] = $value;
 }
 
-foreach ($globalData['data']['servers'] as $data)
+foreach (DataGenerator::generateServerChartData($plugin, HOURS) as $data)
 {
     $epoch = $data[0];
     $value = $data[1];
@@ -128,9 +119,11 @@ $graph->drawGraphArea(250, 250, 250, true);
 $graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_START0, 150, 150, 150, true, 0, 0);
 // $graph->drawGrid(4, true, 230, 230, 230, 100);
 
+$serversLast24Hours = $plugin->countServersLastUpdated(time() - SECONDS_IN_DAY);
+
 // Draw the footer
 $graph->setFontProperties('pf_arma_five.ttf', 6);
-$footer = sprintf('%s servers in the last 24 hours with %s all-time server starts  ', number_format($pluginData['servers'][24]), number_format($pluginData['starts']));
+$footer = sprintf('%s servers in the last 24 hours with %s all-time server starts  ', number_format($serversLast24Hours), number_format($plugin->getGlobalHits()));
 $graph->drawTextBox(60, IMAGE_HEIGHT - 25, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 7, $footer, 0, 255, 255, 255, ALIGN_RIGHT, true, 0, 0, 0, 30);
 
 // Draw the data
@@ -140,10 +133,11 @@ $graph->drawFilledLineGraph($dataSet->GetData(), $dataSet->GetDataDescription(),
 $graph->drawLegend(65, 35, $dataSet->GetDataDescription(), 255, 255, 255);
 
 // Get the center of the image
-if (!empty($pluginData['author']))
-    $title = $pluginData['name'] . ' - ' . $pluginData['author'];
+$authors = $plugin->getAuthors();
+if (!empty($authors))
+    $title = $pluginName . ' - ' . $authors;
 else
-    $title = $pluginData['name'];
+    $title = $pluginName;
 
 $font = 'tahoma.ttf';
 $bounding_box = imagettfbbox(11, 0, $font, $title);
