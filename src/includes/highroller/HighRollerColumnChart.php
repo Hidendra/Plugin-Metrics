@@ -22,15 +22,18 @@
  *
  */
 
-class HighRollerColumnChart extends HighRoller {
+class HighRollerColumnChart extends HighRoller
+{
 
-  function __construct(){
-    parent::__construct();
-    $this->chart->type = 'column';
+    function __construct()
+    {
+        parent::__construct();
+        $this->chart->type = 'column';
 //    $this->xAxis = new HighRollerXAxis();
 //    $this->yAxis = new HighRollerYAxis();
 //    $this->plotOptions->column = new HighRollerPlotOptionsByChartType($this->chart->type);
-  }
+    }
 
 }
+
 ?>

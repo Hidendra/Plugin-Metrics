@@ -21,31 +21,37 @@
  * limitations under the License.
  *
  */
- 
-class HighRollerSeriesData {
 
-  public $name;
-  public $data = array();
-  
-  public function addName($name){
-    $this->name = $name;
-    return $this;
-  }
+class HighRollerSeriesData
+{
 
-  public function addType($type){
-    $this->type = $type;
-    return $this;
-  }
+    public $name;
+    public $data = array();
 
-  public function addData($data){
-    $this->data = $data;
-    return $this;
-  }
+    public function addName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
 
-  public function addColor($color){
-    $this->color = $color;
-    return $this;
-  }
+    public function addType($type)
+    {
+        $this->type = $type;
+        return $this;
+    }
+
+    public function addData($data)
+    {
+        $this->data = $data;
+        return $this;
+    }
+
+    public function addColor($color)
+    {
+        $this->color = $color;
+        return $this;
+    }
 
 }
+
 ?>

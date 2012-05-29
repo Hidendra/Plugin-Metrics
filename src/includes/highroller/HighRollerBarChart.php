@@ -22,15 +22,18 @@
  *
  */
 
-class HighRollerBarChart extends HighRoller {
+class HighRollerBarChart extends HighRoller
+{
 
-  function __construct(){
-    parent::__construct();
-    $this->chart->type = 'bar';
+    function __construct()
+    {
+        parent::__construct();
+        $this->chart->type = 'bar';
 //    $this->xAxis = new HighRollerXAxis();
 //    $this->yAxis = new HighRollerYAxis();
 //    $this->plotOptions->bar = new HighRollerPlotOptionsByChartType($this->chart->type);
-  }
+    }
 
 }
+
 ?>

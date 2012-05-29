@@ -21,16 +21,19 @@
  * limitations under the License.
  *
  */
- 
-class HighRollerScatterChart extends HighRoller {
 
-  function __construct(){
-    parent::__construct();
-    $this->chart->type = 'scatter';
+class HighRollerScatterChart extends HighRoller
+{
+
+    function __construct()
+    {
+        parent::__construct();
+        $this->chart->type = 'scatter';
 //    $this->xAxis = new HighRollerXAxis();
 //    $this->yAxis = new HighRollerYAxis();
 //    $this->plotOptions->scatter = new HighRollerPlotOptionsByChartType($this->chart->type);
-  }
+    }
 
 }
+
 ?>
