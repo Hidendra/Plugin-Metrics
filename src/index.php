@@ -76,10 +76,6 @@ foreach (loadPlugins() as $plugin)
 
     $format = number_format($servers);
 
-    if ($plugin->getName() == 'VanishNoPacket') {
-        $format = '<b>' . $format . '</b>';
-    }
-
     echo '                          <tr' . ($servers < 10 ? ' class="hide-server"' : '') . '> <td> <a href="/plugin/' . $plugin->getName() . '">' . $plugin->getName() . '</a> </td> <td> ' . $format . ' </td> </tr>
 ';
 }
