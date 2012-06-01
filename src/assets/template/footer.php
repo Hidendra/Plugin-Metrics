@@ -3,7 +3,7 @@
             <footer class="row-fluid">
                 <hr />
                 <p> Metrics backend created by Hidendra. Plugins are owned by their respective authors. </p>
-                <p> <a href="/">plugin list</a> | <a href="/admin/">admin</a> | <a href="http://github.com/Hidendra/mcstats.org">github</a> | irc.esper.net #metrics </p>
+                <p> <a href="/status/">status</a> | <a href="/">plugin list</a> | <a href="/admin/">admin</a> | <a href="http://github.com/Hidendra/mcstats.org">github</a> | irc.esper.net #metrics </p>
             </footer>
 
         </div>
