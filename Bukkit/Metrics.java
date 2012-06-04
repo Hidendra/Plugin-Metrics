@@ -232,6 +232,10 @@ public class Metrics {
                             if (isOptOut() && taskId > 0) {
                                 plugin.getServer().getScheduler().cancelTask(taskId);
                                 taskId = -1;
+                                // Tell all plotters to stop gathering information.
+                                for (Graph graph : graphs){
+                                    graph.onOptOut();
+                                }
                             }
                         }
 
@@ -522,6 +526,11 @@ public class Metrics {
             final Graph graph = (Graph) object;
             return graph.name.equals(name);
         }
+
+        /**
+         * Called when the server owner decides to opt-out of Metrics while the server is running.
+         */
+        protected void onOptOut(){}
 
     }
 
