@@ -184,6 +184,19 @@ public class Metrics {
     }
 
     /**
+     * Add a Graph object to Metrics that represents data for the plugin that should be sent to the backend
+     *
+     * @param graph
+     */
+    public void addGraph(final Graph graph) {
+        if (graph == null) {
+            throw new IllegalArgumentException("Graph cannot be null");
+        }
+
+        graphs.add(graph);
+    }
+
+    /**
      * Adds a custom data plotter to the default graph
      *
      * @param plotter
@@ -584,7 +597,7 @@ public class Metrics {
 
         @Override
         public int hashCode() {
-            return getColumnName().hashCode() + getValue();
+            return getColumnName().hashCode();
         }
 
         @Override
