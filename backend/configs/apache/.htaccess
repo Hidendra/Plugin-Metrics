@@ -1,16 +1,16 @@
 Options -Indexes
 RewriteEngine On
 
-RewriteRule ^plugin/([a-zA-Z0-9_\.%+]+) /plugin.php?plugin=$1 [L]
-RewriteRule ^report/([^/\.]+)/?$ /report.php?plugin=$1 [L]
-RewriteRule ^signature/([^/\.]+)[\.png]? /signature.php?plugin=$1 [L]
-RewriteRule ^api/1.0/([^/\.]+)/?$ /api/1.0/basic.php?plugin=$1 [L]
-RewriteRule ^api/1.0/([^/\.]+)/graph/([^/\.]+)/?$ /api/1.0/graph.php?plugin=$1&graph=$2 [L]
+RewriteRule ^/plugin/([a-zA-Z0-9_\.%+]+) /plugin.php?plugin=$1 [L]
+RewriteRule ^/report/([^/\.]+)/?$ /report.php?plugin=$1 [L]
+RewriteRule ^/signature/([^/\.]+)[\.png]? /signature.php?plugin=$1 [L]
+RewriteRule ^/api/1.0/([^/\.]+)/?$ /api/1.0/basic.php?plugin=$1 [L]
+RewriteRule ^/api/1.0/([^/\.]+)/graph/([^/\.]+)/?$ /api/1.0/graph.php?plugin=$1&graph=$2 [L]
 
 # Admin UI
-RewriteRule ^admin/plugin/([^/\.]+)/view /admin/viewplugin.php?plugin=$1 [L]
-RewriteRule ^admin/plugin/([^/\.]+)/update /admin/updateplugin.php?plugin=$1 [L]
+RewriteRule ^/admin/plugin/([^/\.]+)/view /admin/viewplugin.php?plugin=$1 [L]
+RewriteRule ^/admin/plugin/([^/\.]+)/update /admin/updateplugin.php?plugin=$1 [L]
 
 # security
-RewriteRule ^includes/ /index.php [L]
-RewriteRule ^cron/ /index.php [L]
+RewriteRule ^/includes/ /index.php [L]
+RewriteRule ^/cron/ /index.php [L]
