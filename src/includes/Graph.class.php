@@ -248,7 +248,7 @@ class Graph
         if ($this->plugin != null)
         {
             $chart->subtitle = array(
-                'text' => 'for ' . htmlentities($this->displayName) . ' via http://mcstats.org'
+                'text' => 'for ' . htmlentities($this->plugin->getName()) . ' via http://mcstats.org'
             );
         } else
         {
