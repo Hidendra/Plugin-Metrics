@@ -274,6 +274,7 @@ function resolvePlugin($row)
 {
     $plugin = new Plugin();
     $plugin->setID($row['ID']);
+    $plugin->setParent($row['Parent']);
     $plugin->setName($row['Name']);
     $plugin->setAuthors($row['Author']);
     $plugin->setHidden($row['Hidden']);
@@ -294,10 +295,10 @@ function loadPlugins($alphabetical = false)
 
     if ($alphabetical)
     {
-        $statement = $db_handle->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin ORDER BY Name ASC');
+        $statement = $db_handle->prepare('SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Parent = -1 ORDER BY Name ASC');
     } else
     {
-        $statement = $db_handle->prepare('SELECT Plugin.ID, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin FORCE INDEX (Count) ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? GROUP BY Plugin.ID ORDER BY ServerCount DESC');
+        $statement = $db_handle->prepare('SELECT Plugin.ID, Parent, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin FORCE INDEX (Count) ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? AND Plugin.Parent = -1 GROUP BY Plugin.ID ORDER BY ServerCount DESC');
     }
     $statement->execute(array(time() - SECONDS_IN_DAY));
 
@@ -317,12 +318,24 @@ function loadPlugins($alphabetical = false)
  */
 function loadPlugin($plugin)
 {
-    $statement = get_slave_db_handle()->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Name = :Name');
+    $statement = get_slave_db_handle()->prepare('SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Name = :Name');
     $statement->execute(array(':Name' => $plugin));
 
     if ($row = $statement->fetch())
     {
         $plugin = resolvePlugin($row);
+
+        // check for parent
+        if ($plugin->getParent() != -1)
+        {
+            $parent = loadPluginByID($plugin->getParent());
+
+            if ($parent != null)
+            {
+                return $parent;
+            }
+        }
+
         return $plugin;
     }
 
@@ -337,7 +350,7 @@ function loadPlugin($plugin)
  */
 function loadPluginByID($id)
 {
-    $statement = get_slave_db_handle()->prepare('SELECT ID, Name, Author, Hidden, GlobalHits FROM Plugin WHERE ID = :ID');
+    $statement = get_slave_db_handle()->prepare('SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE ID = :ID');
     $statement->execute(array(':ID' => $id));
 
     if ($row = $statement->fetch())

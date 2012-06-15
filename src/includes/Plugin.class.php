@@ -13,6 +13,12 @@ class Plugin
     private $id;
 
     /**
+     * The parent plugin
+     * @var integer
+     */
+    private $parent;
+
+    /**
      * The plugin's name
      * @var string
      */
@@ -651,6 +657,16 @@ class Plugin
     public function setGlobalHits($globalHits)
     {
         $this->globalHits = $globalHits;
+    }
+
+    public function getParent()
+    {
+        return $this->parent;
+    }
+
+    public function setParent($parent)
+    {
+        $this->parent = $parent;
     }
 
 }

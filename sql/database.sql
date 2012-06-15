@@ -105,9 +105,7 @@ CREATE TABLE `CustomData` (
 `Updated`  int(11) NOT NULL ,
 PRIMARY KEY (`ID`)
 )
-ENGINE=MyISAM
-DEFAULT CHARACTER SET=latin1 COLLATE=latin1_swedish_ci
-
+ENGINE=InnoDB
 ;
 
 -- ----------------------------
