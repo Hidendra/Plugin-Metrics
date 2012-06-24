@@ -80,5 +80,6 @@ while ($running_processes > 0)
 }
 
 // Tear down the scratch table
+$master_db_handle = try_connect_database();
 $statement = $master_db_handle->prepare('TRUNCATE CustomDataScratch');
 $statement->execute();
