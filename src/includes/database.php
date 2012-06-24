@@ -35,7 +35,7 @@ function get_slave_db_handle()
  * @param string database type to connect to in the config, master or slave
  * @return PDO object if connected, otherwise the error message is sent to the error log and exited
  */
-function try_connect_database($dbtype)
+function try_connect_database($dbtype = 'master')
 {
     global $config;
     $db = $config['database'][$dbtype];
@@ -53,7 +53,7 @@ function try_connect_database($dbtype)
 }
 
 // Attempt to connect to the master database
-$master_db_handle = try_connect_database('master');
+$master_db_handle = try_connect_database();
 
 // Only connect to the slave database if it is enabled
 if ($config['database']['slave']['enabled'] == TRUE)

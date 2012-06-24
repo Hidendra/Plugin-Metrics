@@ -294,7 +294,7 @@ class Plugin
      * @return int
      * @deprecated
      */
-    public function sumCustomData($columnID, $min, $max = -1)
+    public function sumCustomData($columnID, $min, $max = -1, $table = 'CustomData')
     {
         $db_handle = get_slave_db_handle();
 
@@ -304,7 +304,7 @@ class Plugin
             $max = time();
         }
 
-        $statement = $db_handle->prepare('SELECT SUM(DataPoint) FROM CustomData WHERE ColumnID = ? AND Plugin = ? AND Updated >= ? AND Updated <= ?');
+        $statement = $db_handle->prepare('SELECT SUM(DataPoint) FROM ' . $table . ' WHERE ColumnID = ? AND Plugin = ? AND Updated >= ? AND Updated <= ?');
         $statement->execute(array($columnID, $this->id, $min, $max));
 
         $row = $statement->fetch();
@@ -328,7 +328,7 @@ class Plugin
         }
 
         $ret = array();
-        $statement = $db_handle->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
         $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -472,7 +472,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Country, Servers, Epoch FROM CountryTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -501,7 +501,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -530,7 +530,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -559,7 +559,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Count, Epoch FROM VersionTimeline WHERE Plugin = ? AND Version = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
+        $statement = $db_handle->prepare('SELECT Count, Epoch FROM VersionTimeline WHERE Plugin = ? AND Version = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
         $statement->execute(array($this->id, $versionID, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
