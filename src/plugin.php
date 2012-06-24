@@ -201,7 +201,7 @@ foreach ($activeGraphs as $activeGraph)
         foreach ($activeGraph->getColumns() as $id => $columnName)
         {
             // Get all of the data points
-            $dataPoints = $activeGraph->getPlugin()->getTimelineCustom($id, $minimum);
+            $dataPoints = $activeGraph->getPlugin()->getTimelineCustom($id, $minimum, -1, 'DESC');
 
             foreach ($dataPoints as $epoch => $dataPoint)
             {

@@ -317,7 +317,7 @@ class Plugin
      * @param $maxEpoch int
      * @return array keyed by the epoch
      */
-    function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1)
+    function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1, $sort = 'ASC')
     {
         $db_handle = get_slave_db_handle();
 
@@ -328,7 +328,7 @@ class Plugin
         }
 
         $ret = array();
-        $statement = $db_handle->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
+        $statement = $db_handle->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ' . $sort);
         $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -501,7 +501,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
+        $statement = $db_handle->prepare('SELECT Players, Epoch FROM PlayerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -530,7 +530,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
+        $statement = $db_handle->prepare('SELECT Servers, Epoch FROM ServerTimeline WHERE Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
@@ -559,7 +559,7 @@ class Plugin
 
         $ret = array();
 
-        $statement = $db_handle->prepare('SELECT Count, Epoch FROM VersionTimeline WHERE Plugin = ? AND Version = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch DESC');
+        $statement = $db_handle->prepare('SELECT Count, Epoch FROM VersionTimeline WHERE Plugin = ? AND Version = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ASC');
         $statement->execute(array($this->id, $versionID, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
