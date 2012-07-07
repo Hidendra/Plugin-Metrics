@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.mcstats</groupId>
-    <artifactId>Metrics</artifactId>
+    <artifactId>metrics</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
     <name>Metrics</name>
@@ -30,11 +30,16 @@
     </dependencies>
 
     <distributionManagement>
-        <!--
         <repository>
-            <id>maven-repo</id>
-            <url>http://repo-url/</url>
+            <id>mcstats.releases</id>
+            <name>mcstats.org releases</name>
+            <url>http://repo.mcstats.org/content/repositories/releases/</url>
         </repository>
-        -->
+
+        <snapshotRepository>
+            <id>mcstats.snapshots</id>
+            <name>mcstats.org snapshots</name>
+            <url>http://repo.mcstats.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>
