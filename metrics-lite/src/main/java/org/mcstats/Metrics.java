@@ -19,7 +19,7 @@ import java.net.URLEncoder;
 import java.util.UUID;
 import java.util.logging.Level;
 
-public class MetricsLite {
+public class Metrics {
 
     /**
      * The current revision number
@@ -76,7 +76,7 @@ public class MetricsLite {
      */
     private volatile int taskId = -1;
 
-    public MetricsLite(Plugin plugin) throws IOException {
+    public Metrics(Plugin plugin) throws IOException {
         if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
         }
