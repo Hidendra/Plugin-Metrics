@@ -7,14 +7,11 @@ require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
-// Load all of the countries we can use
-$baseEpoch = normalizeTime();
-
-// we want the data for the last hour
-$minimum = strtotime('-30 minutes', $baseEpoch);
-
 // the current number of running forks
 $running_processes = 0;
+
+$baseEpoch = normalizeTime();
+$minimum = strtotime('-30 minutes', $baseEpoch);
 
 // iterate through all of the plugins
 foreach (loadPlugins(true) as $plugin)

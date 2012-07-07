@@ -1,9 +1,5 @@
 <?php
 
-// 0 * * * * php cron/servers.php
-//
-// stores the amount of servers that pinged us in the last hour so it can be easily graphed
-
 define('ROOT', '../');
 define('MAX_CHILDREN', 30);
 
@@ -11,15 +7,16 @@ require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
-// Load all of the countries we can use
-$countries = loadCountries();
-$baseEpoch = normalizeTime();
-
 // we want the data for the last hour
 $minimum = strtotime('-30 minutes', $baseEpoch);
 
 // the current number of running forks
 $running_processes = 0;
+
+// Load all of the countries we can use
+$countries = loadCountries();
+$baseEpoch = normalizeTime();
+$minimum = strtotime('-30 minutes', $baseEpoch);
 
 // iterate through all of the plugins
 foreach (loadPlugins(true) as $plugin)

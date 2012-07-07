@@ -1,9 +1,5 @@
 <?php
 
-// 0 * * * * php cron/custom.php
-//
-// stores the custom data obtained in the last hour into a graphable format
-
 define('ROOT', '../');
 define('MAX_COLUMNS', 50); // soft limit of max amount of columns to loop through per plugin
 define('MAX_CHILDREN', 30); // the maximum amount of children that can be started
@@ -15,14 +11,15 @@ require_once ROOT . 'includes/func.php';
 // the current number of running forks
 $running_processes = 0;
 
+$baseEpoch = normalizeTime();
+$minimum = strtotime('-30 minutes', $baseEpoch);
+
 // iterate through all of the plugins
 foreach (loadPlugins(true) as $plugin)
 {
     if ($plugin->getID() == GLOBAL_PLUGIN_ID) continue;
-    $baseEpoch = normalizeTime();
 
     // we want the data for the last hour
-    $minimum = strtotime('-30 minutes', $baseEpoch);
     $count = 0;
 
     // are we at the process limit ?
