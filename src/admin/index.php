@@ -9,7 +9,6 @@ require_once ROOT . 'includes/func.php';
 
 ensure_loggedin();
 
-// TODO functions to include them?
 send_header();
 ?>
 
@@ -31,6 +30,5 @@ send_header();
 
             </div>
 <?php
-
 
 send_footer();

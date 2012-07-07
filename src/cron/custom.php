@@ -12,10 +12,6 @@ require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
-// Prepare the scratch table
-$statement = $master_db_handle->prepare('INSERT INTO CustomDataScratch SELECT * FROM CustomData');
-$statement->execute();
-
 // the current number of running forks
 $running_processes = 0;
 
@@ -42,19 +38,17 @@ foreach (loadPlugins(true) as $plugin)
 
     if ($pid == 0)
     {
-        // we are the child
-        // create a new database handle
         $master_db_handle = try_connect_database();
 
         // Loop through all of the possible columns
         foreach ($plugin->getCustomColumns() as $id => $name)
         {
             if ($count > MAX_COLUMNS) {
-                break;
+                // break;
             }
 
             // Sum the data for the current graphing period
-            $sum = $plugin->sumCustomData($id, $minimum, -1, 'CustomDataScratch');
+            $sum = $plugin->sumCustomData($id, $minimum);
 
             $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, DataPoint, Epoch) VALUES (:Plugin, :ColumnID, :DataPoint, :Epoch)');
             $statement->execute(array(
@@ -72,14 +66,9 @@ foreach (loadPlugins(true) as $plugin)
     }
 }
 
-// wait for all of the processes to finish first
+// wait for all of the processes to finish
 while ($running_processes > 0)
 {
     pcntl_wait($status);
     $running_processes --;
 }
-
-// Tear down the scratch table
-$master_db_handle = try_connect_database();
-$statement = $master_db_handle->prepare('TRUNCATE CustomDataScratch');
-$statement->execute();

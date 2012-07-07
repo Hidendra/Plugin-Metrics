@@ -31,6 +31,7 @@ class HighRollerSeriesData
     public function addName($name)
     {
         $this->name = $name;
+        $this->id = $name;
         return $this;
     }
 

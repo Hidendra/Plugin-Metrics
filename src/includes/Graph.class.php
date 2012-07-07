@@ -197,7 +197,7 @@ class Graph
      * The generated code should be placed inside <script> tags.
      * @return string javascript
      */
-    public function generateGraph($renderTo)
+    public function generateGraph($renderTo, $flags = array())
     {
         // Only generate the graph if we have plotters
         if (count($this->series) == 0)
@@ -375,35 +375,72 @@ class Graph
             $chart->addSeries($series);
         }
 
+        $isPlayerChart = $renderTo == 'GlobalServerChart' || $renderTo == 'PlayerServerChart';
+        if ($isPlayerChart)
+        {
+            $flags = array(array(
+                'type' => 'flags',
+                'name' => '',
+                'data' => array (
+                    array (
+                        'x' => 1341257400000,
+                        'title' => '!',
+                        'text' => 'minecraft.net login server outage'
+                    )
+                ),
+                'color' => '#5F86B3',
+                'fillColor' => '#5F86B3',
+                'style' => array (
+                    'color' => 'white'
+                ),
+                'states' => array (
+                    'hover' => array (
+                        'fillColor' => '#395C84'
+                    )
+                ),
+                'onSeries' => 'Players',
+                'shape' => 'squarepin',
+                'width' => 12
+            ));
+        }
+
+        foreach ($flags as $flag)
+        {
+            $chart->series[] = $flag;
+        }
+
         // Some raw javascript
         $rawJavascript = '';
 
         if ($this->type != GraphType::Pie)
         {
 
-            $rawJavascript = "
-                $renderTo.tooltip =
-                {
-                    \"shared\": true,
-                    \"crosshairs\": true,
-                    \"formatter\": function() {
-                        var points = this.points;
-                        var series = points[0].series;
-                        var s = series.tooltipHeaderFormatter(points[0].key);
+            if (!$isPlayerChart)
+            {
+                // just sorts the series
+                $rawJavascript = "
+                    $renderTo.tooltip =
+                    {
+                        \"shared\": true,
+                        \"crosshairs\": true,
+                        \"formatter\": function() {
+                            var points = this.points;
+                            var series = points[0].series;
+                            var s = series.tooltipHeaderFormatter(points[0].key);
 
-                        var sortedPoints = points.sort(function(a, b){
-                            return ((a.y < b.y) ? 1 : ((a.y > b.y) ? -1 : 0));
-                        });
+                            var sortedPoints = points.sort(function(a, b){
+                                return ((a.y < b.y) ? 1 : ((a.y > b.y) ? -1 : 0));
+                            });
 
-                        $.each(sortedPoints , function(i, point) {
-                            s += point.point.tooltipFormatter(series.tooltipOptions.pointFormat);
-                        });
+                            $.each(sortedPoints , function(i, point) {
+                                s += point.point.tooltipFormatter(series.tooltipOptions.pointFormat);
+                            });
 
-                        return s;
-                    }
-                };
-            ";
-
+                            return s;
+                        }
+                    };
+                ";
+            }
         } else
         { // Pie chart
 

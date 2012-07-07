@@ -28,15 +28,18 @@ require 'pChart/pChart.class.php';
 // The plugin we are graphing
 $pluginName = urldecode($_GET['plugin']);
 
-// Check the cache for the signature
-// If it already exists we can simply imagepng that shit
-$cache_key = 'signature-' . strtolower($pluginName);
-$cached_image = $cache->get($cache_key);
-
-// Image found ?!?!?
-if ($cached_image !== FALSE)
+if ($cache->isEnabled())
 {
-    exit ($cached_image);
+    // Check the cache for the signature
+    // If it already exists we can simply imagepng that shit
+    $cache_key = 'signature-' . strtolower($pluginName);
+    $cached_image = $cache->get($cache_key);
+
+    // Image found ?!?!?
+    if ($cached_image !== FALSE)
+    {
+        exit ($cached_image);
+    }
 }
 
 // Load the json data from the api
