@@ -104,7 +104,7 @@ public class MetricsLite {
      */
     private volatile int taskId = -1;
 
-    public Metrics(Plugin plugin) throws IOException {
+    public MetricsLite(Plugin plugin) throws IOException {
         if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
         }
