@@ -19,7 +19,7 @@ import java.net.URLEncoder;
 import java.util.UUID;
 import java.util.logging.Level;
 
-public class Metrics {
+public class MetricsLite {
 
     /**
      * The current revision number
@@ -35,11 +35,6 @@ public class Metrics {
      * The url used to report a server's status
      */
     private static final String REPORT_URL = "/report/%s";
-
-    /**
-     * The file where guid and opt out is stored in
-     */
-    private static final String CONFIG_FILE = "plugins/PluginMetrics/config.yml";
 
     /**
      * Interval of time to ping (in minutes)
@@ -76,7 +71,7 @@ public class Metrics {
      */
     private volatile int taskId = -1;
 
-    public Metrics(Plugin plugin) throws IOException {
+    public MetricsLite(Plugin plugin) throws IOException {
         if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
         }
@@ -84,7 +79,7 @@ public class Metrics {
         this.plugin = plugin;
 
         // load the config
-        configurationFile = new File(CONFIG_FILE);
+        configurationFile = getConfigFile();
         configuration = YamlConfiguration.loadConfiguration(configurationFile);
 
         // add some defaults
@@ -164,7 +159,7 @@ public class Metrics {
         synchronized(optOutLock) {
             try {
                 // Reload the metrics file
-                configuration.load(CONFIG_FILE);
+                configuration.load(getConfigFile());
             } catch (IOException ex) {
                 Bukkit.getLogger().log(Level.INFO, "[Metrics] " + ex.getMessage());
                 return true;
@@ -217,6 +212,23 @@ public class Metrics {
                 taskId = -1;
             }
         }
+    }
+
+    /**
+     * Gets the File object of the config file that should be used to store data such as the GUID and opt-out status
+     *
+     * @return the File object for the config file
+     */
+    public File getConfigFile() {
+        // I believe the easiest way to get the base folder (e.g craftbukkit set via -P) for plugins to use
+        // is to abuse the plugin object we already have
+        // plugin.getDataFolder() => base/plugins/PluginA/
+        // pluginsFolder => base/plugins/
+        // The base is not necessarily relative to the startup directory.
+        File pluginsFolder = plugin.getDataFolder().getParentFile();
+
+        // return => base/plugins/PluginMetrics/config.yml
+        return new File(new File(pluginsFolder, "PluginMetrics"), "config.yml");
     }
 
     /**
