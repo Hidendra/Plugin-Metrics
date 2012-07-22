@@ -230,7 +230,7 @@ public class MetricsLite {
         // This has to be synchronized or it can collide with the check in the task.
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
-//          if (!isOptOut()) {this will always set outout from false to true ondisable, and it only needs happen once
+//          if (!isOptOut()) {this will always set opt-out from false to true ondisable, and it only needs happen once
 //          configuration.set("opt-out", true);
 //          configuration.save(configurationFile);//already saved in constructor
 //      	}
