@@ -297,10 +297,11 @@ public class Metrics {
         // This has to be synchronized or it can collide with the check in the task.
         synchronized (optOutLock) {
         	// Check if the server owner has already set opt-out, if not, set it.
-        	if (isOptOut()) {
-        		configuration.set("opt-out", false);
-        		configuration.save(configurationFile);
-        	}
+//        	if (isOptOut()) {//this is basically not needed because there is a default set for opt-out in constructor
+//        		//and this sets opt-out to false if it were true
+//        		configuration.set("opt-out", false);
+//        		configuration.save(configurationFile);//already saved in constructor
+//        	}
 
         	// Enable Task, if it is not running
         	if (taskId < 0) {
@@ -318,10 +319,10 @@ public class Metrics {
         // This has to be synchronized or it can collide with the check in the task.
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
-            if (!isOptOut()) {
-                configuration.set("opt-out", true);
-                configuration.save(configurationFile);
-            }
+//            if (!isOptOut()) {this will always set outout from false to true ondisable, and it only needs happen once
+//                configuration.set("opt-out", true);
+//                configuration.save(configurationFile);//already saved in constructor
+//            }
 
             // Disable Task, if it is running
             if (taskId > 0) {
