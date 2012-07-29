@@ -26,9 +26,17 @@ REMOTE_LOCATION="/"
 if [ "$REALM" == "live" ]; then
 	REMOTE_HOST="root@mcstats.org"
 elif [ "$REALM" == "dev" ]; then
-	REMOTE_HOST="root@192.168.1.30"
+	if [ "$TYPE_SHORT" == "web" ]; then
+	    REMOTE_HOST="192.168.1.30"
+	elif [ "$TYPE_SHORT" == "db" ]; then
+	    REMOTE_HOST="192.168.1.35"
+	fi
 else
-    REMOTE_HOST="root@10.10.1.30"
+	if [ "$TYPE_SHORT" == "web" ]; then
+	    REMOTE_HOST="10.10.1.30"
+	elif [ "$TYPE_SHORT" == "db" ]; then
+	    REMOTE_HOST="10.10.1.35"
+	fi
 fi
 
 echo -e "Realm:\t\033[0;32m$REALM\033[00m"
