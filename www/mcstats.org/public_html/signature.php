@@ -114,7 +114,7 @@ $dataSet->AddAllSeries();
 
 // Set us up the bomb
 $graph = new pChart(IMAGE_WIDTH, IMAGE_HEIGHT);
-$graph->setFontProperties('tahoma.ttf', 8);
+$graph->setFontProperties('../fonts/tahoma.ttf', 8);
 $graph->setGraphArea(60, 30, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 30);
 $graph->drawFilledRoundedRectangle(7, 7, IMAGE_WIDTH - 7, IMAGE_HEIGHT - 7, 5, 240, 240, 240);
 $graph->drawRoundedRectangle(5, 5, IMAGE_WIDTH - 5, IMAGE_HEIGHT - 5, 5, 230, 230, 230);
@@ -125,7 +125,7 @@ $graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_STA
 $serversLast24Hours = $plugin->countServersLastUpdated(time() - SECONDS_IN_DAY);
 
 // Draw the footer
-$graph->setFontProperties('pf_arma_five.ttf', 6);
+$graph->setFontProperties('../fonts/pf_arma_five.ttf', 6);
 $footer = sprintf('%s servers in the last 24 hours with %s all-time server starts  ', number_format($serversLast24Hours), number_format($plugin->getGlobalHits()));
 $graph->drawTextBox(60, IMAGE_HEIGHT - 25, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 7, $footer, 0, 255, 255, 255, ALIGN_RIGHT, true, 0, 0, 0, 30);
 
@@ -142,7 +142,7 @@ if (!empty($authors))
 else
     $title = $pluginName;
 
-$font = 'tahoma.ttf';
+$font = '../fonts/tahoma.ttf';
 $bounding_box = imagettfbbox(11, 0, $font, $title);
 $center_x = ceil((IMAGE_WIDTH - $bounding_box[2]) / 2);
 
@@ -208,7 +208,7 @@ function error_image($text)
     imagefilledrectangle($image, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, $white);
 
     // write the text
-    imagettftext($image, 16, 0, 5, 25, $black, 'pf_arma_five.ttf', $text);
+    imagettftext($image, 16, 0, 5, 25, $black, '../fonts/pf_arma_five.ttf', $text);
 
     // render and destroy the image
     imagepng($image);
