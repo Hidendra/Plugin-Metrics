@@ -8,7 +8,7 @@ fi
 REALM="$1"
 
 # rsync command
-RSYNC="rsync -avzq --progress"
+RSYNC="rsync -avzq --delete --progress"
 
 # nginx load balancer
 NGINX_BALANCER="root@mcstats.org"
