@@ -328,12 +328,12 @@ class Plugin
         }
 
         $ret = array();
-        $statement = $db_handle->prepare('SELECT DataPoint, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ' . $sort);
+        $statement = $db_handle->prepare('SELECT Sum, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ' . $sort);
         $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
         {
-            $ret[$row['Epoch']] = $row['DataPoint'];
+            $ret[$row['Epoch']] = $row['Sum'];
         }
 
         return $ret;
