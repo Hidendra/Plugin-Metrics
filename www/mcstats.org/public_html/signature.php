@@ -7,6 +7,9 @@ require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
+// set the search path for fonts
+putenv('GDFONTPATH=' . realpath('../fonts/'));
+
 // The image's height
 define('IMAGE_HEIGHT', 124);
 
@@ -24,23 +27,10 @@ if (!isset($_GET['plugin']))
 // Required requirements
 require 'pChart/pData.class.php';
 require 'pChart/pChart.class.php';
+require 'pChart/pCache.class.php';
 
 // The plugin we are graphing
 $pluginName = urldecode($_GET['plugin']);
-
-if ($cache->isEnabled())
-{
-    // Check the cache for the signature
-    // If it already exists we can simply imagepng that shit
-    $cache_key = 'signature-' . strtolower($pluginName);
-    $cached_image = $cache->get($cache_key);
-
-    // Image found ?!?!?
-    if ($cached_image !== FALSE)
-    {
-        exit ($cached_image);
-    }
-}
 
 // Load the json data from the api
 // First, basic plugin data
@@ -114,7 +104,7 @@ $dataSet->AddAllSeries();
 
 // Set us up the bomb
 $graph = new pChart(IMAGE_WIDTH, IMAGE_HEIGHT);
-$graph->setFontProperties('../fonts/tahoma.ttf', 8);
+$graph->setFontProperties('tahoma.ttf', 8);
 $graph->setGraphArea(60, 30, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 30);
 $graph->drawFilledRoundedRectangle(7, 7, IMAGE_WIDTH - 7, IMAGE_HEIGHT - 7, 5, 240, 240, 240);
 $graph->drawRoundedRectangle(5, 5, IMAGE_WIDTH - 5, IMAGE_HEIGHT - 5, 5, 230, 230, 230);
@@ -125,7 +115,7 @@ $graph->drawScale($dataSet->GetData(), $dataSet->GetDataDescription(), SCALE_STA
 $serversLast24Hours = $plugin->countServersLastUpdated(time() - SECONDS_IN_DAY);
 
 // Draw the footer
-$graph->setFontProperties('../fonts/pf_arma_five.ttf', 6);
+$graph->setFontProperties('pf_arma_five.ttf', 6);
 $footer = sprintf('%s servers in the last 24 hours with %s all-time server starts  ', number_format($serversLast24Hours), number_format($plugin->getGlobalHits()));
 $graph->drawTextBox(60, IMAGE_HEIGHT - 25, IMAGE_WIDTH - 20, IMAGE_HEIGHT - 7, $footer, 0, 255, 255, 255, ALIGN_RIGHT, true, 0, 0, 0, 30);
 
@@ -142,7 +132,7 @@ if (!empty($authors))
 else
     $title = $pluginName;
 
-$font = '../fonts/tahoma.ttf';
+$font = 'tahoma.ttf';
 $bounding_box = imagettfbbox(11, 0, $font, $title);
 $center_x = ceil((IMAGE_WIDTH - $bounding_box[2]) / 2);
 
@@ -169,26 +159,10 @@ imagefilledrectangle($image, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT, $white);
 // Copy our graph into the image
 imagecopy($image, $graphImage, 0, 0, 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
 
-// Begin the output buffer to read in the image so we can cache it
-ob_start();
-
-// Render the image
 imagepng($image);
-
-// Get the buffer contents
-$image_data = ob_get_contents();
-
-// End and clean the buffer
-ob_end_clean();
-
-echo $image_data;
-
-// cache the image until the next graphing period
-$cache->set($cache_key, $image_data, CACHE_UNTIL_NEXT_GRAPH);
 
 // Destroy it
 imagedestroy($image);
-
 
 /**
  * Create an error image, send it to the client, and then exit
