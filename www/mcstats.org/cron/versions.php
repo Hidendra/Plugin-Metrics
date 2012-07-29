@@ -1,6 +1,6 @@
 <?php
 
-define('ROOT', '../');
+define('ROOT', '../public_html/');
 define('MAX_CHILDREN', 30);
 
 require_once ROOT . 'config.php';
@@ -31,30 +31,20 @@ foreach (loadPlugins(true) as $plugin)
     {
         $master_db_handle = try_connect_database();
 
-        $servers = 0;
-
-        // load the players online in the last hour
-        if ($plugin->getID() != GLOBAL_PLUGIN_ID)
+        foreach($plugin->getVersions() as $versionID => $version)
         {
-            $servers = $plugin->countServersLastUpdated($minimum);
-        } else
-        {
-            $statement = $master_db_handle->prepare('select COUNT(distinct Server) AS Count from ServerPlugin where Updated >= ?');
-            $statement->execute(array($minimum));
+            // Count the amount of servers that upgraded to this version
+            $count = $plugin->countVersionChanges($versionID, $minimum);
 
-            if ($row = $statement->fetch())
-            {
-                $servers = $row['Count'];
-            }
+            // Insert it into the database
+            $statement = $master_db_handle->prepare('INSERT INTO VersionTimeline (Plugin, Version, Count, Epoch) VALUES (:Plugin, :Version, :Count, :Epoch)');
+            $statement->execute(array(
+                ':Plugin' => $plugin->getID(),
+                ':Version' => $versionID,
+                ':Count' => $count,
+                ':Epoch' => $baseEpoch
+            ));
         }
-
-        // Insert it into the database
-        $statement = $master_db_handle->prepare('INSERT INTO ServerTimeline (Plugin, Servers, Epoch) VALUES (:Plugin, :Servers, :Epoch)');
-        $statement->execute(array(
-            ':Plugin' => $plugin->getID(),
-            ':Servers' => $servers,
-            ':Epoch' => $baseEpoch
-        ));
 
         exit(0);
     }
