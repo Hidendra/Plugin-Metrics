@@ -198,7 +198,7 @@ class DataGenerator
         foreach ($servers as $epoch => $data)
         {
             // Sort the server counts
-            asort(&$data);
+            asort($data);
 
             // Get the amount of servers we have
             $server_total = array_sum($data);
@@ -225,7 +225,7 @@ class DataGenerator
                 $data['Others'] = $others_total;
 
                 // Sort again
-                arsort(&$data);
+                arsort($data);
             }
 
             // Begin emitting unadulterated JSON

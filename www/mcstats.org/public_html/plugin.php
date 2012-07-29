@@ -213,7 +213,7 @@ foreach ($activeGraphs as $activeGraph)
         }
 
         // Now begin our magic
-        asort(&$columnAmounts);
+        asort($columnAmounts);
 
         // Sum all of the points
         $data_sum = array_sum($columnAmounts);
@@ -239,7 +239,7 @@ foreach ($activeGraphs as $activeGraph)
             $columnAmounts['Others'] = $others_total;
 
             // Sort again
-            arsort(&$columnAmounts);
+            arsort($columnAmounts);
         }
 
         // Now convert it to %

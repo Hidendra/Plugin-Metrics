@@ -17,7 +17,7 @@ class Cache
 
     public function __construct($handle = null)
     {
-        if ($handle === NULL)
+        if ($handle === NULL && $this->isEnabled())
         {
             $this->handle = new Memcached('memcached_pool');
             $this->connect();
