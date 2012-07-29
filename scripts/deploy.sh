@@ -8,7 +8,7 @@ fi
 REALM="$1"
 
 # rsync command
-RSYNC="rsync -avzq --delete --progress"
+RSYNC="rsync -avzq --progress"
 
 # nginx load balancer
 REMOTE_HOST="root@mcstats.org"
@@ -21,7 +21,7 @@ elif [ "$REALM" == "dev" ]; then
 	REMOTE_LOCATION="/data/www/"
 else
     REMOTE_HOST="root@10.10.1.30"
-    REMOTE_LOCATION="/var/www/servers/"
+    REMOTE_LOCATION="/data/www/"
 fi
 
 if [ -d "www" ]; then
