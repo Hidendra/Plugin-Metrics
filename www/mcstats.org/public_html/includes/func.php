@@ -22,6 +22,9 @@ define('SECONDS_IN_HALFDAY', 60 * 60 * 12);
 define('SECONDS_IN_DAY', 60 * 60 * 24);
 define('SECONDS_IN_WEEK', 60 * 60 * 24 * 7);
 
+// plugin list
+define('PLUGIN_LIST_RESULTS_PER_PAGE', 30);
+
 // Global plugin ID, used to store global stats so
 // we can easily re-use our own methods
 define('GLOBAL_PLUGIN_ID', -1);
@@ -58,6 +61,18 @@ function getTimeLast()
     // max 2 hours
     if($timelast > 7200) $timelast = 0;
     return($timelast);
+}
+
+/**
+ * Get the epoch of the last graph that was generated
+ * @return int
+ */
+function getLastGraphEpoch()
+{
+    $statement = get_slave_db_handle()->prepare('SELECT MAX(Epoch) FROM PlayerTimeline');
+    $statement->execute();
+    $row = $statement->fetch();
+    return $row != null ? $row[0] : 0;
 }
 
 /**
@@ -122,6 +137,44 @@ function normalizeTime($time = -1)
 
     // Round to the closest one
     return round(($time - ($denom / 2)) / $denom) * $denom;
+}
+
+/**
+ * Sum the amount of servers that have reported since the last update
+ * @return int
+ */
+function sumServersSinceLastUpdated()
+{
+    $baseEpoch = normalizeTime();
+    $minimum = strtotime('-30 minutes', $baseEpoch);
+    $statement = get_slave_db_handle()->prepare('select COUNT(distinct Server) AS Count from ServerPlugin where Updated >= ?');
+    $statement->execute(array($minimum));
+
+    if ($row = $statement->fetch())
+    {
+        return $row['Count'];
+    }
+
+    return 0;
+}
+
+/**
+ * Sum the amount of players that have reported since the last update
+ * @return int
+ */
+function sumPlayersSinceLastUpdated()
+{
+    $baseEpoch = normalizeTime();
+    $minimum = strtotime('-30 minutes', $baseEpoch);
+    $statement = get_slave_db_handle()->prepare('SELECT SUM(dev.Players) AS Count FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev;');
+    $statement->execute(array($minimum));
+
+    if ($row = $statement->fetch())
+    {
+        return $row['Count'];
+    }
+
+    return 0;
 }
 
 /**
@@ -283,24 +336,73 @@ function resolvePlugin($row)
     return $plugin;
 }
 
+define ('PLUGIN_ORDER_ALPHABETICAL', 1);
+define ('PLUGIN_ORDER_POPULARITY', 2);
+define ('PLUGIN_ORDER_RANDOM', 3);
+define ('PLUGIN_ORDER_RANDOM_TOP100', 3);
+
 /**
  * Loads all of the plugins from the database
  *
  * @return Plugin[]
  */
-function loadPlugins($alphabetical = false)
+function loadPlugins($order = PLUGIN_ORDER_POPULARITY, $limit = -1, $start = -1)
 {
+    // separate handling for POPULARITY_TOP100
+    // should be faster this way than writing some query which would be slower
+    if ($order == PLUGIN_ORDER_RANDOM_TOP100)
+    {
+        // load the top 100
+        $plugins = loadPlugins(PLUGIN_ORDER_POPULARITY, 100);
+
+        // mix them up
+        shuffle($plugins);
+
+        // if $limit is specified, trim down the array to suit
+        if ($limit != -1 && $limit < 100)
+        {
+            for ($i = $limit; $i < 100; $i++)
+            {
+                // remove it from the array
+                unset ($plugins[$i]);
+            }
+        }
+
+        return $plugins;
+    }
+
     $db_handle = get_slave_db_handle();
     $plugins = array();
 
-    if ($alphabetical)
+    switch ($order)
     {
-        $statement = $db_handle->prepare('SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Parent = -1 ORDER BY Name ASC');
-    } else
-    {
-        $statement = $db_handle->prepare('SELECT Plugin.ID, Parent, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin FORCE INDEX (Count) ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? AND Plugin.Parent = -1 GROUP BY Plugin.ID ORDER BY ServerCount DESC');
+        case PLUGIN_ORDER_ALPHABETICAL:
+            $query = 'SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Parent = -1 ORDER BY Name ASC';
+            break;
+
+        case PLUGIN_ORDER_POPULARITY:
+            $query = 'SELECT Plugin.ID, Parent, Name, Author, Hidden, GlobalHits, count(ServerPlugin.Server) AS ServerCount FROM Plugin LEFT JOIN ServerPlugin FORCE INDEX (Count) ON Plugin.ID = ServerPlugin.Plugin WHERE ServerPlugin.Updated >= ? AND Plugin.Parent = -1 GROUP BY Plugin.ID ORDER BY ServerCount DESC';
+            break;
+
+        case PLUGIN_ORDER_RANDOM:
+            $query = 'SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Parent = -1 ORDER BY RAND() ASC';
+            break;
+
+        default:
+            error_log ('Unimplemented loadPlugins () order => ' . $order);
+            exit('Unimplemented loadPlugins () order => ' . $order);
     }
-    $statement->execute(array(time() - SECONDS_IN_DAY));
+
+    if ($start != -1 && is_numeric($start))
+    {
+        $query .= ' LIMIT ' . $start . ',' . $limit;
+    } else if ($limit != -1 && is_numeric($limit))
+    {
+        $query .= ' LIMIT ' . $limit;
+    }
+
+    $statement = $db_handle->prepare($query);
+    $statement->execute(array(normalizeTime() - SECONDS_IN_DAY));
 
     while ($row = $statement->fetch())
     {

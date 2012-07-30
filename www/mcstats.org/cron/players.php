@@ -14,7 +14,7 @@ $baseEpoch = normalizeTime();
 $minimum = strtotime('-30 minutes', $baseEpoch);
 
 // iterate through all of the plugins
-foreach (loadPlugins(true) as $plugin)
+foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
 {
     // are we at the process limit ?
     if ($running_processes >= MAX_CHILDREN)
@@ -39,13 +39,7 @@ foreach (loadPlugins(true) as $plugin)
             $players = $plugin->sumPlayersOfServersLastUpdated($minimum);
         } else
         {
-            $statement = $master_db_handle->prepare('SELECT SUM(dev.Players) AS Count FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev;');
-            $statement->execute(array($minimum));
-
-            if ($row = $statement->fetch())
-            {
-                $players = $row['Count'];
-            }
+            $players = sumPlayersSinceLastUpdated();
         }
 
         // Insert it into the database

@@ -187,12 +187,8 @@ class DataGenerator
         // this is mainly just for their names
         $countries = loadCountries();
 
-        // Calculate the epoch to lookup
-        $baseEpoch = normalizeTime();
-        $minimum = strtotime('-' . $config['graph']['interval'] . ' minutes', $baseEpoch);
-
         // load the data from mysql
-        $servers = $plugin->getTimelineCountry($minimum);
+        $servers = $plugin->getTimelineCountryLast();
 
         // go through each and add to json
         foreach ($servers as $epoch => $data)

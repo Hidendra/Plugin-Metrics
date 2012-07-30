@@ -14,7 +14,7 @@ $baseEpoch = normalizeTime();
 $minimum = strtotime('-30 minutes', $baseEpoch);
 
 // iterate through all of the plugins
-foreach (loadPlugins(true) as $plugin)
+foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
 {
     // are we at the process limit ?
     if ($running_processes >= MAX_CHILDREN)
@@ -39,13 +39,7 @@ foreach (loadPlugins(true) as $plugin)
             $servers = $plugin->countServersLastUpdated($minimum);
         } else
         {
-            $statement = $master_db_handle->prepare('select COUNT(distinct Server) AS Count from ServerPlugin where Updated >= ?');
-            $statement->execute(array($minimum));
-
-            if ($row = $statement->fetch())
-            {
-                $servers = $row['Count'];
-            }
+            $servers = sumServersSinceLastUpdated();
         }
 
         // Insert it into the database

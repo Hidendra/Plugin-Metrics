@@ -43,13 +43,13 @@ echo '
             </script>
 
             <!-- Important scripts we want just for this page -->
-            <script src="http://static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
-            <script src="http://static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
-            <script src="http://static.mcstats.org/javascript/highcharts/themes/grid.js" type="text/javascript"></script>
+            <script src="http://test.static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
+            <script src="http://test.static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
+            <script src="http://test.static.mcstats.org/javascript/highcharts/themes/simplex.js" type="text/javascript"></script>
 
             <div id="row-fluid" style="width: 100%">
 
-                <div class="span4" style="width: 20%">
+                <div class="span4" style="margin-left: 10px; width: 300px;">
                     <h3>Plugin information</h3>
 ';
 
@@ -67,13 +67,28 @@ if($timelast > 0) {
 ';
 }
 
+$authors = htmlentities($plugin->getAuthors());
+
+// set a default author if none is set
+if ($authors == '')
+{
+    $authors = 'unknown :-(';
+}
+
+// check for spaces or commas (and if they exist, throw is (s) after Author
+$author_prepend = '';
+if (strstr($authors, ' ') !== FALSE || strstr($authors, ',') !== FALSE)
+{
+    $author_prepend = '(s)';
+}
+
 echo '
                     <table class="table table-striped">
                         <tbody>
                             <tr> <td> Name </td> <td> ' . $pluginName . ' </td> </tr>
-                            <tr> <td> Author(s) </td> <td> ' . htmlentities($plugin->getAuthors()) . ' </td> </tr>
+                            <tr> <td> Author' . $author_prepend .' </td> <td> ' . $authors . ' </td> </tr>
                             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
-                            <tr> <td> Signature </td> <td> <a href="/signature/' . strtolower($encodedName) . '.png" target="_blank">/signature/' . strtolower($encodedName) . '.png</a> </td> </tr>
+                            <tr> <td> <a class="btn btn-info btn-mini" href="/signature/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Signature image</a> </td> <td> </td> </tr>
                         </tbody>
                     </table>
 
@@ -81,16 +96,21 @@ echo '
                     <table class="table table-striped">
                         <tbody>
                             <tr> <td> All-time </td> <td> ' . number_format($plugin->countServers()) . ' </td> </tr>
-                            <tr> <td> Last hour </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_HOUR)) . ' </td> </tr>
-                            <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
-                            <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_DAY)) . ' </td> </tr>
-                            <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdated(time() - SECONDS_IN_WEEK)) . ' </td> </tr>
+                            <tr> <td> Last hour </td> <td> ' . number_format($plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_HOUR)) . ' </td> </tr>
+                            <tr> <td> Last 12 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_HALFDAY)) . ' </td> </tr>
+                            <tr> <td> Last 24 hrs </td> <td> ' . number_format($plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_DAY)) . ' </td> </tr>
+                            <tr> <td> Last 7 days </td> <td> ' . number_format($plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_WEEK)) . ' </td> </tr>
                             <tr> <td> This month </td> <td> ' . number_format($plugin->countServersLastUpdated(strtotime(date('m').'/01/' . date('Y') . ' 00:00:00'))) . ' </td> </tr>
                         </tbody>
                     </table>
 
-                    <h3>Servers\' last known version</h3>
-                    <p> Versions with less than 5 servers are omitted. <br/> Servers not using ' . $plugin->getName() . ' in the last 7 days are also omitted. </p>
+                    <h3>Servers\' last known version<sup>*</sup></h3>
+                    <p>
+                        <ul>
+                            <li>Counts are for servers started in the last 24 hours</li>
+                            <li>Versions with less than 5 servers are omitted</li>
+                        </ul>
+                    </p>
                     <table class="table table-striped">
                         <tbody>';
 
@@ -112,7 +132,7 @@ echo '
                     </table>
                 </div>
 
-                <div class="span8" style="width: 75%">
+                <div style="margin-left: 320px;">
                     <div id="PlayerServerChart" style="height:500"></div>
                     <div id="PlayerServerChart2" style="height:500"></div>
 ';
@@ -201,7 +221,7 @@ foreach ($activeGraphs as $activeGraph)
         foreach ($activeGraph->getColumns() as $id => $columnName)
         {
             // Get all of the data points
-            $dataPoints = $activeGraph->getPlugin()->getTimelineCustom($id, $minimum, -1, 'DESC');
+            $dataPoints = $activeGraph->getPlugin()->getTimelineCustomLast($id);
 
             foreach ($dataPoints as $epoch => $dataPoint)
             {

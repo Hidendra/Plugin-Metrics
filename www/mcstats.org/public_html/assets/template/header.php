@@ -22,14 +22,14 @@ $show_navbar = $is_in_admin_ui || is_loggedin();
         <meta name="description" content="" />
         <meta name="author" content="Tyler Blair <hidendra@griefcraft.com>" />
 
-        <link href="http://static.mcstats.org/css/bootstrap.css" rel="stylesheet" />
-        <link href="http://static.mcstats.org/css/bootstrap-responsive.css" rel="stylesheet" />
-        <link href="http://static.mcstats.org/css/ui-lightness/jquery-ui.css" rel="stylesheet" />
+        <link href="http://test.static.mcstats.org/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="http://test.static.mcstats.org/css/bootstrap-responsive.min.css" rel="stylesheet" />
+        <link href="http://test.static.mcstats.org/css/ui-lightness/jquery-ui.css" rel="stylesheet" />
 
-        <script src="http://static.mcstats.org/javascript/jquery.js" type="text/javascript"></script>
-        <script src="http://static.mcstats.org/javascript/jquery.pjax.js" type="text/javascript"></script>
-        <script src="http://static.mcstats.org/javascript/jquery-ui.js" type="text/javascript"></script>
-        <script src="http://static.mcstats.org/javascript/main.js" type="text/javascript"></script>
+        <script src="http://test.static.mcstats.org/javascript/jquery.js" type="text/javascript"></script>
+        <script src="http://test.static.mcstats.org/javascript/jquery.pjax.js" type="text/javascript"></script>
+        <script src="http://test.static.mcstats.org/javascript/jquery-ui.js" type="text/javascript"></script>
+        <script src="http://test.static.mcstats.org/javascript/main.js" type="text/javascript"></script>
 
         <script type="text/javascript">
             // Google analytics

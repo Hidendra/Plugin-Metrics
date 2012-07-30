@@ -312,12 +312,12 @@ class Plugin
     }
 
     /**
-     * Get the amount of servers online and using LWC between two epochs
+     * Get the custom timeline data for all times between the two epochs
      * @param $minEpoch int
      * @param $maxEpoch int
      * @return array keyed by the epoch
      */
-    function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1, $sort = 'ASC')
+    function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1)
     {
         $db_handle = get_slave_db_handle();
 
@@ -328,12 +328,36 @@ class Plugin
         }
 
         $ret = array();
-        $statement = $db_handle->prepare('SELECT Sum, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ? ORDER BY Epoch ' . $sort);
+        $statement = $db_handle->prepare('SELECT Sum, Epoch FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch >= ? AND Epoch <= ?');
         $statement->execute(array($columnID, $this->id, $minEpoch, $maxEpoch));
 
         while ($row = $statement->fetch())
         {
             $ret[$row['Epoch']] = $row['Sum'];
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Get the custom timeline data for the last graph that was generated
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return array keyed by the epoch
+     */
+    function getTimelineCustomLast($columnID)
+    {
+        $db_handle = get_slave_db_handle();
+
+        $epoch = getLastGraphEpoch();
+        $ret = array();
+        $statement = $db_handle->prepare('SELECT Sum FROM CustomDataTimeline WHERE ColumnID = ? AND Plugin = ? AND Epoch = ?');
+        $statement->execute(array($columnID, $this->id, $epoch));
+
+        while ($row = $statement->fetch())
+        {
+            $sum = $row['Sum'];
+            $ret[$epoch] = $sum;
         }
 
         return $ret;
@@ -478,6 +502,33 @@ class Plugin
         while ($row = $statement->fetch())
         {
             $ret[$row['Epoch']][$row['Country']] = $row['Servers'];
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Gets the last set of country timelines
+     * @param $minEpoch int
+     * @param $maxEpoch int
+     * @return array keyed by the epoch
+     */
+    function getTimelineCountryLast()
+    {
+        $db_handle = get_slave_db_handle();
+
+        $ret = array();
+
+        $epoch = getLastGraphEpoch();
+        $statement = $db_handle->prepare('SELECT Country, Servers FROM CountryTimeline WHERE Plugin = ? AND Epoch = ?');
+        $statement->execute(array($this->id, $epoch));
+
+        while ($row = $statement->fetch())
+        {
+            $country = $row['Country'];
+            $servers = $row['Servers'];
+
+            $ret[$epoch][$country] = $servers;
         }
 
         return $ret;
