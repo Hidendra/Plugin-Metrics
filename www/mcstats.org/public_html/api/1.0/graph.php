@@ -38,26 +38,44 @@ if ($plugin === NULL)
 // Decide which graph they want
 switch (strtolower($_GET['graph']))
 {
+        case 'global':
+        // load the plugin's stats graph
+        $globalstatistics = $plugin->getOrCreateGraph('Global Statistics');
+        // the player plot's column id
+        $playersColumnID = $globalstatistics->getColumnID('Players');
+        // server plot's column id
+        $serversColumnID = $globalstatistics->getColumnID('Servers');
 
-    case 'global':
         $response['status'] = 'ok';
-        $response['data']['players'] = DataGenerator::generatePlayerChartData($plugin, $hours);
-        $response['data']['servers'] = DataGenerator::generateServerChartData($plugin, $hours);
+        $response['data']['players'] = DataGenerator::generateCustomChartData($globalstatistics, $playersColumnID, $hours);
+        $response['data']['servers'] = DataGenerator::generateCustomChartData($globalstatistics, $serversColumnID, $hours);
         break;
 
     case 'country':
-        $response['status'] = 'ok';
-        $response['data'] = DataGenerator::generateCountryChartData($plugin);
+        // $response['status'] = 'ok';
+        // $response['data'] = DataGenerator::generateCountryChartData($plugin);
+        $response['status'] = 'err';
+        $response['data'] = 'Support for this has been removed for now';
         break;
 
     case 'players':
+        // load the plugin's stats graph
+        $globalstatistics = $plugin->getOrCreateGraph('Global Statistics');
+        // the player plot's column id
+        $playersColumnID = $globalstatistics->getColumnID('Players');
+
         $response['status'] = 'ok';
-        $response['data'] = DataGenerator::generatePlayerChartData($plugin, $hours);
+        $response['data'] = DataGenerator::generateCustomChartData($globalstatistics, $playersColumnID, $hours);
         break;
 
     case 'servers':
+        // load the plugin's stats graph
+        $globalstatistics = $plugin->getOrCreateGraph('Global Statistics');
+        // server plot's column id
+        $serversColumnID = $globalstatistics->getColumnID('Servers');
+
         $response['status'] = 'ok';
-        $response['data'] = DataGenerator::generateServerChartData($plugin, $hours);
+        $response['data'] = DataGenerator::generateCustomChartData($globalstatistics, $serversColumnID, $hours);
         break;
 
     default:
