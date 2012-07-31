@@ -88,8 +88,13 @@ echo '
                             <tr> <td> Name </td> <td> ' . $pluginName . ' </td> </tr>
                             <tr> <td> Author' . $author_prepend .' </td> <td> ' . $authors . ' </td> </tr>
                             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
-                            <tr> <td> </td> <td> <a class="btn btn-mini" href="/signature/' . strtolower($encodedName) . '.png" target="_blank" style="margin-bottom: 5px;"><i class="icon-tasks"></i> Signature image</a>
-                                      <br/> <a class="btn btn-mini" href="/plugin-preview/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Nameless preview</a> </td> </tr>
+                            <tr> <td> </td>
+                                <td>
+                                    <ul style="list-style: none;">
+                                        <li> <a class="btn btn-mini" href="/signature/' . strtolower($encodedName) . '.png" target="_blank" style="margin-bottom: 5px;"><i class="icon-tasks"></i> Signature image</a> </li>
+                                        <li> <a class="btn btn-mini" href="/plugin-preview/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Nameless preview</a> </li>
+                                    </ul>
+                                </td> </tr>
                         </tbody>
                     </table>
 
