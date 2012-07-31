@@ -70,6 +70,13 @@ function loadPluginListPage(page) {
             $("#plugin-list-back").show();
         }
 
+        // and the forward button
+        if (pluginListPage == pluginListMaxPages) {
+            $("#plugin-list-forward").hide();
+        } else {
+            $("#plugin-list-forward").show();
+        }
+
         // change the URL
         history.pushState(null, "Plugin Metrics :: Page " + page, "/plugin-list/" + page + "/");
     });
