@@ -89,6 +89,12 @@ class Graph
     private $active;
 
     /**
+     * If the graph is read-only
+     * @var bool
+     */
+    private $readonly;
+
+    /**
      * The graph's scale
      * @var string
      */
@@ -106,13 +112,14 @@ class Graph
      */
     private $series = array();
 
-    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0, $scale = 'linear')
+    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0, $readonly = FALSE, $scale = 'linear')
     {
         $this->id = $id;
         $this->plugin = $plugin;
         $this->type = $type;
         $this->name = $name;
         $this->displayName = $displayName;
+        $this->readonly = $readonly;
         $this->active = $active;
         $this->scale = $scale;
 
@@ -136,8 +143,8 @@ class Graph
     {
         global $master_db_handle;
 
-        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ?, Scale = ? WHERE ID = ?');
-        $statement->execute(array($this->displayName, $this->type, $this->active, $this->scale, $this->id)); // TODO
+        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ?, Readonly = ?, Scale = ? WHERE ID = ?');
+        $statement->execute(array($this->displayName, $this->type, $this->active, $this->readonly ? 1 : 0, $this->scale, $this->id)); // TODO
     }
 
     /**
@@ -175,7 +182,7 @@ class Graph
         global $master_db_handle;
 
         // It should already be in the database
-        $statement = get_slave_db_handle()->prepare('SELECT ID FROM CustomColumn WHERE Plugin = ? AND Graph = ? AND Name = ?');
+        $statement = $master_db_handle->prepare('SELECT ID FROM CustomColumn WHERE Plugin = ? AND Graph = ? AND Name = ?');
         $statement->execute(array($this->plugin->getID(), $this->id, $columnName));
 
         if ($row = $statement->fetch())
@@ -472,6 +479,15 @@ class Graph
 
         // Render it!!
         return $chart->renderChart($classname, $rawJavascript);
+    }
+
+    /**
+     * Check if the graph is read only or not
+     * @return bool
+     */
+    public function isReadOnly()
+    {
+        return $this->readonly;
     }
 
     /**

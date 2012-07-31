@@ -59,6 +59,11 @@ if ($plugin === NULL)
     $plugin = loadPlugin($pluginName);
 }
 
+if ($plugin->getID() == GLOBAL_PLUGIN_ID)
+{
+    exit('ERR Rejected');
+}
+
 // Some arguments added later in that to remain backwards compatibility
 $players = isset($_POST['players']) ? intval($_POST['players']) : 0;
 
@@ -121,6 +126,11 @@ if ($revision >= 5)
         {
             // Get or create the graph
             $graph = $plugin->getOrCreateGraph($graphName, false, 1); // Todo make it not active when authors can modify graphs
+
+            if ($graph->isReadOnly())
+            {
+                continue;
+            }
 
             foreach ($plotters as $columnName => $value)
             {

@@ -118,37 +118,13 @@ echo '
                 </div>
 
                 <div style="margin-left: 310px;">
-                <div id="GlobalServerChart" style="height:500"></div>
-                <br />
-                <div id="GlobalCountryPieChart" style="height:500"></div>
-
-                    <script>
 ';
 
 // Load the global plugin
 $globalPlugin = loadPluginByID(GLOBAL_PLUGIN_ID);
+outputGraphs($globalPlugin);
 
-/// Create the global server chart
-$globalServersChart = new Graph(-1, $globalPlugin, GraphType::Area);
-$globalServersChart->setName('All Servers reporting to Metrics');
-$playersSeries = new HighRollerSeriesData();
-$serversSeries = new HighRollerSeriesData();
-$globalServersChart->addSeries($playersSeries->addName('Players')->addData(DataGenerator::generatePlayerChartData($globalPlugin)));
-$globalServersChart->addSeries($serversSeries->addName('Servers')->addData(DataGenerator::generateServerChartData($globalPlugin)));
-
-/// Create the countries chart
-$globalCountryChart = new Graph(-1, $globalPlugin, GraphType::Pie);
-$globalCountryChart->setName('Server Locations');
-$countrySeries = new HighRollerSeriesData();
-$globalCountryChart->addSeries($countrySeries->addName('Country')->addData(DataGenerator::generateCountryChartData($globalPlugin)));
-
-// And render it
-echo $globalServersChart->generateGraph('GlobalServerChart');
-echo $globalCountryChart->generateGraph('GlobalCountryPieChart');
-
-
-echo '              </script>
-                </div>
+echo '          </div>
             </div>';
 
 /// Templating

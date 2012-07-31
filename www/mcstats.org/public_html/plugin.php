@@ -88,7 +88,8 @@ echo '
                             <tr> <td> Name </td> <td> ' . $pluginName . ' </td> </tr>
                             <tr> <td> Author' . $author_prepend .' </td> <td> ' . $authors . ' </td> </tr>
                             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
-                            <tr> <td> <a class="btn btn-info btn-mini" href="/signature/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Signature image</a> </td> <td> </td> </tr>
+                            <tr> <td> </td> <td> <a class="btn btn-mini" href="/signature/' . strtolower($encodedName) . '.png" target="_blank" style="margin-bottom: 5px;"><i class="icon-tasks"></i> Signature image</a>
+                                      <br/> <a class="btn btn-mini" href="/plugin-preview/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Nameless preview</a> </td> </tr>
                         </tbody>
                     </table>
 
@@ -133,168 +134,9 @@ echo '
                 </div>
 
                 <div style="margin-left: 320px;">
-                    <div id="PlayerServerChart" style="height:500"></div>
-                    <div id="PlayerServerChart2" style="height:500"></div>
 ';
 
-/// Load all of the custom graphs for the plugin
-$activeGraphs = $plugin->getActiveGraphs();
-
-/// Output a div for each one
-$index = 1;
-foreach ($activeGraphs as $activeGraph)
-{
-    echo '                    <br/> <div id="CustomChart' . $index++ . '" style="height:500"></div>
-';
-}
-
-echo '                    <br/> <div id="CountryPieChart" style="height:500"></div> <br/>
-                    <div id="VersionChart" style="height:500"></div>
-                </div>
-
-            </div>';
-
-/// Flush before sending / generating graph data
-flush();
-
-/// Get some graphs up in hurr
-echo '
-
-            <script>';
-
-/// Version chart
-$versionChart = new Graph(-1, $plugin, GraphType::Area);
-$versionChart->setName('Version trends');
-
-// Add data
-foreach ($plugin->getVersions() as $versionID => $name) {
-    $safeName = htmlentities($name);
-
-    $versionSeries = new HighRollerSeriesData();
-    $versionChart->addSeries($versionSeries->addName($safeName)->addData(DataGenerator::generateVersionChartData($plugin, $versionID)));
-}
-
-/// Players/Servers chart
-$playersAndServersChart = new Graph(-1, $plugin, GraphType::Area);
-$playersAndServersChart->setName('Global Statistics');
-
-// Add the serieses
-$playersSeries = new HighRollerSeriesData();
-$serversSeries = new HighRollerSeriesData();
-$playersAndServersChart->addSeries($playersSeries->addName('Players')->addData(DataGenerator::generatePlayerChartData($plugin)));
-$playersAndServersChart->addSeries($serversSeries->addName('Servers')->addData(DataGenerator::generateServerChartData($plugin)));
-
-/// Countries chart
-$countryChart = new Graph(-1, $plugin, GraphType::Pie);
-$countryChart->setName('Server Locations');
-
-// Add the series
-$countrySeries = new HighRollerSeriesData();
-$countryChart->addSeries($countrySeries->addName('Country')->addData(DataGenerator::generateCountryChartData($plugin)));
-
-/// MULTIPLE CUSTOM GRAPHS YEAH TO THE POWER OF FUCK YEAH
-// ITERATE THROUGH THE ACTIVE GRAPHS
-$index = 1; // WE GIVE A UNIQUE NUMBER TO EACH CHART
-foreach ($activeGraphs as $activeGraph)
-{
-    // ADD ALL OF THE SERIES PLOTS TO THE CHART
-    if ($activeGraph->getType() != GraphType::Pie)
-    {
-        foreach ($activeGraph->getColumns() as $id => $columnName)
-        {
-            // GENERATE SOME DATA DIRECTLY TO THE CHART!
-            $series = new HighRollerSeriesData();
-            $activeGraph->addSeries($series->addName($columnName)->addData(DataGenerator::generateCustomChartData($activeGraph, $id)));
-        }
-    } else // Pie chart
-    {
-        $series = new HighRollerSeriesData();
-        $seriesData = array();
-
-        // Time !
-        $baseEpoch = normalizeTime();
-        $minimum = strtotime('-12 hours', $baseEpoch);
-
-        // the amounts for each column
-        $columnAmounts = array();
-
-        foreach ($activeGraph->getColumns() as $id => $columnName)
-        {
-            // Get all of the data points
-            $dataPoints = $activeGraph->getPlugin()->getTimelineCustomLast($id);
-
-            foreach ($dataPoints as $epoch => $dataPoint)
-            {
-                $columnAmounts[$columnName] = $dataPoint;
-
-                // We only want 1 :)
-                break;
-            }
-        }
-
-        // Now begin our magic
-        asort($columnAmounts);
-
-        // Sum all of the points
-        $data_sum = array_sum($columnAmounts);
-
-        $count = count($columnAmounts);
-        if ($count >= MINIMUM_FOR_OTHERS)
-        {
-            $others_total = 0;
-
-            foreach ($columnAmounts as $columnName => $amount)
-            {
-                if ($count <= MINIMUM_FOR_OTHERS)
-                {
-                    break;
-                }
-
-                $count--;
-                $others_total += $amount;
-                unset($columnAmounts[$columnName]);
-            }
-
-            // Set the 'Others' stat
-            $columnAmounts['Others'] = $others_total;
-
-            // Sort again
-            arsort($columnAmounts);
-        }
-
-        // Now convert it to %
-        foreach ($columnAmounts as $columnName => $dataPoint)
-        {
-            $percent = round(($dataPoint / $data_sum) * 100, 2);
-
-            // Leave out 0%s !
-            if ($percent == 0)
-            {
-                continue;
-            }
-
-            $seriesData[] = array($columnName, $percent);
-        }
-
-        // Finalize
-        $activeGraph->addSeries($series->addName('')->addData($seriesData));
-    }
-
-    // GENERATE THE GRAPH, OH HELL YEAH!
-    echo $activeGraph->generateGraph('CustomChart' . $index++);
-}
-
-// Render the graphs
-echo $playersAndServersChart->generateGraph('PlayerServerChart');
-flush();
-echo $countryChart->generateGraph('CountryPieChart');
-flush();
-echo $versionChart->generateGraph('VersionChart');
-flush();
-
-
-echo '
-            </script>';
+outputGraphs($plugin);
 
 /// Templating
 send_footer();

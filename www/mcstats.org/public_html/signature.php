@@ -56,7 +56,14 @@ $serversX = array();
 $playersX = array();
 $graph_data = array(); // epoch => [ "servers" => v, "players" => v ]
 
-foreach (DataGenerator::generatePlayerChartData($plugin, HOURS) as $data)
+// load the plugin's stats graph
+$globalstatistics = $plugin->getOrCreateGraph('Global Statistics');
+// the player plot's column id
+$playersColumnID = $globalstatistics->getColumnID('Players');
+// server plot's column id
+$serversColumnID = $globalstatistics->getColumnID('Servers');
+
+foreach (DataGenerator::generateCustomChartData($globalstatistics, $playersColumnID, HOURS) as $data)
 {
     $epoch = $data[0];
     $value = $data[1];
@@ -64,7 +71,7 @@ foreach (DataGenerator::generatePlayerChartData($plugin, HOURS) as $data)
     $graph_data[$epoch]['players'] = $value;
 }
 
-foreach (DataGenerator::generateServerChartData($plugin, HOURS) as $data)
+foreach (DataGenerator::generateCustomChartData($globalstatistics, $serversColumnID, HOURS) as $data)
 {
     $epoch = $data[0];
     $value = $data[1];

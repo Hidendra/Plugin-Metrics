@@ -25,11 +25,16 @@ foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
 }
 
 echo <<<END
+
 <div class="hero-unit">
     <h1 style="margin-bottom:10px; font-size:57px;">Glorious plugin stats.</h1>
     <p>MCStats / Plugin Metrics is the de-facto statistical engine for Minecraft, actively used by over <b>$pluginCount</b> plugins.</p>
-    <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last 30 minutes</b> across <b>$serverCount</b> servers</p>
+    <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last 30 minutes</b> across <b>$serverCount</b> servers.</p>
     <p><a class="btn btn-primary btn-large" href="/plugin-list/" target="_blank">Plugin List &raquo;</a></p>
+</div>
+
+<div class="row" style="text-align: center;">
+    <h1 style="margin-bottom:30px; font-size:40px;">4 of the top 100 plugins. Do you use them?</h1>
 </div>
 
 <div class="row" style="text-align: center;">

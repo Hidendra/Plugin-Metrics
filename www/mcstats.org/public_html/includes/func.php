@@ -33,6 +33,125 @@ define('GLOBAL_PLUGIN_ID', -1);
 $cache = new Cache();
 
 /**
+ * Output all of the graphs for a given plugin
+ * @param $plugin
+ */
+function outputGraphs($plugin)
+{
+    /// Load all of the custom graphs for the plugin
+    $activeGraphs = $plugin->getActiveGraphs();
+
+    /// Output a div for each one
+    $index = 1;
+    foreach ($activeGraphs as $activeGraph)
+    {
+        echo '                    <div id="CustomChart' . $index++ . '" style="height:500"></div> <br/>
+';
+    }
+
+    echo '
+                </div>
+
+            </div>';
+
+    /// Flush before sending / generating graph data
+    flush();
+
+    /// MULTIPLE CUSTOM GRAPHS YEAH TO THE POWER OF FUCK YEAH
+    // ITERATE THROUGH THE ACTIVE GRAPHS
+    $index = 1; // WE GIVE A UNIQUE NUMBER TO EACH CHART
+    foreach ($activeGraphs as $activeGraph)
+    {
+        // ADD ALL OF THE SERIES PLOTS TO THE CHART
+        if ($activeGraph->getType() != GraphType::Pie)
+        {
+            foreach ($activeGraph->getColumns() as $id => $columnName)
+            {
+                // GENERATE SOME DATA DIRECTLY TO THE CHART!
+                $series = new HighRollerSeriesData();
+                $activeGraph->addSeries($series->addName($columnName)->addData(DataGenerator::generateCustomChartData($activeGraph, $id)));
+            }
+        } else // Pie chart
+        {
+            $series = new HighRollerSeriesData();
+            $seriesData = array();
+
+            // Time !
+            $baseEpoch = normalizeTime();
+            $minimum = strtotime('-12 hours', $baseEpoch);
+
+            // the amounts for each column
+            $columnAmounts = array();
+
+            foreach ($activeGraph->getColumns() as $id => $columnName)
+            {
+                // Get all of the data points
+                $dataPoints = $activeGraph->getPlugin()->getTimelineCustomLast($id);
+
+                foreach ($dataPoints as $epoch => $dataPoint)
+                {
+                    $columnAmounts[$columnName] = $dataPoint;
+
+                    // We only want 1 :)
+                    break;
+                }
+            }
+
+            // Now begin our magic
+            asort($columnAmounts);
+
+            // Sum all of the points
+            $data_sum = array_sum($columnAmounts);
+
+            $count = count($columnAmounts);
+            if ($count >= MINIMUM_FOR_OTHERS)
+            {
+                $others_total = 0;
+
+                foreach ($columnAmounts as $columnName => $amount)
+                {
+                    if ($count <= MINIMUM_FOR_OTHERS)
+                    {
+                        break;
+                    }
+
+                    $count--;
+                    $others_total += $amount;
+                    unset($columnAmounts[$columnName]);
+                }
+
+                // Set the 'Others' stat
+                $columnAmounts['Others'] = $others_total;
+
+                // Sort again
+                arsort($columnAmounts);
+            }
+
+            // Now convert it to %
+            foreach ($columnAmounts as $columnName => $dataPoint)
+            {
+                $percent = round(($dataPoint / $data_sum) * 100, 2);
+
+                // Leave out 0%s !
+                if ($percent == 0)
+                {
+                    continue;
+                }
+
+                $seriesData[] = array($columnName, $percent);
+            }
+
+            // Finalize
+            $activeGraph->addSeries($series->addName('')->addData($seriesData));
+        }
+
+        // GENERATE THE GRAPH, OH HELL YEAH!
+        echo '<script type="text/javascript">' . $activeGraph->generateGraph('CustomChart' . $index++) . '</script>';
+        flush();
+    }
+}
+
+/**
  * Log an error and force end the process
  * @param $message
  */
@@ -55,7 +174,7 @@ function error_fquit($message)
 function getTimeLast()
 {
     $timelast = -1;
-    $statement = get_slave_db_handle()->prepare('SELECT UNIX_TIMESTAMP(NOW()) - MAX(Epoch) FROM PlayerTimeline');
+    $statement = get_slave_db_handle()->prepare('SELECT UNIX_TIMESTAMP(NOW()) - MAX(Epoch) FROM CustomDataTimeline');
     $statement->execute();
     if ($row = $statement->fetch()) $timelast = (int)$row[0];
     // max 2 hours
@@ -69,7 +188,7 @@ function getTimeLast()
  */
 function getLastGraphEpoch()
 {
-    $statement = get_slave_db_handle()->prepare('SELECT MAX(Epoch) FROM PlayerTimeline');
+    $statement = get_slave_db_handle()->prepare('SELECT MAX(Epoch) FROM CustomDataTimeline');
     $statement->execute();
     $row = $statement->fetch();
     return $row != null ? $row[0] : 0;
@@ -385,7 +504,7 @@ function loadPlugins($order = PLUGIN_ORDER_POPULARITY, $limit = -1, $start = -1)
             break;
 
         case PLUGIN_ORDER_RANDOM:
-            $query = 'SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Parent = -1 ORDER BY RAND() ASC';
+            $query = 'SELECT ID, Parent, Name, Author, Hidden, GlobalHits FROM Plugin WHERE Parent = -1 ORDER BY RAND()';
             break;
 
         default:
