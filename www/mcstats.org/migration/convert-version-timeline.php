@@ -19,6 +19,9 @@ $converted = 0;
 $plugins = loadPlugins(PLUGIN_ORDER_ALPHABETICAL);
 $total = count($plugins);
 
+$statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+                                            SELECT Plugin, :ColumnID, Count, 0, 0, 0, 0, 0, 0, Epoch FROM VersionTimeline where Plugin = :Plugin AND Version = :VersionID');
+
 // iterate through all of the plugins
 foreach ($plugins as $plugin)
 {
@@ -33,8 +36,6 @@ foreach ($plugins as $plugin)
         $columnID = $versiontrends->getColumnID($versionName);
 
         // convert all of it
-        $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
-                                            SELECT Plugin, :ColumnID, Count, 0, 0, 0, 0, 0, 0, Epoch FROM VersionTimeline where Plugin = :Plugin AND Version = :VersionID');
         $statement->execute(array(':Plugin' => $plugin->getID(), ':ColumnID' => $columnID, ':VersionID' => $versionID));
     }
 

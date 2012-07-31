@@ -19,6 +19,9 @@ $converted = 0;
 $plugins = loadPlugins(PLUGIN_ORDER_ALPHABETICAL);
 $total = count($plugins);
 
+$statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+                                            SELECT Plugin, :ColumnID, Players, 0, 0, 0, 0, 0, 0, Epoch FROM PlayerTimeline where Plugin = :Plugin');
+
 // iterate through all of the plugins
 foreach ($plugins as $plugin)
 {
@@ -30,8 +33,6 @@ foreach ($plugins as $plugin)
     $columnID = $globalstats->getColumnID('Players');
 
     // convert all of it
-    $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
-                                            SELECT Plugin, :ColumnID, Players, 0, 0, 0, 0, 0, 0, Epoch FROM PlayerTimeline where Plugin = :Plugin');
     $statement->execute(array(':Plugin' => $plugin->getID(), ':ColumnID' => $columnID));
     $converted ++;
 }

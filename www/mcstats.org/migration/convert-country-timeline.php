@@ -22,6 +22,9 @@ $total = count($plugins);
 // countries
 $countries = loadCountries();
 
+$statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+                                            SELECT Plugin, :ColumnID, Servers, 0, 0, 0, 0, 0, 0, Epoch FROM CountryTimeline where Plugin = :Plugin AND Country = :ShortCode AND Servers > 0');
+
 // iterate through all of the plugins
 foreach ($plugins as $plugin)
 {
@@ -36,8 +39,6 @@ foreach ($plugins as $plugin)
         $columnID = $serverlocations->getColumnID($countryName);
 
         // convert all of it
-        $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
-                                            SELECT Plugin, :ColumnID, Servers, 0, 0, 0, 0, 0, 0, Epoch FROM CountryTimeline where Plugin = :Plugin AND Country = :ShortCode AND Servers > 0');
         $statement->execute(array(':Plugin' => $plugin->getID(), ':ColumnID' => $columnID, ':ShortCode' => $shortCode));
     }
 

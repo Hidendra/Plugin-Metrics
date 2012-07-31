@@ -326,19 +326,13 @@ class Plugin
      * @param $maxEpoch int
      * @return array keyed by the epoch
      */
-    function getTimelineCustom($columnID, $minEpoch, $maxEpoch = -1)
+    function getTimelineCustom($columnID, $minEpoch)
     {
         $db_handle = get_slave_db_handle();
 
-        // use time() if $max is -1
-        if ($maxEpoch == -1)
-        {
-            $maxEpoch = time();
-        }
-
         $ret = array();
-        $statement = $db_handle->prepare('SELECT Sum, Epoch FROM CustomDataTimeline WHERE Plugin = ? AND ColumnID = ? AND Epoch >= ? AND Epoch <= ?');
-        $statement->execute(array($this->id, $columnID, $minEpoch, $maxEpoch));
+        $statement = $db_handle->prepare('SELECT Sum, Epoch FROM CustomDataTimeline WHERE Plugin = ? AND ColumnID = ? AND Epoch >= ?');
+        $statement->execute(array($this->id, $columnID, $minEpoch));
 
         while ($row = $statement->fetch())
         {

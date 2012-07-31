@@ -6,7 +6,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Plugin Metrics :: Homepage</title>
+    <title>MCStats :: Maintenance</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="" />
     <meta name="author" content="Tyler Blair <hidendra@griefcraft.com>" />
@@ -14,11 +14,6 @@
     <link href="http://test.static.mcstats.org/css/bootstrap.min.css" rel="stylesheet" />
     <link href="http://test.static.mcstats.org/css/bootstrap-responsive.min.css" rel="stylesheet" />
     <link href="http://test.static.mcstats.org/css/ui-lightness/jquery-ui.css" rel="stylesheet" />
-
-    <script src="http://test.static.mcstats.org/javascript/jquery.js" type="text/javascript"></script>
-    <script src="http://test.static.mcstats.org/javascript/jquery.pjax.js" type="text/javascript"></script>
-    <script src="http://test.static.mcstats.org/javascript/jquery-ui.js" type="text/javascript"></script>
-    <script src="http://test.static.mcstats.org/javascript/main.js" type="text/javascript"></script>
 
     <script type="text/javascript">
         // Google analytics
