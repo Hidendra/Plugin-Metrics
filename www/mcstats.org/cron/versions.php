@@ -34,15 +34,44 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         foreach($plugin->getVersions() as $versionID => $version)
         {
             // Count the amount of servers that upgraded to this version
-            $count = $plugin->countVersionChanges($versionID, $minimum);
+            $statement = get_slave_db_handle()->prepare('
+                    SELECT
+                        SUM(1) AS Sum,
+                        COUNT(*) AS Count,
+                        AVG(1) AS Avg,
+                        MAX(1) AS Max,
+                        MIN(1) AS Min,
+                        VAR_SAMP(1) AS Variance,
+                        STDDEV_SAMP(1) AS StdDev
+                    FROM VersionHistory WHERE Version = ? AND Created >= ?');
+            $statement->execute(array($versionID, $minimum));
 
-            // Insert it into the database
-            $statement = $master_db_handle->prepare('INSERT INTO VersionTimeline (Plugin, Version, Count, Epoch) VALUES (:Plugin, :Version, :Count, :Epoch)');
+            $data = $statement->fetch();
+            $sum = $data['Sum'];
+            $count = $data['Count'];
+            $avg = $data['Avg'];
+            $max = $data['Max'];
+            $min = $data['Min'];
+            $variance = $data['Variance'];
+            $stddev = $data['StdDev'];
+
+            $graph = $plugin->getOrCreateGraph('Version Trends');
+            $columnID = $graph->getColumnID($version);
+
+            // insert it into the database
+            $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+                                                    VALUES (:Plugin, :ColumnID, :Sum, :Count, :Avg, :Max, :Min, :Variance, :StdDev, :Epoch)');
             $statement->execute(array(
                 ':Plugin' => $plugin->getID(),
-                ':Version' => $versionID,
+                ':ColumnID' => $columnID,
+                ':Epoch' => $baseEpoch,
+                ':Sum' => $sum,
                 ':Count' => $count,
-                ':Epoch' => $baseEpoch
+                ':Avg' => $avg,
+                ':Max' => $max,
+                ':Min' => $min,
+                ':Variance' => $variance,
+                ':StdDev' => $stddev
             ));
         }
 

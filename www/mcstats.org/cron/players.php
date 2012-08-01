@@ -72,7 +72,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         $stddev = $data['StdDev'];
 
         $graph = $plugin->getOrCreateGraph('Global Statistics');
-        $columnID = $graph->getColumnID('Servers');
+        $columnID = $graph->getColumnID('Players');
 
         // insert it into the database
         $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
