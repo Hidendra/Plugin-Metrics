@@ -39,13 +39,13 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
             $statement = get_slave_db_handle()->prepare('
                     SELECT
                         SUM(1) AS Sum,
-                        COUNT(*) AS Count,
+                        COUNT(dev.Server) AS Count,
                         AVG(1) AS Avg,
                         MAX(1) AS Max,
                         MIN(1) AS Min,
                         VAR_SAMP(1) AS Variance,
                         STDDEV_SAMP(1) AS StdDev
-                    FROM ServerPlugin WHERE Plugin = ? AND Updated >= ?');
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE Plugin = ? AND ServerPlugin.Updated >= ?) dev');
             $statement->execute(array($this->id, $minimum));
         } else
         {
