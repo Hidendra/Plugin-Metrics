@@ -36,18 +36,58 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         // load the players online in the last hour
         if ($plugin->getID() != GLOBAL_PLUGIN_ID)
         {
-            $servers = $plugin->countServersLastUpdated($minimum);
+            $statement = get_slave_db_handle()->prepare('
+                    SELECT
+                        SUM(1) AS Sum,
+                        COUNT(*) AS Count,
+                        AVG(1) AS Avg,
+                        MAX(1) AS Max,
+                        MIN(1) AS Min,
+                        VAR_SAMP(1) AS Variance,
+                        STDDEV_SAMP(1) AS StdDev
+                    FROM ServerPlugin WHERE Plugin = ? AND Updated >= ?');
+            $statement->execute(array($this->id, $minimum));
         } else
         {
-            $servers = sumServersSinceLastUpdated();
+            $statement = get_slave_db_handle()->prepare('
+                    SELECT
+                        SUM(1) AS Sum,
+                        COUNT(dev.Server) AS Count,
+                        AVG(1) AS Avg,
+                        MAX(1) AS Max,
+                        MIN(1) AS Min,
+                        VAR_SAMP(1) AS Variance,
+                        STDDEV_SAMP(1) AS StdDev
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev;');
+            $statement->execute(array($minimum));
         }
 
-        // Insert it into the database
-        $statement = $master_db_handle->prepare('INSERT INTO ServerTimeline (Plugin, Servers, Epoch) VALUES (:Plugin, :Servers, :Epoch)');
+        $data = $statement->fetch();
+        $sum = $data['Sum'];
+        $count = $data['Count'];
+        $avg = $data['Avg'];
+        $max = $data['Max'];
+        $min = $data['Min'];
+        $variance = $data['Variance'];
+        $stddev = $data['StdDev'];
+
+        $graph = $plugin->getOrCreateGraph('Global Statistics');
+        $columnID = $graph->getColumnID('Servers');
+
+        // insert it into the database
+        $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+                                                    VALUES (:Plugin, :ColumnID, :Sum, :Count, :Avg, :Max, :Min, :Variance, :StdDev, :Epoch)');
         $statement->execute(array(
             ':Plugin' => $plugin->getID(),
-            ':Servers' => $servers,
-            ':Epoch' => $baseEpoch
+            ':ColumnID' => $columnID,
+            ':Epoch' => $baseEpoch,
+            ':Sum' => $sum,
+            ':Count' => $count,
+            ':Avg' => $avg,
+            ':Max' => $max,
+            ':Min' => $min,
+            ':Variance' => $variance,
+            ':StdDev' => $stddev
         ));
 
         exit(0);
