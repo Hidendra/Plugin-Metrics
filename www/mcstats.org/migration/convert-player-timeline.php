@@ -1,17 +1,10 @@
 <?php
 
 define('ROOT', '../public_html/');
-define('MAX_CHILDREN', 30);
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
-
-// the current number of running forks
-$running_processes = 0;
-
-$baseEpoch = normalizeTime();
-$minimum = strtotime('-30 minutes', $baseEpoch);
 
 // number of plugins converted
 $converted = 0;
