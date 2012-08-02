@@ -38,7 +38,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         $master_db_handle = try_connect_database();
 
         // Loop through all of the possible columns
-        foreach ($plugin->getCustomColumns() as $id => $name)
+        foreach ($plugin->getCustomColumns() as $columnID => $name)
         {
             // Extract the data for the current graphing period
             $statement = get_slave_db_handle()->prepare('

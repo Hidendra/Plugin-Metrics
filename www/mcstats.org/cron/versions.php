@@ -58,6 +58,15 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
             $graph = $plugin->getOrCreateGraph('Version Trends');
             $columnID = $graph->getColumnID($version);
 
+            // these can be NULL IFF there is only one data point (e.g one server) in the sample
+            // we're using sample functions NOT population so this should be fairly obvious why
+            // this will return null
+            if ($variance === null || $stddev === null)
+            {
+                $variance = 0;
+                $stddev = 0;
+            }
+
             // insert it into the database
             $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
                                                     VALUES (:Plugin, :ColumnID, :Sum, :Count, :Avg, :Max, :Min, :Variance, :StdDev, :Epoch)');

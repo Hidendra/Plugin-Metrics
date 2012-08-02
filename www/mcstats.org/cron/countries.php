@@ -7,9 +7,6 @@ require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
-// we want the data for the last hour
-$minimum = strtotime('-30 minutes', $baseEpoch);
-
 // the current number of running forks
 $running_processes = 0;
 
@@ -43,7 +40,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
             // load the players online in the last hour
             if ($plugin->getID() != GLOBAL_PLUGIN_ID)
             {
-                $statement = $db_handle->prepare('
+                $statement = get_slave_db_handle()->prepare('
                     SELECT
                         SUM(1) AS Sum,
                         COUNT(dev.Server) AS Count,
@@ -56,7 +53,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                 $statement->execute(array($shortCode, $plugin->getID(), $minimum));
             } else
             {
-                $statement = $db_handle->prepare('
+                $statement = get_slave_db_handle()->prepare('
                     SELECT
                         SUM(1) AS Sum,
                         COUNT(dev.Server) AS Count,
@@ -86,6 +83,15 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
             if ($count == 0)
             {
                 continue;
+            }
+
+            // these can be NULL IFF there is only one data point (e.g one server) in the sample
+            // we're using sample functions NOT population so this should be fairly obvious why
+            // this will return null
+            if ($variance === null || $stddev === null)
+            {
+                $variance = 0;
+                $stddev = 0;
             }
 
             $graph = $plugin->getOrCreateGraph('Version Trends');
