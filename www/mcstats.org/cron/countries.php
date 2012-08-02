@@ -94,8 +94,8 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                 $stddev = 0;
             }
 
-            $graph = $plugin->getOrCreateGraph('Version Trends');
-            $columnID = $graph->getColumnID($version);
+            $graph = $plugin->getOrCreateGraph('Server Locations');
+            $columnID = $graph->getColumnID($fullName);
 
             // insert it into the database
             $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
