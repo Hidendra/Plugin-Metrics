@@ -53,7 +53,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                         VAR_SAMP(1) AS Variance,
                         STDDEV_SAMP(1) AS StdDev
                     FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE Country = ? AND ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ?) dev');
-                $statement->execute(array($shortCode, $this->id, $minimum));
+                $statement->execute(array($shortCode, $plugin->getID(), $minimum));
             } else
             {
                 $statement = $db_handle->prepare('

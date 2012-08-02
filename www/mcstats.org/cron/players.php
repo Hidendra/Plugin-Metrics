@@ -46,7 +46,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                         VAR_SAMP(Players) AS Variance,
                         STDDEV_SAMP(Players) AS StdDev
                     FROM ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ?');
-            $statement->execute(array($this->id, $minimum));
+            $statement->execute(array($plugin->getID(), $minimum));
         } else
         {
             $statement = get_slave_db_handle()->prepare('
