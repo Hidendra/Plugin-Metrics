@@ -2,8 +2,8 @@
 
 # executed every 30 minutes
 
-php -q players.php
-php -q servers.php
-php -q custom.php
-php -q countries.php
-php -q version.php
+/usr/local/bin/php -q players.php
+/usr/local/bin/php -q servers.php
+/usr/local/bin/php -q custom.php
+/usr/local/bin/php -q countries.php
+/usr/local/bin/php -q versions.php
