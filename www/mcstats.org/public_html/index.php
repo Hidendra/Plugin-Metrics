@@ -24,12 +24,21 @@ foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
     }
 }
 
+// generally the time player count is is last 30-60 minutes, so get the real time for popover
+$realTimeUsed = floor((time() - strtotime('-30 minutes', normalizeTime())) / 60);
+
 echo <<<END
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#players-popover").popover();
+    });
+</script>
 
 <div class="hero-unit">
     <h1 style="margin-bottom:10px; font-size:57px;">Glorious plugin stats.</h1>
     <p>MCStats / Plugin Metrics is the de-facto statistical engine for Minecraft, actively used by over <b>$pluginCount</b> plugins.</p>
-    <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last 30 minutes</b> across <b>$serverCount</b> servers.</p>
+    <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last <span id="players-popover" rel="popover" title="Actually..." data-content="It's the last $realTimeUsed minutes, but since it's constantly changing, 30 minutes is a good average (which is the amount of time between graph generations)">30<sup>*</sup></span> minutes</b> across <b>$serverCount</b> servers.</p>
     <p><a class="btn btn-primary btn-large" href="/plugin-list/" target="_blank">Plugin List &raquo;</a></p>
 </div>
 
