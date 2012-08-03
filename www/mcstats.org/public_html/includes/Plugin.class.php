@@ -145,7 +145,7 @@ class Plugin
         // The graphs to return
         $graphs = array();
 
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active,Readonly,  Name, DisplayName, Scale FROM Graph WHERE Plugin = ? ORDER BY Active DESC');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active,Readonly,  Name, DisplayName, Scale FROM Graph WHERE Plugin = ? ORDER BY Active DESC, Position ASC');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())

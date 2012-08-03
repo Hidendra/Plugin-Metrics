@@ -143,5 +143,8 @@ echo '
 
 outputGraphs($plugin);
 
+echo '
+                </div>';
+
 /// Templating
 send_footer();

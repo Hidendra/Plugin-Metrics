@@ -52,6 +52,26 @@ $show_navbar = $is_in_admin_ui || is_loggedin();
 
 if ($show_navbar)
 {
+    $plugin_dropdown = '
+
+
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Plugins <b class="caret"></b></a>
+                        <ul class="dropdown-menu">';
+
+    foreach (get_accessible_plugins() as $plugin)
+    {
+        $pluginName = htmlentities($plugin->getName());
+
+        $plugin_dropdown .= "
+                        <li>
+                            <a href=\"/admin/plugin/${pluginName}/view\">${pluginName}</a>
+                        </li>";
+    }
+
+    $plugin_dropdown .= '
+                        </ul>
+                    </li>';
 
     echo '
         <div class="navbar navbar-fixed-top">
@@ -68,6 +88,7 @@ if ($show_navbar)
                         <li' . ($is_in_admin_ui ? ' class="active"' : '') . '>
                             <a href="/admin/">Admin</a>
                         </li>
+                        ' . $plugin_dropdown . '
                     </ul> ';
 
 if (is_loggedin())

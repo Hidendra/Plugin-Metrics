@@ -52,6 +52,12 @@ if (isset($_POST['graph']))
             continue;
         }
 
+        // don't allow editing for readonly graphs
+        if ($graph->isReadOnly())
+        {
+            continue;
+        }
+
         // Pull out tasty data
         $displayName = $_POST['displayName'][$graphID];
         $type = $_POST['type'][$graphID];

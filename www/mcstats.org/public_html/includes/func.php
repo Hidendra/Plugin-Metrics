@@ -634,40 +634,6 @@ function err($msg)
     </div>';
 }
 
-function send_admin_sidebar()
-{
-    echo '
-                <script type="text/javascript">
-
-                    $(function() {
-                        // pjaxify
-                        $("a").pjax("#plugin-content");
-                    });
-
-                </script>
-
-                <div class="span2">
-                    <div class="well sidebar-nav">
-                        <ul class="nav nav-list">
-                            <li class="nav-header">Your plugins</li>';
-
-    // Go through each of the plugins they can access
-    foreach (get_accessible_plugins() as $plugin)
-    {
-        // The plugin's name
-        $pluginName = $plugin->getName();
-
-        echo '
-                            <li><a href="/admin/plugin/' . $pluginName . '/view">' . $pluginName . '</a></li>';
-    }
-
-echo '
-                        </ul>
-                    </div>
-                </div>
-    ';
-}
-
 /**
  * Check if the given plugin can be accessed.
  *

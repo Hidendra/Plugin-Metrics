@@ -42,15 +42,18 @@ else
 <?php
     if (!$ajax)
     {
-        echo '            <div class="row-fluid">
-';
-        send_admin_sidebar();
         echo '
-                <div class="span8" id="plugin-content">';
+            <!-- Important scripts we want just for this page -->
+            <script src="http://test.static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
+            <script src="http://test.static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
+            <script src="http://test.static.mcstats.org/javascript/highcharts/themes/simplex.js" type="text/javascript"></script>
+
+                        <div class="row-fluid">
+';
     }
 ?>
 
-                    <div class="span5">
+                    <div class="span4" style="margin-left: 10px; width: 320px;">
 
                         <form action="/admin/plugin/<?php echo $plugin->getName(); ?>/update" method="post" class="form-horizontal">
                             <legend>
@@ -87,6 +90,7 @@ foreach ($graphs as $graph)
     $type = $graph->getType();
     $isActive = $graph->isActive();
     $scale = $graph->getScale();
+    $disabled = $graph->isReadOnly() ? TRUE : FALSE;
 echo '
                             <legend>
                                 Custom graph #' . $index . '
@@ -107,7 +111,7 @@ echo '
                                 <label class="control-label" for="' . $id . '-displayname">Display Name</label>
 
                                 <div class="controls">
-                                    <input type="text" name="displayName[' . $id . ']" id="' . $id . '-displayname" value="' . $displayName . '" />
+                                    <input type="text" name="displayName[' . $id . ']" id="' . $id . '-displayname" value="' . $displayName . '"' . ($disabled ? ' disabled' : '') . ' />
                                 </div>
                             </div>
 
@@ -115,7 +119,7 @@ echo '
                                 <label class="control-label" for="' . $id . '-type">Type</label>
 
                                 <div class="controls">
-                                    <select name="type[' . $id . ']" id="' . $id . '-type">
+                                    <select name="type[' . $id . ']" id="' . $id . '-type"' . ($disabled ? ' disabled' : '') . '>
                                         <option value="' . GraphType::Line . '"' . ($type == GraphType::Line ? ' selected' : '') . '>Line</option>
                                         <option value="' . GraphType::Area . '"' . ($type == GraphType::Area ? ' selected' : '') . '>Area</option>
                                         <option value="' . GraphType::Column . '"' . ($type == GraphType::Column ? ' selected' : '') . '>Column</option>
@@ -129,7 +133,7 @@ echo '
 
                                 <div class="controls">
                                     <label class="checkbox">
-                                        <input type="checkbox" name="active[' . $id . ']" id="' . $id . '-active" value="1"' . ($isActive ? ' CHECKED' : '') . '>
+                                        <input type="checkbox" name="active[' . $id . ']" id="' . $id . '-active" value="1"' . ($isActive ? ' CHECKED' : '') . ($disabled ? ' disabled' : '') . '>
                                     </label>
                                 </div>
                             </div>
@@ -139,10 +143,10 @@ echo '
 
                                 <div class="controls">
                                     <label class="radio inline">
-                                        <input type="radio" name="scale[' . $id . ']" id="' . $id . '-scale" value="linear"' . ($scale == GraphScale::Linear ? ' CHECKED' : '') . '> Linear
+                                        <input type="radio" name="scale[' . $id . ']" id="' . $id . '-scale" value="linear"' . ($scale == GraphScale::Linear ? ' CHECKED' : '') . ($disabled ? ' disabled' : '') . '> Linear
                                     </label>
                                     <label class="radio inline">
-                                        <input type="radio" name="scale[' . $id . ']" value="log"' . ($scale == GraphScale::Logarithmic ? ' CHECKED' : '') . '> Logarithmic
+                                        <input type="radio" name="scale[' . $id . ']" value="log"' . ($scale == GraphScale::Logarithmic ? ' CHECKED' : '') . ($disabled ? ' disabled' : '') . '> Logarithmic
                                     </label>
                                 </div>
                             </div>
@@ -150,8 +154,7 @@ echo '
 ';
 }
 ?>
-
-                            <div class="form-actions">
+                            <div class="form-actions" style="padding-left: 0; text-align: center; width: 320px;">
                                 <input type="submit" name="submit" value="Save changes" class="btn btn-primary" />
                                 <a href="/admin/" class="btn">Cancel</a>
                             </div>
@@ -160,13 +163,17 @@ echo '
 
                     </div>
 
+                    <div style="margin-left: 410px;">
+
+<?php outputGraphs($plugin); ?>
+
+                    </div>
+
                 <?php
                 if (!$ajax)
                 {
                     echo '
-                </div>
-
-            </div>';
+                </div>';
                 }
                 ?>
 
