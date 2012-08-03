@@ -62,7 +62,11 @@ if ($show_navbar)
 
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Plugins <b class="caret"></b></a>
-                        <ul class="dropdown-menu">';
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href=\"#\">Add a Plugin</a>
+                            </li>
+                            <li class="divider"></li>';
 
     foreach (get_accessible_plugins() as $plugin)
     {
