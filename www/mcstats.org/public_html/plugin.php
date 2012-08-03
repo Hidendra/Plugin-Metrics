@@ -4,6 +4,7 @@
 /// Todo for the old way of generating graphs :D
 
 define('ROOT', './');
+session_start();
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
@@ -41,11 +42,6 @@ echo '
                 // Plugin-specific bindings
                 var pluginName = "' . $pluginName . '";
             </script>
-
-            <!-- Important scripts we want just for this page -->
-            <script src="http://test.static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
-            <script src="http://test.static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
-            <script src="http://test.static.mcstats.org/javascript/highcharts/themes/simplex.js" type="text/javascript"></script>
 
             <div id="row-fluid" style="width: 100%">
 

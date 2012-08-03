@@ -1,5 +1,6 @@
 <?php
 define('ROOT', './');
+session_start();
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
@@ -37,10 +38,6 @@ $container_class = 'container-fluid';
 send_header();
 
 echo '
-
-            <script src="http://test.static.mcstats.org/javascript/highcharts/highcharts.js" type="text/javascript"></script>
-            <script src="http://test.static.mcstats.org/javascript/highcharts/highstock.js" type="text/javascript"></script>
-            <script src="http://test.static.mcstats.org/javascript/highcharts/themes/simplex.js" type="text/javascript"></script>
 
             <div class="row-fluid" style="text-align: center; margin-bottom: 15px;">
                     <h2> Plugin Metrics </h2>
