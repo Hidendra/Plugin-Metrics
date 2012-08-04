@@ -63,6 +63,7 @@ if (isset($_POST['graph']))
         $type = $_POST['type'][$graphID];
         $active = isset($_POST['active'][$graphID]) ? $_POST['active'][$graphID] : 0;
         $scale = $_POST['scale'][$graphID];
+        $position = $_POST['position'][$graphID];
 
         // Validate active
         if ($active != 0 && $active != 1)
@@ -76,6 +77,13 @@ if (isset($_POST['graph']))
         {
             // default to linear
             $scale = GraphScale::Linear;
+        }
+
+        // validate the position they want to set the graph to and if they're valid set it
+        // TODO make these ranges easier to change ?
+        if ($position > 1 && $position < 9000)
+        {
+            $graph->setPosition($position);
         }
 
         // Set them onto the graph
@@ -94,4 +102,4 @@ if (isset($_POST['graph']))
 $plugin->save();
 
 /// Redirect them back to the view
-header('Location: /admin/plugin/' . $plugin->getName() . '/view');
+header('Location: /admin/plugin/' . htmlentities($plugin->getName()) . '/view');

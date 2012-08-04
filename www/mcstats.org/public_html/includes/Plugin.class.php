@@ -63,12 +63,12 @@ class Plugin
         global $master_db_handle;
 
         // Try to get it from the database
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Readonly, Name, DisplayName, Scale FROM Graph WHERE Plugin = ? AND Name = ?');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Readonly, Name, DisplayName, Scale, Position FROM Graph WHERE Plugin = ? AND Name = ?');
         $statement->execute(array($this->id, $name));
 
         if ($row = $statement->fetch())
         {
-            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Scale']);
+            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Position'], $row['Scale']);
         }
 
         if ($attemptedToCreate)
@@ -101,12 +101,12 @@ class Plugin
     {
         global $master_db_handle;
 
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Readonly, Name, DisplayName, Scale FROM Graph WHERE ID = ?');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Readonly, Name, DisplayName, Scale, Position FROM Graph WHERE ID = ?');
         $statement->execute(array($id));
 
         if ($row = $statement->fetch())
         {
-            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Scale']);
+            return new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Position'], $row['Scale']);
         }
 
         return NULL;
@@ -123,12 +123,12 @@ class Plugin
         // The graphs to return
         $graphs = array();
 
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Readonly, Name, DisplayName, Scale FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY Position ASC');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active, Readonly, Name, DisplayName, Scale, Position FROM Graph WHERE Plugin = ? AND Active = 1 ORDER BY Position ASC');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
         {
-            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Scale']);
+            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Position'], $row['Scale']);
         }
 
         return $graphs;
@@ -145,12 +145,12 @@ class Plugin
         // The graphs to return
         $graphs = array();
 
-        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active,Readonly,  Name, DisplayName, Scale FROM Graph WHERE Plugin = ? ORDER BY Active DESC, Position ASC');
+        $statement = $master_db_handle->prepare('SELECT ID, Plugin, Type, Active,Readonly,  Name, DisplayName, Scale, Position FROM Graph WHERE Plugin = ? ORDER BY Active DESC, Position ASC');
         $statement->execute(array($this->id));
 
         while ($row = $statement->fetch())
         {
-            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Scale']);
+            $graphs[] = new Graph($row['ID'], $this, $row['Type'], $row['Name'], $row['DisplayName'], $row['Active'], $row['Readonly'], $row['Position'], $row['Scale']);
         }
 
         return $graphs;

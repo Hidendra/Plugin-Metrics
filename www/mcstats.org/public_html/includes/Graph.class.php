@@ -95,6 +95,12 @@ class Graph
     private $readonly;
 
     /**
+     * The graph's position
+     * @var int
+     */
+    private $position;
+
+    /**
      * The graph's scale
      * @var string
      */
@@ -112,7 +118,7 @@ class Graph
      */
     private $series = array();
 
-    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0, $readonly = FALSE, $scale = 'linear')
+    public function __construct($id = -1, $plugin = NULL, $type = GraphType::Line, $name = '', $displayName = '', $active = 0, $readonly = FALSE, $position = 1, $scale = 'linear')
     {
         $this->id = $id;
         $this->plugin = $plugin;
@@ -120,6 +126,7 @@ class Graph
         $this->name = $name;
         $this->displayName = $displayName;
         $this->readonly = $readonly;
+        $this->position = $position;
         $this->active = $active;
         $this->scale = $scale;
 
@@ -143,8 +150,8 @@ class Graph
     {
         global $master_db_handle;
 
-        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ?, Readonly = ?, Scale = ? WHERE ID = ?');
-        $statement->execute(array($this->displayName, $this->type, $this->active, $this->readonly ? 1 : 0, $this->scale, $this->id)); // TODO
+        $statement = $master_db_handle->prepare('UPDATE Graph SET DisplayName = ?, Type = ?, Active = ?, Readonly = ?, Position = ?, Scale = ? WHERE ID = ?');
+        $statement->execute(array($this->displayName, $this->type, $this->active, $this->readonly ? 1 : 0, $this->position, $this->scale, $this->id)); // TODO
     }
 
     /**
@@ -638,6 +645,22 @@ class Graph
     public function getScale()
     {
         return $this->scale;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPosition()
+    {
+        return $this->position;
+    }
+
+    /**
+     * @param int $position
+     */
+    public function setPosition($position)
+    {
+        $this->position = $position;
     }
 
 }

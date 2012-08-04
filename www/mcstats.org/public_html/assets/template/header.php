@@ -64,7 +64,7 @@ if ($show_navbar)
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Plugins <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a href=\"#\">Add a Plugin</a>
+                                <a href="#">Add a Plugin</a>
                             </li>
                             <li class="divider"></li>';
 

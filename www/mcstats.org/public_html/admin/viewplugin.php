@@ -86,6 +86,7 @@ foreach ($graphs as $graph)
     $type = $graph->getType();
     $isActive = $graph->isActive();
     $scale = $graph->getScale();
+    $position = $graph->getPosition();
     $disabled = $graph->isReadOnly() ? TRUE : FALSE;
 echo '
                             <legend>
@@ -108,6 +109,14 @@ echo '
 
                                 <div class="controls">
                                     <input type="text" name="displayName[' . $id . ']" id="' . $id . '-displayname" value="' . $displayName . '"' . ($disabled ? ' disabled' : '') . ' />
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label" for="' . $id . '-position">Position</label>
+
+                                <div class="controls">
+                                    <input type="text" name="position[' . $id . ']" id="' . $id . '-position" value="' . $position . '"' . ($disabled ? ' disabled' : '') . ' />
                                 </div>
                             </div>
 
