@@ -83,6 +83,7 @@ echo '
                         <tbody>
                             <tr> <td> Name </td> <td> ' . $pluginName . ' </td> </tr>
                             <tr> <td> Author' . $author_prepend .' </td> <td> ' . $authors . ' </td> </tr>
+                            <tr> <td> Date added </td> <td> ' . date('F m, Y', $plugin->getCreated()) . ' </td> </tr>
                             <tr> <td> Global starts </td> <td> ' . number_format($plugin->getGlobalHits()) . ' </td> </tr>
                             <tr> <td> </td>
                                 <td>
