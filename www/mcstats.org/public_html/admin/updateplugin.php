@@ -97,9 +97,11 @@ if (isset($_POST['graph']))
     }
 }
 
-
 /// Save the plugin
 $plugin->save();
+
+// re-order the plugin's graphs
+$plugin->orderGraphs();
 
 /// Redirect them back to the view
 header('Location: /admin/plugin/' . htmlentities($plugin->getName()) . '/view');

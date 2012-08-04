@@ -43,6 +43,33 @@ class Plugin
     private $globalHits;
 
     /**
+     * Order the plugin's active graphs to have linear position arrangements. For example,
+     * [ 1, 2, 5, 1543, 9000, 90001 ]
+     * Where [ 1, 9000, 9001 ] are enforced graphs, it will become
+     * [ 1, 2, 3, 4, 9000, 90001 ]
+     */
+    public function orderGraphs()
+    {
+        $graphs = $this->getActiveGraphs();
+
+        $count = count($graphs);
+
+        // do they even have any custom graphs ?
+        if ($count == 3)
+        {
+            return;
+        }
+
+        $current = 2; // the current position to use
+        for ($i = 1; $i < $count - 2; $i++)
+        {
+            $graph = $graphs[$i];
+            $graph->setPosition($current++);
+            $graph->save();
+        }
+    }
+
+    /**
      * Get the key is prefixed to entries stored in the cache
      * @return string
      */
