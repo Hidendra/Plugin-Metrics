@@ -94,7 +94,7 @@ if ($show_navbar)
             <div class="navbar-inner">
                 <div class="container-fluid" style="width: auto;">
 
-                    <a class="brand" href="/">Plugin Metrics</a>
+                    <a class="brand" href="/">MCStats</a>
                     
                     <ul class="nav">
                         <li' . ($is_in_admin_ui ? '' : ' class="active"') . '>
