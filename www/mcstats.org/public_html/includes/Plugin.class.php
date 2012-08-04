@@ -43,6 +43,12 @@ class Plugin
     private $globalHits;
 
     /**
+     * When the plugin was created
+     * @var
+     */
+    private $created;
+
+    /**
      * Order the plugin's active graphs to have linear position arrangements. For example,
      * [ 1, 2, 5, 1543, 9000, 90001 ]
      * Where [ 1, 9000, 9001 ] are enforced graphs, it will become
@@ -659,7 +665,7 @@ class Plugin
         global $master_db_handle;
 
         // Prepare it
-        $statement = $master_db_handle->prepare('INSERT INTO Plugin (Name, Author, Hidden, GlobalHits) VALUES (:Name, :Author, :Hidden, :GlobalHits)');
+        $statement = $master_db_handle->prepare('INSERT INTO Plugin (Name, Author, Hidden, GlobalHits, Created) VALUES (:Name, :Author, :Hidden, :GlobalHits, UNIX_TIMESTAMP())');
 
         // Execute
         $statement->execute(array(':Name' => $this->name, ':Author' => $this->authors, ':Hidden' => $this->hidden,
@@ -674,11 +680,11 @@ class Plugin
         global $master_db_handle;
 
         // Prepare it
-        $statement = $master_db_handle->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits WHERE ID = :ID');
+        $statement = $master_db_handle->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits, Created = :Created WHERE ID = :ID');
 
         // Execute
         $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':Author' => $this->authors,
-            ':Hidden' => $this->hidden, ':GlobalHits' => $this->globalHits));
+            ':Hidden' => $this->hidden, ':GlobalHits' => $this->globalHits, ':Created' => $this->created));
     }
 
     /**
@@ -748,6 +754,22 @@ class Plugin
     public function setParent($parent)
     {
         $this->parent = $parent;
+    }
+
+    /**
+     * @return
+     */
+    public function getCreated()
+    {
+        return $this->created;
+    }
+
+    /**
+     * @param  $created
+     */
+    public function setCreated($created)
+    {
+        $this->created = $created;
     }
 
 }
