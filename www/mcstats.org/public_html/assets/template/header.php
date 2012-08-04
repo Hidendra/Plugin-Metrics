@@ -57,30 +57,36 @@ $show_navbar = $is_in_admin_ui || is_loggedin();
 
 if ($show_navbar)
 {
-    $plugin_dropdown = '
-
-
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Plugins <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="#">Add a Plugin</a>
-                            </li>
-                            <li class="divider"></li>';
-
-    foreach (get_accessible_plugins() as $plugin)
+    if (is_loggedin())
     {
-        $pluginName = htmlentities($plugin->getName());
+        $plugin_dropdown = '
 
-        $plugin_dropdown .= "
-                        <li>
-                            <a href=\"/admin/plugin/${pluginName}/view\">${pluginName}</a>
-                        </li>";
+
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Plugins <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="#">Add a Plugin</a>
+                                </li>
+                                <li class="divider"></li>';
+
+        foreach (get_accessible_plugins() as $plugin)
+        {
+            $pluginName = htmlentities($plugin->getName());
+
+            $plugin_dropdown .= "
+                                <li>
+                                    <a href=\"/admin/plugin/${pluginName}/view\">${pluginName}</a>
+                                </li>";
+        }
+
+        $plugin_dropdown .= '
+                            </ul>
+                        </li>';
+    } else
+    {
+        $plugin_dropdown = '';
     }
-
-    $plugin_dropdown .= '
-                        </ul>
-                    </li>';
 
     echo '
         <div class="navbar navbar-fixed-top">
