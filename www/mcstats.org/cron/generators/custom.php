@@ -15,7 +15,7 @@ $baseEpoch = normalizeTime();
 $minimum = strtotime('-30 minutes', $baseEpoch);
 
 // iterate through all of the plugins
-foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
+foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
 {
     if ($plugin->getID() == GLOBAL_PLUGIN_ID) continue;
 

@@ -26,7 +26,7 @@ while ($row = $statement->fetch())
 }
 
 // iterate through all of the plugins
-foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
+foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
 {
     // are we at the process limit ?
     if ($running_processes >= MAX_CHILDREN)
