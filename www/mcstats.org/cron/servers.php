@@ -71,7 +71,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         $variance = $data['Variance'];
         $stddev = $data['StdDev'];
 
-        $graph = $plugin->getOrCreateGraph('Global Statistics', false, 1, GraphType::Area, TRUE);
+        $graph = $plugin->getOrCreateGraph('Global Statistics', false, 1, GraphType::Area, TRUE, 1);
         $columnID = $graph->getColumnID('Servers');
 
         // these can be NULL IFF there is only one data point (e.g one server) in the sample
