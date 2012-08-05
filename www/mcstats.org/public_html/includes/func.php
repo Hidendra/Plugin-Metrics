@@ -33,6 +33,36 @@ define('GLOBAL_PLUGIN_ID', -1);
 $cache = new Cache();
 
 /**
+ * Get the graph generator's generation percentage. This can return NULL which means generation is not currently
+ * happening.
+ *
+ * @return the percent complete of generation. If NULL the generator is not currently running
+ */
+function graph_generator_percentage()
+{
+    $path = ROOT . '../generator.txt';
+
+    if (!file_exists($path))
+    {
+        return NULL;
+    }
+
+    $handle = fopen($path, 'r');
+
+    if ($handle === FALSE)
+    {
+        return NULL;
+    }
+
+    // percent is only ever at most 3 bytes so only read that
+    $percent = trim(fread($handle, 3));
+
+    // close it
+    fclose($handle);
+    return $percent;
+}
+
+/**
  * Output all of the graphs for a given plugin
  * @param $plugin
  */

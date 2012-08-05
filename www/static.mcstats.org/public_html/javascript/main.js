@@ -2,6 +2,24 @@
 $(document).ready(function() {
     // Hide the servers that are waiting to be hidden
     $(".hide-server").hide();
+
+    // listen for graph generator updates
+    setInterval(function() {
+        $.get('/graph-generator.php', function(data) {
+            var graphPercent = parseInt(data);
+
+            // nothing generating
+            if (graphPercent == 0) {
+                $("#graph-generator").hide();
+            }
+
+            // graphs generating
+            else {
+                $("#graph-generator-progress-bar").width(graphPercent + "%");
+                $("#graph-generator").show();
+            }
+        });
+    }, 1000);
 });
 
 // plugin list vars

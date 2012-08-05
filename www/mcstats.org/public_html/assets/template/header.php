@@ -124,6 +124,18 @@ echo '
         <br />';
 }
 
+$graphPercent = graph_generator_percentage();
+
 ?>
 
         <div class="<?php global $container_class; echo (isset($container_class) ? $container_class : 'container-fluid'); ?>">
+
+            <div class="row" id="graph-generator" style="text-align: center; width:50%; margin-left: 25%;<?php if ($graphPercent === NULL) echo ' display: none;'; ?>">
+                <p>
+                    <b> INFO: </b> Graphs are currently generating. Site performance may suffer.
+                </p>
+
+                <div class="progress progress-striped progress-success active">
+                    <div class="bar" id="graph-generator-progress-bar" style="<?php if ($graphPercent !== NULL) echo 'width: ' . $graphPercent . '%;'; ?>"></div>
+                </div>
+            </div>
