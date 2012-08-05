@@ -225,7 +225,7 @@ class Plugin
         global $master_db_handle;
 
         // Try to select it first
-        $statement = get_slave_db_handle()->prepare('SELECT Server.ID, GUID, ServerVersion, Country, Hits, Created, Players, Plugin, ServerPlugin.Version, ServerPlugin.Updated
+        $statement = get_slave_db_handle()->prepare('SELECT Server.ID, GUID, ServerVersion, Country, Hits, Created, ServerSoftware, MinecraftVersion, Players, Plugin, ServerPlugin.Version, ServerPlugin.Updated
                                                 FROM Server
                                                 LEFT OUTER JOIN ServerPlugin ON ServerPlugin.Server = Server.ID
                                                 WHERE GUID = :GUID');
@@ -247,6 +247,8 @@ class Plugin
                 $server->setServerVersion($row['ServerVersion']);
                 $server->setHits($row['Hits']);
                 $server->setCreated($row['Created']);
+                $server->setServerSoftware($row['ServerSoftware']);
+                $server->setMinecraftVersion($row['MinecraftVersion']);
                 $server->setModified(false);
             }
 

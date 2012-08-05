@@ -65,6 +65,18 @@ class Server
     private $updated;
 
     /**
+     * The software the server is running
+     * @var string
+     */
+    private $serverSoftware;
+
+    /**
+     * The minecraft version the server is running
+     * @var string
+     */
+    private $minecraftVersion;
+
+    /**
      * If the server has been modified (so we don't have to save it if possible.)
      *
      * @var bool
@@ -359,6 +371,38 @@ class Server
     public function isModified()
     {
         return $this->modified;
+    }
+
+    /**
+     * @return string
+     */
+    public function getServerSoftware()
+    {
+        return $this->serverSoftware;
+    }
+
+    /**
+     * @param string $serverSoftware
+     */
+    public function setServerSoftware($serverSoftware)
+    {
+        $this->serverSoftware = $serverSoftware;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMinecraftVersion()
+    {
+        return $this->minecraftVersion;
+    }
+
+    /**
+     * @param string $minecraftVersion
+     */
+    public function setMinecraftVersion($minecraftVersion)
+    {
+        $this->minecraftVersion = $minecraftVersion;
     }
 
 }
