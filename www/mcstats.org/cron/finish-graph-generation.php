@@ -9,8 +9,7 @@ require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
 // copy timeline data
-$statement = get_slave_db_handle()->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Max, Min, Variance, StdDev, Avg, Epoch)
-                                                                SELECT Plugin, ColumnID, Sum, Count, Max, Min, Variance, StdDev, Avg, Epoch FROM CustomDataTimelineScratch');
+$statement = get_slave_db_handle()->prepare('INSERT INTO CustomDataTimeline SELECT * FROM CustomDataTimelineScratch');
 $statement->execute();
 
 // empty the scratch table incase it failed to empty
