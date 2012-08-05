@@ -40,7 +40,7 @@ echo <<<END
     <h1 style="margin-bottom:10px; font-size:57px;">Glorious plugin stats.</h1>
     <p>MCStats / Plugin Metrics is the de-facto statistical engine for Minecraft, actively used by over <b>$pluginCount</b> plugins.</p>
     <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last <span id="players-popover" rel="popover" title="Actually..." data-content="It's the last $realTimeUsed minutes, but since it's constantly changing, 30 minutes is a good average (which is the amount of time between graph generations)">30<sup>*</sup></span> minutes</b> across <b>$serverCount</b> servers.</p>
-    <p><a class="btn btn-primary btn-large" href="/plugin-list/" target="_blank">Plugin List &raquo;</a></p>
+    <p><a href="/learn-more/" class="btn btn-success" target="_blank"><i class="icon-white icon-heart"></i> Learn More</a> :: <a class="btn btn-primary" href="/plugin-list/" target="_blank"><i class="icon-white icon-th-list"></i> Plugin List</a></p>
 </div>
 
 <div class="row" style="text-align: center;">
