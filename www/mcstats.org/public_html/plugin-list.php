@@ -40,8 +40,7 @@ send_header();
 echo '
 
             <div class="row-fluid" style="text-align: center; margin-bottom: 15px;">
-                    <h2> Plugin Metrics </h2>
-                    <p> Plugins with zero active servers (last 24 hrs) are omitted from this list. </p>
+                    <h2> MCStats / Plugin Metrics </h2>
 ';
 
 // get last updated
