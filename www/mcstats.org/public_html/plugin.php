@@ -89,7 +89,7 @@ echo '
                                 <td>
                                     <ul style="list-style: none;">
                                         <li> <a class="btn btn-mini" href="/signature/' . strtolower($encodedName) . '.png" target="_blank" style="margin-bottom: 5px;"><i class="icon-tasks"></i> Signature image</a> </li>
-                                        <li> <a class="btn btn-mini" href="/plugin-preview/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Nameless preview</a> </li>
+                                        <li> <a class="btn btn-mini" href="/plugin-preview/' . strtolower($encodedName) . '.png" target="_blank"><i class="icon-tasks"></i> Textless preview</a> </li>
                                     </ul>
                                 </td> </tr>
                         </tbody>

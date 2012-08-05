@@ -139,13 +139,17 @@ if (!empty($authors))
 else
     $title = $pluginName;
 
-$font = 'tahoma.ttf';
-$bounding_box = imagettfbbox(11, 0, $font, $title);
+$tahoma = 'tahoma.ttf';
+$bounding_box = imagettfbbox(11, 0, $tahoma, $title);
 $center_x = ceil((IMAGE_WIDTH - $bounding_box[2]) / 2);
 
 // Draw the title there
-$graph->setFontProperties($font, 11); // Switch to font size 10
+$graph->setFontProperties($tahoma, 11); // Switch to font size 10
 $graph->drawTitle($center_x, 22, $title, 50, 50, 50);
+
+// shameless advertising
+$graph->setFontProperties('pf_arma_five.ttf', 6);
+$graph->drawTitle(63, IMAGE_HEIGHT - 9, 'mcstats.org', 210, 210, 210, -1, -1, TRUE);
 
 // Stroke the image
 $graphImage = $graph->Render('__handle');
