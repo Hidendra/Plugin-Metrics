@@ -10,8 +10,20 @@ require_once ROOT . 'includes/func.php';
 // the current number of running forks
 $running_processes = 0;
 
+// Load all of the countries we can use
+$countries = loadCountries();
 $baseEpoch = normalizeTime();
 $minimum = strtotime('-30 minutes', $baseEpoch);
+
+$minecraftVersions = array();
+
+$statement = get_slave_db_handle()->prepare('SELECT distinct MinecraftVersion FROM Server');
+$statement->execute();
+
+while ($row = $statement->fetch())
+{
+    $minecraftVersions[] = $row[0];
+}
 
 // iterate through all of the plugins
 foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
@@ -31,20 +43,36 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
     {
         $master_db_handle = try_connect_database();
 
-        foreach($plugin->getVersions() as $versionID => $version)
+        foreach ($minecraftVersions as $minecraftVersion)
         {
-            // Count the amount of servers that upgraded to this version
-            $statement = get_slave_db_handle()->prepare('
+            // load the players online in the last hour
+            if ($plugin->getID() != GLOBAL_PLUGIN_ID)
+            {
+                $statement = get_slave_db_handle()->prepare('
                     SELECT
                         SUM(1) AS Sum,
-                        COUNT(*) AS Count,
+                        COUNT(dev.Server) AS Count,
                         AVG(1) AS Avg,
                         MAX(1) AS Max,
                         MIN(1) AS Min,
                         VAR_SAMP(1) AS Variance,
                         STDDEV_SAMP(1) AS StdDev
-                    FROM VersionHistory WHERE Version = ? AND Created >= ?');
-            $statement->execute(array($versionID, $minimum));
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE MinecraftVersion = ? AND ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ?) dev');
+                $statement->execute(array($minecraftVersion, $plugin->getID(), $minimum));
+            } else
+            {
+                $statement = get_slave_db_handle()->prepare('
+                    SELECT
+                        SUM(1) AS Sum,
+                        COUNT(dev.Server) AS Count,
+                        AVG(1) AS Avg,
+                        MAX(1) AS Max,
+                        MIN(1) AS Min,
+                        VAR_SAMP(1) AS Variance,
+                        STDDEV_SAMP(1) AS StdDev
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE MinecraftVersion = ? AND ServerPlugin.Updated >= ?) dev');
+                $statement->execute(array($minecraftVersion, $minimum));
+            }
 
             $data = $statement->fetch();
             $sum = $data['Sum'];
@@ -55,8 +83,10 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
             $variance = $data['Variance'];
             $stddev = $data['StdDev'];
 
-            $graph = $plugin->getOrCreateGraph('Version Trends', false, 1, GraphType::Area, TRUE, 9003);
-            $columnID = $graph->getColumnID($version);
+            if ($count == 0)
+            {
+                continue;
+            }
 
             // these can be NULL IFF there is only one data point (e.g one server) in the sample
             // we're using sample functions NOT population so this should be fairly obvious why
@@ -67,8 +97,11 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                 $stddev = 0;
             }
 
+            $graph = $plugin->getOrCreateGraph('Minecraft Version', false, 1, GraphType::Pie, TRUE, 9000);
+            $columnID = $graph->getColumnID($minecraftVersion);
+
             // insert it into the database
-            $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+            $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimelineScratch (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
                                                     VALUES (:Plugin, :ColumnID, :Sum, :Count, :Avg, :Max, :Min, :Variance, :StdDev, :Epoch)');
             $statement->execute(array(
                 ':Plugin' => $plugin->getID(),

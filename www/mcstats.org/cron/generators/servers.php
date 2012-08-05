@@ -31,32 +31,34 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
     {
         $master_db_handle = try_connect_database();
 
+        $servers = 0;
+
         // load the players online in the last hour
         if ($plugin->getID() != GLOBAL_PLUGIN_ID)
         {
             $statement = get_slave_db_handle()->prepare('
                     SELECT
-                        SUM(Players) AS Sum,
-                        COUNT(*) AS Count,
-                        AVG(Players) AS Avg,
-                        MAX(Players) AS Max,
-                        MIN(Players) AS Min,
-                        VAR_SAMP(Players) AS Variance,
-                        STDDEV_SAMP(Players) AS StdDev
-                    FROM ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ?');
+                        SUM(1) AS Sum,
+                        COUNT(dev.Server) AS Count,
+                        AVG(1) AS Avg,
+                        MAX(1) AS Max,
+                        MIN(1) AS Min,
+                        VAR_SAMP(1) AS Variance,
+                        STDDEV_SAMP(1) AS StdDev
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE Plugin = ? AND ServerPlugin.Updated >= ?) dev');
             $statement->execute(array($plugin->getID(), $minimum));
         } else
         {
             $statement = get_slave_db_handle()->prepare('
                     SELECT
-                        SUM(dev.Players) AS Sum,
-                        COUNT(*) AS Count,
-                        AVG(dev.Players) AS Avg,
-                        MAX(dev.Players) AS Max,
-                        MIN(dev.Players) AS Min,
-                        VAR_SAMP(dev.Players) AS Variance,
-                        STDDEV_SAMP(dev.Players) AS StdDev
-                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev;');
+                        SUM(1) AS Sum,
+                        COUNT(dev.Server) AS Count,
+                        AVG(1) AS Avg,
+                        MAX(1) AS Max,
+                        MIN(1) AS Min,
+                        VAR_SAMP(1) AS Variance,
+                        STDDEV_SAMP(1) AS StdDev
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerPlugin.Updated >= ?) dev');
             $statement->execute(array($minimum));
         }
 
@@ -70,7 +72,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         $stddev = $data['StdDev'];
 
         $graph = $plugin->getOrCreateGraph('Global Statistics', false, 1, GraphType::Area, TRUE, 1);
-        $columnID = $graph->getColumnID('Players');
+        $columnID = $graph->getColumnID('Servers');
 
         // these can be NULL IFF there is only one data point (e.g one server) in the sample
         // we're using sample functions NOT population so this should be fairly obvious why
@@ -82,7 +84,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
         }
 
         // insert it into the database
-        $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
+        $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimelineScratch (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)
                                                     VALUES (:Plugin, :ColumnID, :Sum, :Count, :Avg, :Max, :Min, :Variance, :StdDev, :Epoch)');
         $statement->execute(array(
             ':Plugin' => $plugin->getID(),
