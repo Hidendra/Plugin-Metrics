@@ -15,6 +15,16 @@ $countries = loadCountries();
 $baseEpoch = normalizeTime();
 $minimum = strtotime('-30 minutes', $baseEpoch);
 
+$softwares = array();
+
+$statement = get_slave_db_handle()->prepare('SELECT distinct ServerSoftware FROM Server');
+$statement->execute();
+
+while ($row = $statement->fetch())
+{
+    $softwares[] = $row[0];
+}
+
 // iterate through all of the plugins
 foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
 {
@@ -33,7 +43,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
     {
         $master_db_handle = try_connect_database();
 
-        foreach ($countries as $shortCode => $fullName)
+        foreach ($softwares as $softwareVersion)
         {
             // load the players online in the last hour
             if ($plugin->getID() != GLOBAL_PLUGIN_ID)
@@ -47,8 +57,8 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                         MIN(1) AS Min,
                         VAR_SAMP(1) AS Variance,
                         STDDEV_SAMP(1) AS StdDev
-                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE Country = ? AND ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ?) dev');
-                $statement->execute(array($shortCode, $plugin->getID(), $minimum));
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerSoftware = ? AND ServerPlugin.Plugin = ? AND ServerPlugin.Updated >= ?) dev');
+                $statement->execute(array($softwareVersion, $plugin->getID(), $minimum));
             } else
             {
                 $statement = get_slave_db_handle()->prepare('
@@ -60,8 +70,8 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                         MIN(1) AS Min,
                         VAR_SAMP(1) AS Variance,
                         STDDEV_SAMP(1) AS StdDev
-                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE Country = ? AND ServerPlugin.Updated >= ?) dev');
-                $statement->execute(array($shortCode, $minimum));
+                    FROM (SELECT DISTINCT Server, Server.Players from ServerPlugin LEFT OUTER JOIN Server ON Server.ID = ServerPlugin.Server WHERE ServerSoftware = ? AND ServerPlugin.Updated >= ?) dev');
+                $statement->execute(array($softwareVersion, $minimum));
             }
 
             $data = $statement->fetch();
@@ -87,8 +97,8 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
                 $stddev = 0;
             }
 
-            $graph = $plugin->getOrCreateGraph('Server Locations', false, 1, GraphType::Pie, TRUE, 9002);
-            $columnID = $graph->getColumnID($fullName);
+            $graph = $plugin->getOrCreateGraph('Server Software', false, 1, GraphType::Pie, TRUE, 9001);
+            $columnID = $graph->getColumnID($softwareVersion);
 
             // insert it into the database
             $statement = $master_db_handle->prepare('INSERT INTO CustomDataTimeline (Plugin, ColumnID, Sum, Count, Avg, Max, Min, Variance, StdDev, Epoch)

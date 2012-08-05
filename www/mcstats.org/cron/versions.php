@@ -55,7 +55,7 @@ foreach (loadPlugins(PLUGIN_ORDER_ALPHABETICAL) as $plugin)
             $variance = $data['Variance'];
             $stddev = $data['StdDev'];
 
-            $graph = $plugin->getOrCreateGraph('Version Trends', false, 1, GraphType::Area, TRUE);
+            $graph = $plugin->getOrCreateGraph('Version Trends', false, 1, GraphType::Area, TRUE, 9003);
             $columnID = $graph->getColumnID($version);
 
             // these can be NULL IFF there is only one data point (e.g one server) in the sample
