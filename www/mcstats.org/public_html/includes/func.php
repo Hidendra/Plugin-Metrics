@@ -711,7 +711,7 @@ function can_admin_plugin($plugin)
     {
         if ($a_plugin->getName() == $plugin_obj->getName())
         {
-            return TRUE;
+            return $a_plugin->getPendingAccess() !== TRUE;
         }
     }
 
@@ -737,12 +737,15 @@ function get_accessible_plugins()
     }
 
     // Query for all of the plugins
-    $statement = $master_db_handle->prepare('SELECT Plugin, ID, Name, Parent, Plugin.Author, Hidden, GlobalHits, Created FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
+    $statement = $master_db_handle->prepare('SELECT Plugin, ID, Name, Parent, Plugin.Author, Hidden, GlobalHits, Created, Pending FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
     $statement->execute(array($_SESSION['uid']));
 
     while ($row = $statement->fetch())
     {
-        $plugins[] = resolvePlugin($row);
+        $plugin = resolvePlugin($row);
+        $plugin->setPendingAccess($row['Pending'] == 1);
+
+        $plugins[] = $plugin;
     }
 
     return $plugins;

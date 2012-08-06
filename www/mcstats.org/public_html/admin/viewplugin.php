@@ -29,10 +29,15 @@ else
     // Load the provided plugin
     $plugin = loadPlugin($_GET['plugin']);
 
-    /// Can we access it?
-    if (!can_admin_plugin($plugin))
+    if ($plugin === NULL)
     {
         err ('Invalid plugin.');
+    }
+
+    /// Can we access it?
+    elseif (!can_admin_plugin($plugin))
+    {
+        err ('You do not have ownership access of that plugin!');
     }
 
     else

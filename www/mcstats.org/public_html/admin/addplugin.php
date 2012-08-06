@@ -57,6 +57,8 @@ if (isset($_POST['submit']))
             {
                 $statement = $master_db_handle->prepare('INSERT INTO PluginRequest (Author, Plugin, Email, DBO, Created) VALUES (?, ?, ?, ?, UNIX_TIMESTAMP())');
                 $statement->execute(array($uid, $plugin->getID(), $email, $dbo));
+                $statement = $master_db_handle->prepare('INSERT INTO AuthorACL (Author, Plugin, Pending) VALUES (?, ?, 1)');
+                $statement->execute(array($uid, $plugin->getID()));
 
                 success(sprintf('Successfully requested ownership of the plugin <b>%s</b>!', htmlentities($plugin->getName())));
             }

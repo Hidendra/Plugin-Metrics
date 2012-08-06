@@ -22,7 +22,7 @@ if (isset($_POST['submit']))
 
     if ($approved)
     {
-        $statement = $master_db_handle->prepare('INSERT INTO AuthorACL (Author, Plugin) VALUES (?, ?)');
+        $statement = $master_db_handle->prepare('UPDATE AuthorACL SET Pending = 0 WHERE Author = ? AND Plugin = ?');
         $statement->execute(array($authorID, $pluginID));
     }
 

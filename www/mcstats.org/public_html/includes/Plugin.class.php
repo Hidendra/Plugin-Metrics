@@ -49,6 +49,13 @@ class Plugin
     private $created;
 
     /**
+     * If the plugin is pending sufficient access. This is only set when obtained in context with an Author
+     * (that is, get_accessible_plugins())
+     * @var boolean
+     */
+    private $pendingAccess;
+
+    /**
      * Order the plugin's active graphs to have linear position arrangements. For example,
      * [ 1, 2, 5, 1543, 9000, 90001 ]
      * Where [ 1, 9000, 9001 ] are enforced graphs, it will become
@@ -772,6 +779,22 @@ class Plugin
     public function setCreated($created)
     {
         $this->created = $created;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getPendingAccess()
+    {
+        return $this->pendingAccess;
+    }
+
+    /**
+     * @param boolean $pendingAccess
+     */
+    public function setPendingAccess($pendingAccess)
+    {
+        $this->pendingAccess = $pendingAccess;
     }
 
 }

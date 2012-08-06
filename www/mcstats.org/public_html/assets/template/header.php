@@ -75,10 +75,18 @@ if ($show_navbar)
         {
             $pluginName = htmlentities($plugin->getName());
 
-            $plugin_dropdown .= "
+            if ($plugin->getPendingAccess() !== TRUE)
+            {
+                $link = '<a href="/admin/plugin/' . $pluginName . '/view">' . $pluginName . '</a>';
+            } else
+            {
+                $link = '<a href="#"><i>' . $pluginName . ' (Pending)</i></a>';
+            }
+
+            $plugin_dropdown .= '
                                 <li>
-                                    <a href=\"/admin/plugin/${pluginName}/view\">${pluginName}</a>
-                                </li>";
+                                    ' . $link . '
+                                </li>';
         }
 
         $plugin_dropdown .= '
