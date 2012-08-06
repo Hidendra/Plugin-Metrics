@@ -24,12 +24,13 @@ if (isset($_POST['submit']))
     {
         $statement = $master_db_handle->prepare('UPDATE AuthorACL SET Pending = 0 WHERE Author = ? AND Plugin = ?');
         $statement->execute(array($authorID, $pluginID));
+    } else {
+        $statement = $master_db_handle->prepare('DELETE FROM AuthorACL WHERE Author = ? and Plugin = ?');
+        $statement->execute(array($authorID, $pluginID));
     }
 
     // both actions require the request to become fulfilled
     $statement = $master_db_handle->prepare('DELETE FROM PluginRequest WHERE Author = ? and Plugin = ?');
-    $statement->execute(array($authorID, $pluginID));
-    $statement = $master_db_handle->prepare('DELETE FROM AuthorACL WHERE Author = ? and Plugin = ?');
     $statement->execute(array($authorID, $pluginID));
 
     // Should we send an email ?
