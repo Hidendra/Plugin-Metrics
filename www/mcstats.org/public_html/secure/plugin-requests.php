@@ -201,6 +201,9 @@ while ($row = $statement->fetch())
         $dbo_link = htmlentities($dbo);
     }
 
+    $createdMinutesAgo = floor((time() - $created) / 60);
+    if ($createdMinutesAgo < 0) $createdMinutesAgo = 0;
+
     echo '
             <tr>
                 <td>
@@ -219,7 +222,7 @@ while ($row = $statement->fetch())
                     ' . date('D, F d H:i T', $created) . '
                 </td>
                 <td>
-                    <b>' . number_format(floor((time() - $created) / 60)) . '</b> minutes ago
+                    <b>' . number_format($createdMinutesAgo) . '</b> minutes ago
                 </td>
                 <td>
                     <form action="" method="POST">
