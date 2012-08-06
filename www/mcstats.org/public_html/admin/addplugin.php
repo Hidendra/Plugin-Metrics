@@ -51,7 +51,7 @@ if (isset($_POST['submit']))
             if ($row = $statement->fetch())
             {
                 $created = $row['Created'];
-                err(sprintf('You have a pending ownership request for <b>%s</b> which was created at <b>%s</b>', htmlentities($plugin->getName()), date('H:i T D, F d', $created)));
+                err(sprintf('Your ownership request for <b>%s</b> is still pending approval, which was submitted at <b>%s</b>', htmlentities($plugin->getName()), date('H:i T D, F d', $created)));
                 send_add_plugin(htmlentities($plugin->getName()), htmlentities($email), htmlentities($dbo));
             } else
             {
