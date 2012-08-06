@@ -510,7 +510,7 @@ class Graph
      * Load the columns for this graph
      * @param $limit_results Only show the most used results, mainly just for displaying in /plugin/
      */
-    private function loadColumns($limit_results = false)
+    public function loadColumns($limit_results = false)
     {
         $this->columns = array();
         $statement = get_slave_db_handle()->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ? AND Graph = ?');
