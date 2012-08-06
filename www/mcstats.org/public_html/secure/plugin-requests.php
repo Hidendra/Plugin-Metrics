@@ -39,8 +39,9 @@ echo '
     <table class="table table-striped" style="width: 70%;">
         <thead>
             <tr>
-                <th> Author (ID) </th>
-                <th> Plugin (ID) </th>
+                <th> Author </th>
+                <th> Plugin </th>
+                <th> DBO </th>
                 <th> Email </th>
                 <th> Submitted </th>
                 <th> Relative </th>
@@ -59,10 +60,10 @@ $statement = get_slave_db_handle()->prepare('SELECT
                                     Plugin.ID AS ID, Parent, Plugin.Name AS Name, Plugin.Author AS Author, Hidden, GlobalHits, Plugin.Created AS Created,
 
                                     -- Generic
-                                    Email, PluginRequest.Created AS RequestCreated FROM PluginRequest
+                                    Email, DBO, PluginRequest.Created AS RequestCreated FROM PluginRequest
                                     LEFT OUTER JOIN Author on Author.ID = PluginRequest.Author
                                     LEFT OUTER JOIN Plugin ON Plugin.ID = PluginRequest.Plugin
-                                    ORDER BY Created desc');
+                                    ORDER BY PluginRequest.Created ASC');
 $statement->execute();
 
 while ($row = $statement->fetch())
@@ -71,13 +72,19 @@ while ($row = $statement->fetch())
     $authorName = $row['AuthorName'];
     $pluginID = $row['Plugin'];
     $email = $row['Email'];
+    $dbo = $row['DBO'];
     $created = $row['RequestCreated'];
 
     // resolve the plugin
     $plugin = resolvePlugin($row);
 
-    $safeAuthorName = htmlentities($row['AuthorName']);
-    $safePluginName = htmlentities($plugin->getName());
+    if (strstr($dbo, 'http') !== FALSE || strstr($dbo, 'com') !== FALSE || strstr($dbo, 'org'))
+    {
+        $dbo_link = '<a href="' . htmlentities($dbo) . '" target="_blank">' . htmlentities($dbo) . '</a>';
+    } else
+    {
+        $dbo_link = htmlentities($dbo);
+    }
 
     echo '
             <tr>
@@ -86,6 +93,9 @@ while ($row = $statement->fetch())
                 </td>
                 <td>
                     ' . htmlentities($plugin->getName()) . ' (' . $plugin->getID() . ')
+                </td>
+                <td>
+                    ' . $dbo_link . '
                 </td>
                 <td>
                     ' . htmlentities($email) . '

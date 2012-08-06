@@ -14,6 +14,7 @@ send_header();
 if (isset($_POST['submit']))
 {
     $pluginName = $_POST['pluginName'];
+    $dbo = $_POST['dbo'];
     $email = $_POST['email'];
 
     $plugin = loadPlugin($pluginName);
@@ -51,11 +52,11 @@ if (isset($_POST['submit']))
             {
                 $created = $row['Created'];
                 err(sprintf('You have a pending ownership request for <b>%s</b> which was created at <b>%s</b>', htmlentities($plugin->getName()), date('H:i T D, F d', $created)));
-                send_add_plugin(htmlentities($plugin->getName()), htmlentities($email));
+                send_add_plugin(htmlentities($plugin->getName()), htmlentities($email), htmlentities($dbo));
             } else
             {
-                $statement = $master_db_handle->prepare('INSERT INTO PluginRequest (Author, Plugin, Email, Created) VALUES (?, ?, ?, UNIX_TIMESTAMP())');
-                $statement->execute(array($uid, $plugin->getID(), $email));
+                $statement = $master_db_handle->prepare('INSERT INTO PluginRequest (Author, Plugin, Email, DBO, Created) VALUES (?, ?, ?, ?, UNIX_TIMESTAMP())');
+                $statement->execute(array($uid, $plugin->getID(), $email, $dbo));
 
                 success(sprintf('Successfully requested ownership of the plugin <b>%s</b>!', htmlentities($plugin->getName())));
             }
@@ -69,7 +70,7 @@ else
 
 send_footer();
 
-function send_add_plugin($plugin = '', $email = '')
+function send_add_plugin($plugin = '', $email = '', $dbo = '')
 {
     echo '
             <script type="text/javascript">
@@ -160,6 +161,13 @@ function send_add_plugin($plugin = '', $email = '')
                                         <div class="input-prepend">
                                             <span class="add-on"><i class="fam-cancel" id="pluginName-icon"></i></span><input type="text" name="pluginName" id="pluginName" value="' . $plugin . '" />
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label" for="dbo">dev.bukkit.org entry or forum post (optional)</label>
+                                    <div class="controls">
+                                        <input type="text" name="dbo" value="' . $dbo . '" />
                                     </div>
                                 </div>
 
