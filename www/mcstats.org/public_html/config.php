@@ -9,6 +9,10 @@ $config['graph']['interval'] = 30;
 // The separator to used in post requests for custom data
 $config['graph']['separator'] = '~~';
 
+// email config settings for gmail
+$config['email']['username'] = 'noreply@mcstats.org';
+$config['email']['password'] = '';
+
 // Master database configuration
 $config['database']['master'] = array(
     'hostname'  => '127.0.0.1',
