@@ -16,12 +16,10 @@ send_header();
 <div class="hero-unit">
     <h1 style="margin-bottom:10px; font-size:57px;">Welcome!</h1>
     <p>
-        To the left you will find the plugins you have access to. From there you will be able to
-        change settings and graphing options for your plugin. If you should require access to another
-        plugin, please contact Hidendra directly, preferably through irc: irc.esper.net #metrics
+        Under the <i>Plugins</i> menu at the top you will find plugins you have access to. From there you can manage them and edit settings for them.
     </p>
     <p>
-        <a class="btn btn-primary btn-large" href="/plugin-list/" target="_blank">Add A Plugin &raquo;</a>
+        <a href="/admin/add-plugin/" class="btn btn-success btn-large"><i class="icon-white icon-heart"></i> Add a Plugin</a>
     </p>
 </div>
 

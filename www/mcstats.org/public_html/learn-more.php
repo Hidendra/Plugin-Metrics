@@ -12,23 +12,6 @@ $page_title = 'Plugin Metrics :: Why MCStats?';
 // $container_class = 'container';
 send_header();
 
-// vars used later on
-$pluginCount = 0;
-$serverCount = number_format(sumServersSinceLastUpdated());
-$playerCount = number_format(sumPlayersSinceLastUpdated());
-
-foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
-{
-    $count = $plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_DAY);
-    if ($count > 0)
-    {
-        $pluginCount ++;
-    }
-}
-
-// generally the time player count is is last 30-60 minutes, so get the real time for popover
-$realTimeUsed = floor((time() - strtotime('-30 minutes', normalizeTime())) / 60);
-
 echo <<<END
 
 <div class="row-fluid" style="margin-left: 25%; text-align: center;">

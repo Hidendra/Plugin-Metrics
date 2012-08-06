@@ -658,10 +658,29 @@ function send_footer()
 function err($msg)
 {
     echo '
-    <div class="row-fluid">
-        <span class="alert alert-error">
-            ' . $msg . '
-        </span>
+    <div class="row-fluid" style="margin-left: 25%; text-align: center;">
+        <div class="alert alert-error span6" style="width: 50%; padding-bottom: 0;">
+            <p>
+                ' . $msg . '
+            </p>
+        </div>
+    </div>';
+}
+
+/**
+ * Output a formatted success message
+ *
+ * @param $msg the error to send
+ */
+function success($msg)
+{
+    echo '
+    <div class="row-fluid" style="margin-left: 25%; text-align: center;">
+        <div class="alert alert-success span6" style="width: 50%; padding-bottom: 0;">
+            <p>
+                ' . $msg . '
+            </p>
+        </div>
     </div>';
 }
 
@@ -718,7 +737,7 @@ function get_accessible_plugins()
     }
 
     // Query for all of the plugins
-    $statement = $master_db_handle->prepare('SELECT Plugin, ID, Name, Plugin.Author, Hidden, GlobalHits, Created FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
+    $statement = $master_db_handle->prepare('SELECT Plugin, ID, Name, Parent, Plugin.Author, Hidden, GlobalHits, Created FROM AuthorACL LEFT OUTER JOIN Plugin ON Plugin.ID = Plugin WHERE AuthorACL.Author = ? ORDER BY Name ASC');
     $statement->execute(array($_SESSION['uid']));
 
     while ($row = $statement->fetch())

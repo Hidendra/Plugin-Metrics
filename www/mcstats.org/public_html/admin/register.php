@@ -19,7 +19,7 @@ if (isset($_POST['submit']))
     if (strlen($password) < 3 || $password != $password2  || $password == $username || !preg_match('/[a-zA-Z0-9 ]/', $username))
     {
         err ('Care to try again? :-)');
-        send_registration();
+        send_add_plugin();
     } else
     {
         // Hash the password
@@ -38,7 +38,7 @@ if (isset($_POST['submit']))
 }
 else
 {
-    send_registration();
+    send_add_plugin();
 }
 
 send_footer();
