@@ -29,6 +29,8 @@ if (isset($_POST['submit']))
     // both actions require the request to become fulfilled
     $statement = $master_db_handle->prepare('DELETE FROM PluginRequest WHERE Author = ? and Plugin = ?');
     $statement->execute(array($authorID, $pluginID));
+    $statement = $master_db_handle->prepare('DELETE FROM AuthorACL WHERE Author = ? and Plugin = ?');
+    $statement->execute(array($authorID, $pluginID));
 
     // Should we send an email ?
     if (!empty($email))
