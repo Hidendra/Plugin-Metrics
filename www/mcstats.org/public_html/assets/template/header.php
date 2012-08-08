@@ -106,8 +106,11 @@ if ($show_navbar)
                     <a class="brand" href="/">MCStats</a>
                     
                     <ul class="nav">
-                        <li' . ($is_in_admin_ui ? '' : ' class="active"') . '>
+                        <li>
                             <a href="/">Home</a>
+                        </li>
+                        <li>
+                            <a href="/plugin-list/">Plugin List</a>
                         </li>
                         <li' . ($is_in_admin_ui ? ' class="active"' : '') . '>
                             <a href="/admin/">Admin</a>
