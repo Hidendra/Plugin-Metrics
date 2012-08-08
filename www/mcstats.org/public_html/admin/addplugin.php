@@ -34,14 +34,15 @@ if (isset($_POST['submit']))
             if ($plugin->getID() == $accessiblePlugin->getID())
             {
                 $hasPlugin = TRUE;
+                $plugin = $accessiblePlugin;
                 break;
             }
         }
 
-        if ($hasPlugin)
+        if ($hasPlugin && $plugin->getPendingAccess() !== TRUE)
         {
             err(sprintf('You already own the plugin <b>%s</b>!', htmlentities($plugin->getName())));
-            send_add_plugin(htmlentities($plugin->getName()), htmlentities($email));
+            send_add_plugin(htmlentities($plugin->getName()), htmlentities($email), $dbo);
         } else
         {
             $uid = $_SESSION['uid'];
