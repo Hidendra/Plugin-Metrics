@@ -12,6 +12,10 @@ $converted = 0;
 $plugins = loadPlugins(PLUGIN_ORDER_ALPHABETICAL);
 $total = count($plugins);
 
+// switch to memory
+$statement = $master_db_handle->prepare('ALTER TABLE Graph Engine = MEMORY');
+$statement->execute();
+
 // iterate through all of the plugins
 foreach ($plugins as $plugin)
 {
@@ -26,5 +30,10 @@ foreach ($plugins as $plugin)
 
     $converted ++;
 }
+
+// switch back
+echo sprintf('Converting Graph table back to InnoDB ..%s', PHP_EOL);
+$statement = $master_db_handle->prepare('ALTER TABLE Graph Engine = InnoDB');
+$statement->execute();
 
 echo sprintf('Converted %d plugins%s', $converted, PHP_EOL);

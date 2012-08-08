@@ -40,7 +40,7 @@ foreach ($plugins as $plugin)
             // if the count is 0 simply remove the column
             if ($count == 0)
             {
-                echo sprintf('  => Deleting Column [ID: %d Name: \"%s\"] from Plugin \"%s\"%s', $columnID, $columnName, $plugin->getName(), PHP_EOL);
+                echo sprintf('  => Deleting Column [ID: %d Name: \"%s\"] from Plugin "%s"%s', $columnID, $columnName, $plugin->getName(), PHP_EOL);
                 $delete_column->execute(array($columnID));
             }
         }
@@ -51,8 +51,12 @@ foreach ($plugins as $plugin)
         // if the graph now has 0 (active) columns it is invalid
         if (count($graph->getColumns()) == 0)
         {
-            echo sprintf('  => Deleting Graph [ID: %d Name: \"%s\"] from Plugin \"%s\"%s', $graph->getID(), $graph->getName(), $plugin->getName(), PHP_EOL);
-            $delete_graph->execute(array($graph->getID()));
+            // only delete it if it is a custom graph
+            if ($graph->getPosition() > 1 && $graph->getPosition() < 9000)
+            {
+                echo sprintf('  => Deleting Graph [ID: %d Name: "%s"] from Plugin "%s"%s', $graph->getID(), $graph->getName(), $plugin->getName(), PHP_EOL);
+                $delete_graph->execute(array($graph->getID()));
+            }
         }
 
     }
