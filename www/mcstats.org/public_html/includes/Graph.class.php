@@ -513,7 +513,7 @@ class Graph
     public function loadColumns($limit_results = false)
     {
         $this->columns = array();
-        $statement = get_slave_db_handle()->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ? AND Graph = ?');
+        $statement = get_slave_db_handle()->prepare('SELECT ID, Name FROM CustomColumn WHERE Plugin = ? AND Graph = ? order by ID ASC');
         $statement->execute(array($this->plugin->getID(), $this->id));
 
         while (($row = $statement->fetch()) != null)
