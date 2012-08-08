@@ -73,7 +73,7 @@ foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
             $variance = $data['Variance'];
             $stddev = $data['StdDev'];
 
-            if ($count == 0)
+            if ($count == 0 || $sum == 0)
             {
                 continue;
             }
