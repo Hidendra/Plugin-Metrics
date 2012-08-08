@@ -19,7 +19,7 @@ $(document).ready(function() {
                 $("#graph-generator").show();
             }
         });
-    }, 1000);
+    }, 2000);
 });
 
 // plugin list vars
