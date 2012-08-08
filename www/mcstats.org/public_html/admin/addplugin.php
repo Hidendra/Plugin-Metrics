@@ -22,7 +22,7 @@ if (isset($_POST['submit']))
     if ($plugin === NULL)
     {
         err('Invalid plugin.');
-        send_add_plugin(htmlentities($pluginName), htmlentities($email));
+        send_add_plugin(htmlentities($pluginName), htmlentities($email), $dbo);
     } else
     {
         // check if they already have access to it
