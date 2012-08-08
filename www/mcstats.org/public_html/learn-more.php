@@ -5,7 +5,6 @@ session_start();
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
-require_once ROOT . 'includes/markdown.php';
 
 /// Templating
 $page_title = 'Plugin Metrics :: Why MCStats?';

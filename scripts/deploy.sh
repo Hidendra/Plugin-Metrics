@@ -17,10 +17,10 @@ if [ "$REALM" == "live" ]; then
 	REMOTE_HOST="root@mcstats.org"
     REMOTE_LOCATION="/var/www/servers/"
 elif [ "$REALM" == "dev" ]; then
-	REMOTE_HOST="root@192.168.1.30"
+	REMOTE_HOST="root@192.168.1.50"
 	REMOTE_LOCATION="/data/www/"
 else
-    REMOTE_HOST="root@10.10.1.30"
+    REMOTE_HOST="root@10.10.1.50"
     REMOTE_LOCATION="/data/www/"
 fi
 

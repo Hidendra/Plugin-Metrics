@@ -38,7 +38,7 @@ if (isset($_POST['submit']))
     {
         // email params
         $pluginName = htmlentities($plugin->getName());
-        $subject = sprintf('Plugin Approval for %s: %s', $pluginName, $approved ? 'Approved!' : 'Rejected');
+        $subject = sprintf('Plugin approval for %s: %s', $pluginName, $approved ? 'Approved!' : 'Rejected');
         if ($approved)
         {
             $body = <<<END

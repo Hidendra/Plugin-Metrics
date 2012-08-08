@@ -27,15 +27,15 @@ if [ "$REALM" == "live" ]; then
 	REMOTE_HOST="root@mcstats.org"
 elif [ "$REALM" == "dev" ]; then
 	if [ "$TYPE_SHORT" == "web" ]; then
-	    REMOTE_HOST="192.168.1.30"
+	    REMOTE_HOST="192.168.1.50"
 	elif [ "$TYPE_SHORT" == "db" ]; then
-	    REMOTE_HOST="192.168.1.35"
+	    REMOTE_HOST="192.168.1.55"
 	fi
 else
 	if [ "$TYPE_SHORT" == "web" ]; then
-	    REMOTE_HOST="10.10.1.30"
+	    REMOTE_HOST="10.10.1.50"
 	elif [ "$TYPE_SHORT" == "db" ]; then
-	    REMOTE_HOST="10.10.1.35"
+	    REMOTE_HOST="10.10.1.55"
 	fi
 fi
 

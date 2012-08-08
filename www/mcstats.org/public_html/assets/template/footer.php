@@ -9,8 +9,8 @@
         </div>
 
         <!-- Load Javascript later, something about magic ponies and loading faster -->
-        <script src="https://test.static.mcstats.org/javascript/admin.js" type="text/javascript"></script>
-        <script src="https://test.static.mcstats.org/javascript/bootstrap.min.js" type="text/javascript"></script>
+        <script src="http://test.static.mcstats.org/javascript/admin.js" type="text/javascript"></script>
+        <script src="http://test.static.mcstats.org/javascript/bootstrap.min.js" type="text/javascript"></script>
 
     </body>
 
