@@ -90,20 +90,23 @@ foreach (loadPlugins(PLUGIN_ORDER_POPULARITY, PLUGIN_LIST_RESULTS_PER_PAGE, $off
         continue;
     }
 
-    if ($rank <= 10) {
-        $rank = '<b>' . $rank . '</b>';
-    }
-
+    $pluginName = htmlentities($plugin->getName());
     $format = number_format($servers);
 
-    echo '                          <tr id="plugin-list-item"> <td style="text-align: center;">' . $rank . ' </td> <td> <a href="/plugin/' . $plugin->getName() . '" target="_blank">' . $plugin->getName() . '</a> </td> <td style="text-align: center;"> ' . $format . ' </td> </tr>
+    if ($rank <= 10) {
+        $rank = '<b>' . $rank . '</b>';
+        $pluginName = '<b>' . $pluginName . '</b>';
+        $format = '<b>' . $format . '</b>';
+    }
+
+    echo '                          <tr id="plugin-list-item"> <td style="text-align: center;">' . $rank . ' </td> <td> <a href="/plugin/' . htmlentities($plugin->getName()) . '" target="_blank">' . $pluginName . '</a> </td> <td style="text-align: center;"> ' . $format . ' </td> </tr>
 ';
     $step ++;
 }
 
 echo '                          <tr>
                                     <td style="text-align: center;" id="plugin-list-page-number"> <span id="plugin-list-current-page">' . $currentPage . '</span>/<span id="plugin-list-max-pages">' . $totalPages . '</span> </td>
-                                    <td style="text-align: center;"> <a href="#" class="btn btn-mini" id="plugin-list-back" onclick="movePluginListBack()" style="' . ($currentPage == 1 ? 'display: none; ' : '') . 'margin: 0;"><i class="icon-arrow-left"></i> Back</a> <a href="#" class="btn btn-mini" id="plugin-list-forward" onclick="movePluginListForward()" style="' . ($currentPage == $totalPages ? 'display: none; ' : '') . 'margin: 0;"><i class="icon-arrow-right"></i> Forward</a> </td>
+                                    <td style="text-align: center;"> <a href="#" class="btn btn-mini" id="plugin-list-back" onclick="movePluginListBack()" style="' . ($currentPage == 1 ? 'display: none; ' : '') . 'margin: 0;"><i class="icon-arrow-left"></i> Back</a> <a href="#" class="btn btn-mini" id="plugin-list-forward" onclick="movePluginListForward()" style="' . ($currentPage == $totalPages ? 'display: none; ' : '') . 'margin: 0;">Forward <i class="icon-arrow-right"></i></a> </td>
                                     <td style="text-align: center;"> <input class="input-mini" type="text" value="' . $currentPage . '" id="plugin-list-goto-page" style="height: 12px; margin: 0; width: 20px; text-align: center;" /> <a href="#" class="btn btn-mini" id="plugin-list-go" onclick="loadPluginListPage($(\'#plugin-list-goto-page\').val());">Go <i class="icon-share-alt"></i></a> </td>
                                 </tr>
 

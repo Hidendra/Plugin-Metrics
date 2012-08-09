@@ -37,7 +37,7 @@
         <div class="container">
 
             <div class="hero-unit">
-                <h1 style="margin-bottom:10px; font-size:38px; text-align: center">All new shiny stats.</h1>
+                <h1 style="margin-bottom:10px; font-size:38px; text-align: center">All new shiny stats. But you can't see them :-(</h1>
             </div>
 
             <footer class="row-fluid">

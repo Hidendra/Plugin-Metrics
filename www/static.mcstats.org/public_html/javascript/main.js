@@ -57,6 +57,8 @@ function loadPluginListPage(page) {
 
             if (rank <= 10) {
                 rank = "<b>" + rank + "</b>";
+                plugin.name = "<b>" + plugin.name + "</b>";
+                plugin.servers24 = "<b>" + plugin.servers24 + "</b>";
             }
 
             html += '<tr id="plugin-list-item"> <td style="text-align: center;">' + rank + ' </td> <td> <a href="/plugin/' + plugin.name + '" target="_blank">' + plugin.name + '</a> </td> <td style="text-align: center;"> ' + plugin.servers24 + ' </td> </tr>';
