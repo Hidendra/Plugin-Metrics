@@ -54,6 +54,7 @@ function loadPluginListPage(page) {
         for (i = 0; i < data.plugins.length; i++) {
             var plugin = data.plugins[i];
             var rank = plugin.rank;
+            var linkName = plugin.name;
 
             if (rank <= 10) {
                 rank = "<b>" + rank + "</b>";
@@ -61,7 +62,7 @@ function loadPluginListPage(page) {
                 plugin.servers24 = "<b>" + plugin.servers24 + "</b>";
             }
 
-            html += '<tr id="plugin-list-item"> <td style="text-align: center;">' + rank + ' </td> <td> <a href="/plugin/' + plugin.name + '" target="_blank">' + plugin.name + '</a> </td> <td style="text-align: center;"> ' + plugin.servers24 + ' </td> </tr>';
+            html += '<tr id="plugin-list-item"> <td style="text-align: center;">' + rank + ' </td> <td> <a href="/plugin/' + linkName + '" target="_blank">' + plugin.name + '</a> </td> <td style="text-align: center;"> ' + plugin.servers24 + ' </td> </tr>';
         }
 
         // clear out the old plugins in the table

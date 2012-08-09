@@ -27,8 +27,8 @@ echo <<<END
             MCStats is <b>free</b>, <b>open source</b> and <b>anonymous</b>. All data is public and freely available for every plugin.
         </p>
         <p>
-            The project started as a means to create an open source stats system for <i>LWC</i>. I wanted to share this with
-            any other author, too, and so I slowly built the system up. It has became very powerful today and for that I am
+            The project started as an idea to create an open source stats system for <i>LWC</i>. I wanted to share this with
+            any other author too and so I slowly built the system up. It has became very powerful today and for that I am
             very proud of what has been done already.
         </p>
         <p>
@@ -38,8 +38,8 @@ echo <<<END
         </p>
         <p>
             While MCStats forces plugins to show their data to everyone, it also means they are proud to show <i>you</i>
-            data they're collecting with it. This is a step in the right direction and something I believe all authors
-            should strive for: <i>transparency</i>.
+            the data they're collecting with it. I believe this is a step in the right direction and something all authors
+            should strive for with transparency.
         </p>
         <p style="text-align: center;">
             <img src="/plugin-preview/all+servers.png" />
