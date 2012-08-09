@@ -152,6 +152,10 @@ function send_add_plugin($plugin = '', $email = '', $dbo = '')
 
                 <div style="width: 50%;">
                     <p style="font-size:18px; font-weight:200; line-height:27px; text-align: center;">
+                        <b>BEFORE YOU USE THIS:</b> You must add your plugin to the backend. Please take a look at <a href="https://github.com/Hidendra/mcstats.org/wiki/Usage">the wiki</a>
+                    </p>
+
+                    <p style="font-size:18px; font-weight:200; line-height:27px; text-align: center;">
                         <b>NOTE:</b> All admin plugin additions are manually processed. <br/> If you enter an email address you will be notified via email once it has been processed.
                     </p>
 

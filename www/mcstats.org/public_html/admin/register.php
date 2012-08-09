@@ -38,7 +38,7 @@ if (isset($_POST['submit']))
 }
 else
 {
-    send_add_plugin();
+    send_registration();
 }
 
 send_footer();
