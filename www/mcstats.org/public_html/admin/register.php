@@ -7,6 +7,12 @@ require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';
 require_once ROOT . 'includes/func.php';
 
+if (is_loggedin())
+{
+    header('Location: /admin/');
+    exit;
+}
+
 send_header();
 
 if (isset($_POST['submit']))
@@ -19,19 +25,30 @@ if (isset($_POST['submit']))
     if (strlen($password) < 3 || $password != $password2  || $password == $username || !preg_match('/[a-zA-Z0-9 ]/', $username))
     {
         err ('Care to try again? :-)');
-        send_add_plugin();
+        send_registration(htmlentities($username));
     } else
     {
-        // Hash the password
-        $hashed_password = sha1($password);
+        // the unique key prevents duplicate usernames but check first
+        $statement = $master_db_handle->prepare('SELECT 1 FROM Author WHERE Name = ?');
+        $statement->execute(array($username));
 
-        // Create a database entry
-        $statement = $master_db_handle->prepare('INSERT INTO Author (Name, Password, Created) VALUES (?, ?, ?)');
-        $statement->execute(array($username, $hashed_password, time()));
+        if ($statement->fetch())
+        {
+            err ('That username is already taken!');
+            send_registration(htmlentities($username));
+        } else
+        {
+            // Hash the password
+            $hashed_password = sha1($password);
 
-        // Redirect them
-        echo '<div class="alert alert-success">Registration complete! If you are not automatically redirected, click <a href="/admin/">here</a></div>
+            // Create a database entry
+            $statement = $master_db_handle->prepare('INSERT INTO Author (Name, Password, Created) VALUES (?, ?, ?)');
+            $statement->execute(array($username, $hashed_password, time()));
+
+            // Redirect them
+            echo '<div class="alert alert-success">Registration complete! If you are not automatically redirected, click <a href="/admin/">here</a></div>
               <meta http-equiv="refresh" content="2; /admin/" /> ';
+        }
     }
 
 
@@ -43,7 +60,7 @@ else
 
 send_footer();
 
-function send_registration()
+function send_registration($username = '')
 {
     echo '
             <div class="row-fluid">
@@ -56,9 +73,9 @@ function send_registration()
                         <form action="" method="post">
                             <div class="control-group">
                                 <div class="controls">
-                                    <input type="text" name="username" value="" placeholder="Username" /> <br/>
-                                    <input type="password" name="password" value="" placeholder="Password" /> <br/>
-                                    <input type="password" name="password2" value="" placeholder="Confirm password" />
+                                    <input type="text" name="username" value="' . $username . '" placeholder="Username" /> <br/>
+                                    <input type="password" name="password" placeholder="Password" /> <br/>
+                                    <input type="password" name="password2" placeholder="Confirm password" />
                                 </div>
                             </div>
 
