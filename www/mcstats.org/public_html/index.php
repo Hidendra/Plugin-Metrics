@@ -45,7 +45,7 @@ echo <<<END
 
 <div class="hero-unit">
     <h1 style="margin-bottom:10px; font-size:57px;">Glorious plugin stats.</h1>
-    <p>MCStats / Plugin Metrics is the de-facto statistical engine for Minecraft, actively used by over <b>$pluginCount</b> plugins.</p>
+    <p>MCStats / Plugin Metrics is the de facto statistical engine for Minecraft, actively used by over <b>$pluginCount</b> plugins.</p>
     <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last 30 minutes</b> on over <b>$serverCount</b> servers.</p>
     <p><a href="/learn-more/" class="btn btn-success" target="_blank"><i class="icon-white icon-heart"></i> Learn More</a> :: <a class="btn btn-primary" href="/plugin-list/" target="_blank"><i class="icon-white icon-th-list"></i> Plugin List</a></p>
 </div>
