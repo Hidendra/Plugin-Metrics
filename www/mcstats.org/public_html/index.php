@@ -68,7 +68,7 @@ foreach (loadPlugins(PLUGIN_ORDER_RANDOM_TOP100, 4) as $plugin)
         <p>
             ' . (empty ($authors) ? '' : ('Author' . $author_prepend . ': ' . $authors)) . ' <br/>
             Started ' . number_format($plugin->getGlobalHits()) . ' times <br/>
-            Servers (last 24 hrs): ' . number_format($plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_DAY)) . '
+            Servers (last 24 hrs): ' . number_format($plugin->getServerCount()) . '
         </p>
         <p>
             <img src="/plugin-preview/' . $name . '" />
@@ -82,5 +82,3 @@ foreach (loadPlugins(PLUGIN_ORDER_RANDOM_TOP100, 4) as $plugin)
 echo '</div>';
 
 send_footer();
-
-?>
