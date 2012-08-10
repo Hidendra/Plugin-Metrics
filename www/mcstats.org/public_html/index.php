@@ -11,10 +11,18 @@ $page_title = 'Plugin Metrics :: Homepage';
 $container_class = 'container';
 send_header();
 
+$lastEpoch = getLastGraphEpoch();
+$statement = get_slave_db_handle()->prepare('SELECT Sum FROM CustomDataTimeline where ColumnID = ? AND Epoch = ?');
+
 // vars used later on
 $pluginCount = 0;
-$serverCount = number_format(sumServersSinceLastUpdated());
-$playerCount = number_format(sumPlayersSinceLastUpdated());
+
+$graph = loadPluginByID(GLOBAL_PLUGIN_ID)->getOrCreateGraph('Global Statistics');
+
+$statement->execute(array($graph->getColumnID('Servers'), $lastEpoch));
+$serverCount = number_format($statement->fetch()[0]);
+$statement->execute(array($graph->getColumnID('Players'), $lastEpoch));
+$playerCount = number_format($statement->fetch()[0]);
 
 $statement = get_slave_db_handle()->prepare('SELECT COUNT(*) FROM Plugin where LastUpdated >= ?');
 $statement->execute(array(normalizeTime() - SECONDS_IN_DAY));
@@ -38,7 +46,7 @@ echo <<<END
 <div class="hero-unit">
     <h1 style="margin-bottom:10px; font-size:57px;">Glorious plugin stats.</h1>
     <p>MCStats / Plugin Metrics is the de-facto statistical engine for Minecraft, actively used by over <b>$pluginCount</b> plugins.</p>
-    <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last <span id="players-popover" rel="popover" title="Actually..." data-content="It's the last $realTimeUsed minutes, but since it's constantly changing, 30 minutes is a good average (which is the amount of time between graph generations)">30<sup>*</sup></span> minutes</b> across <b>$serverCount</b> servers.</p>
+    <p>Across the world, over <b>$playerCount</b> players have been seen <b>in the last 30 minutes</b> on over <b>$serverCount</b> servers.</p>
     <p><a href="/learn-more/" class="btn btn-success" target="_blank"><i class="icon-white icon-heart"></i> Learn More</a> :: <a class="btn btn-primary" href="/plugin-list/" target="_blank"><i class="icon-white icon-th-list"></i> Plugin List</a></p>
 </div>
 
