@@ -56,6 +56,24 @@ class Plugin
     private $pendingAccess;
 
     /**
+     * When the plugin was started on a server
+     * @var
+     */
+    private $lastUpdated;
+
+    /**
+     * The plugin's rank
+     * @var
+     */
+    private $rank;
+
+    /**
+     * Normalized server count for the last 24 hours
+     * @var
+     */
+    private $serverCount = -1;
+
+    /**
      * Order the plugin's active graphs to have linear position arrangements. For example,
      * [ 1, 2, 5, 1543, 9000, 90001 ]
      * Where [ 1, 9000, 9001 ] are enforced graphs, it will become
@@ -689,11 +707,19 @@ class Plugin
         global $master_db_handle;
 
         // Prepare it
-        $statement = $master_db_handle->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits, Created = :Created WHERE ID = :ID');
+        $statement = $master_db_handle->prepare('UPDATE Plugin SET Name = :Name, Author = :Author, Hidden = :Hidden, GlobalHits = :GlobalHits, Created = :Created, LastUpdated = :LastUpdated, Rank = :Rank WHERE ID = :ID');
 
         // Execute
-        $statement->execute(array(':ID' => $this->id, ':Name' => $this->name, ':Author' => $this->authors,
-            ':Hidden' => $this->hidden, ':GlobalHits' => $this->globalHits, ':Created' => $this->created));
+        $statement->execute(array(
+            ':ID' => $this->id,
+            ':Name' => $this->name,
+            ':Author' => $this->authors,
+            ':Hidden' => $this->hidden,
+            ':GlobalHits' => $this->globalHits,
+            ':Created' => $this->created,
+            ':LastUpdated' => $this->lastUpdated,
+            ':Rank' => $this->rank
+        ));
     }
 
     /**
@@ -795,6 +821,59 @@ class Plugin
     public function setPendingAccess($pendingAccess)
     {
         $this->pendingAccess = $pendingAccess;
+    }
+
+    /**
+     * @return
+     */
+    public function getServerCount()
+    {
+        if ($this->serverCount == -1)
+        {
+            $this->serverCount = $this->countServersLastUpdated(normalizeTime() - SECONDS_IN_DAY);
+        }
+
+        return $this->serverCount;
+    }
+
+    /**
+     * @param  $serverCount
+     */
+    public function setServerCount($serverCount)
+    {
+        $this->serverCount = $serverCount;
+    }
+
+    /**
+     * @return
+     */
+    public function getLastUpdated()
+    {
+        return $this->lastUpdated;
+    }
+
+    /**
+     * @param  $lastUpdated
+     */
+    public function setLastUpdated($lastUpdated)
+    {
+        $this->lastUpdated = $lastUpdated;
+    }
+
+    /**
+     * @return
+     */
+    public function getRank()
+    {
+        return $this->rank;
+    }
+
+    /**
+     * @param  $rank
+     */
+    public function setRank($rank)
+    {
+        $this->rank = $rank;
     }
 
 }

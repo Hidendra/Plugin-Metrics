@@ -44,7 +44,15 @@ function try_connect_database($dbtype = 'master')
     {
         // Profiling:
         // return new PDOProfiler("mysql:host={$db['hostname']};dbname={$db['dbname']}", $db['username'], $db['password']);
-        return new PDO("mysql:host={$db['hostname']};dbname={$db['dbname']}", $db['username'], $db['password']);
+        if (php_sapi_name() == 'cli')
+        {
+            return new PDO("mysql:host={$db['hostname']};dbname={$db['dbname']}", $db['username'], $db['password']);
+        } else
+        {
+            return new PDO("mysql:host={$db['hostname']};dbname={$db['dbname']}", $db['username'], $db['password'], array(
+                PDO::ATTR_PERSISTENT => true
+            ));
+        }
     } catch (PDOException $e)
     {
         error_log('Error while connecting to the database ' . $dbtype . ': <br/><b>' . $e->getMessage() . '</b>');

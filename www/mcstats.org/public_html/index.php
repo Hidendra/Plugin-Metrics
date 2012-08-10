@@ -16,13 +16,12 @@ $pluginCount = 0;
 $serverCount = number_format(sumServersSinceLastUpdated());
 $playerCount = number_format(sumPlayersSinceLastUpdated());
 
-foreach (loadPlugins(PLUGIN_ORDER_POPULARITY) as $plugin)
+$statement = get_slave_db_handle()->prepare('SELECT COUNT(*) FROM Plugin where LastUpdated >= ?');
+$statement->execute(array(normalizeTime() - SECONDS_IN_DAY));
+
+if ($row = $statement->fetch())
 {
-    $count = $plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_DAY);
-    if ($count > 0)
-    {
-        $pluginCount ++;
-    }
+    $pluginCount = $row[0];
 }
 
 // generally the time player count is is last 30-60 minutes, so get the real time for popover

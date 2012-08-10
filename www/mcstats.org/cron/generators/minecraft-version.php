@@ -1,7 +1,7 @@
 <?php
 
 define('ROOT', '../public_html/');
-define('MAX_CHILDREN', 30);
+define('MAX_CHILDREN', 5);
 
 require_once ROOT . 'config.php';
 require_once ROOT . 'includes/database.php';

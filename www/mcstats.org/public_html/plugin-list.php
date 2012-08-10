@@ -82,16 +82,8 @@ foreach (loadPlugins(PLUGIN_ORDER_POPULARITY, PLUGIN_LIST_RESULTS_PER_PAGE, $off
     // calculate this plugin's rank
     $rank = $offset + $step;
 
-    // Count the amount of servers in the last 24 hours
-    $servers = $plugin->countServersLastUpdated(normalizeTime() - SECONDS_IN_DAY);
-
-    // Omit Servers with 0
-    if ($servers == 0) {
-        continue;
-    }
-
     $pluginName = htmlentities($plugin->getName());
-    $format = number_format($servers);
+    $format = number_format($plugin->getServerCount());
 
     if ($rank <= 10) {
         $rank = '<b>' . $rank . '</b>';
