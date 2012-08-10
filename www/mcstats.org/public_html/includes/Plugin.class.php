@@ -92,7 +92,7 @@ class Plugin
         }
 
         $current = 2; // the current position to use
-        for ($i = 1; $i < $count - 2; $i++)
+        for ($i = 1; $i < $count - 4; $i++)
         {
             $graph = $graphs[$i];
             $graph->setPosition($current++);

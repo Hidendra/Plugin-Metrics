@@ -56,6 +56,10 @@ $timelast = getTimeLast();
 if($timelast > 0) {
     $lastUpdate = floor($timelast / 60);
     $nextUpdate = $config['graph']['interval'] - $lastUpdate;
+    if ($nextUpdate < 0)
+    {
+        $nextUpdate = 0;
+    }
 
     echo '
                     <p> Last update: ' . $lastUpdate . ' minutes ago <br/>
