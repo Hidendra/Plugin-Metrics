@@ -1,5 +1,0 @@
-*/30 * * * * cd /var/www/servers/mcstats.org/cron/ ; php -q players.php
-*/30 * * * * cd /var/www/servers/mcstats.org/cron/ ; php -q servers.php
-*/30 * * * * cd /var/www/servers/mcstats.org/cron/ ; php -q custom.php
-*/30 * * * * cd /var/www/servers/mcstats.org/cron/ ; php -q countries.php
-*/30 * * * * cd /var/www/servers/mcstats.org/cron/ ; php -q versions.php
