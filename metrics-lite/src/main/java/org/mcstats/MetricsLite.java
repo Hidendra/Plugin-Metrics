@@ -124,7 +124,6 @@ public class MetricsLite {
         guid = configuration.getString("guid");
     }
 
-
     /**
      * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
      * the initial data to the metrics backend, and then after that it will post in increments of
@@ -181,7 +180,7 @@ public class MetricsLite {
     /**
      * Has the server owner denied plugin metrics?
      *
-     * @return
+     * @return true if metrics should be opted out of it
      */
     public boolean isOptOut() {
         synchronized(optOutLock) {
@@ -317,7 +316,7 @@ public class MetricsLite {
     /**
      * Check if mineshafter is present. If it is, we need to bypass it to send POST requests
      *
-     * @return
+     * @return true if mineshafter is installed on the server
      */
     private boolean isMineshafterPresent() {
         try {
@@ -337,10 +336,9 @@ public class MetricsLite {
      * encodeDataPair(data, "version", description.getVersion());
      * </code>
      *
-     * @param buffer
-     * @param key
-     * @param value
-     * @return
+     * @param buffer the stringbuilder to append the data pair onto
+     * @param key the key value
+     * @param value the value
      */
     private static void encodeDataPair(final StringBuilder buffer, final String key, final String value) throws UnsupportedEncodingException {
         buffer.append('&').append(encode(key)).append('=').append(encode(value));
@@ -349,10 +347,10 @@ public class MetricsLite {
     /**
      * Encode text as UTF-8
      *
-     * @param text
-     * @return
+     * @param text the text to encode
+     * @return the encoded text, as UTF-8
      */
-    private static String encode(String text) throws UnsupportedEncodingException {
+    private static String encode(final String text) throws UnsupportedEncodingException {
         return URLEncoder.encode(text, "UTF-8");
     }
 
