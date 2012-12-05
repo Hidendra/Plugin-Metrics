@@ -17,6 +17,12 @@
         <system>jenkins</system>
         <url>http://ci.griefcraft.com</url>
     </ciManagement>
+    
+    <scm>
+        <connection>scm:git:git://github.com/Hidendra/Plugin-Metrics.git</connection>
+        <url>https://github.com/Hidendra/Plugin-Metrics</url>
+        <developerConnection>scm:git:git@github.com:Hidendra/Plugin-Metrics.git</developerConnection>
+    </scm>
 
     <dependencies>
         <dependency>
