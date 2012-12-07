@@ -415,9 +415,7 @@ public class Metrics {
         synchronized (graphs) {
             final Iterator<Graph> iter = graphs.iterator();
 
-            while (iter.hasNext()) {
-                final Graph graph = iter.next();
-
+            for (Graph graph : graphs) {
                 for (Plotter plotter : graph.getPlotters()) {
                     // The key name to send to the metrics server
                     // The format is C-GRAPHNAME-PLOTTERNAME where separator - is defined at the top
@@ -471,9 +469,7 @@ public class Metrics {
                 synchronized (graphs) {
                     final Iterator<Graph> iter = graphs.iterator();
 
-                    while (iter.hasNext()) {
-                        final Graph graph = iter.next();
-
+                    for (Graph graph : graphs) {
                         for (Plotter plotter : graph.getPlotters()) {
                             plotter.reset();
                         }
@@ -488,7 +484,7 @@ public class Metrics {
      *
      * @return true if mineshafter is installed on the server
      */
-    private boolean isMineshafterPresent() {
+    private static boolean isMineshafterPresent() {
         try {
             Class.forName("mineshafter.MineServer");
             return true;
