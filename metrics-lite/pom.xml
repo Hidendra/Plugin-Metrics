@@ -4,7 +4,7 @@
 
     <groupId>org.mcstats</groupId>
     <artifactId>metrics-lite</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>R6</version>
     <packaging>jar</packaging>
     <url>mcstats.org</url>
     <name>Metrics (Lite)</name>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.2.5-R1.0</version>
+            <version>1.4.5-R0.3-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
