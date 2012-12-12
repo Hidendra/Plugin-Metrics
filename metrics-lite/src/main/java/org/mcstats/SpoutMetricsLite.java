@@ -25,15 +25,7 @@
  * authors and contributors and should not be interpreted as representing official policies,
  * either expressed or implied, of anybody else.
  */
-
 package org.mcstats;
-
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,65 +39,63 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.UUID;
 import java.util.logging.Level;
+import org.spout.api.Spout;
+import org.spout.api.Server;
+import org.spout.api.exception.ConfigurationException;
+import org.spout.api.plugin.Platform;
+import org.spout.api.plugin.Plugin;
+import org.spout.api.plugin.PluginDescriptionFile;
+import org.spout.api.scheduler.TaskPriority;
+import org.spout.api.util.config.yaml.YamlConfiguration;
 
-public class MetricsLite {
+public class SpoutMetricsLite {
 
     /**
      * The current revision number
      */
     private final static int REVISION = 6;
-
     /**
      * The base url of the metrics domain
      */
     private static final String BASE_URL = "http://mcstats.org";
-
     /**
      * The url used to report a server's status
      */
     private static final String REPORT_URL = "/report/%s";
-
     /**
      * Interval of time to ping (in minutes)
      */
     private final static int PING_INTERVAL = 10;
-
-    /**
-     * The plugin this metrics submits for
-     */
-    private final Plugin plugin;
-
-    /**
-     * The plugin configuration file
-     */
-    private final YamlConfiguration configuration;
-
-    /**
-     * The plugin configuration file
-     */
-    private final File configurationFile;
-
-    /**
-     * Unique server id
-     */
-    private final String guid;
-
     /**
      * Debug mode
      */
     private final boolean debug;
-
+    /**
+     * The plugin this metrics submits for
+     */
+    private final Plugin plugin;
+    /**
+     * The plugin configuration file
+     */
+    private final YamlConfiguration configuration;
+    /**
+     * The plugin configuration file
+     */
+    private final File configurationFile;
+    /**
+     * Unique server id
+     */
+    private final String guid;
     /**
      * Lock for synchronization
      */
     private final Object optOutLock = new Object();
-
     /**
      * Id of the scheduled task
      */
-    private volatile BukkitTask task = null;
+    private volatile int taskId = -1;
 
-    public MetricsLite(Plugin plugin) throws IOException {
+    public SpoutMetricsLite(Plugin plugin) throws IOException, ConfigurationException {
         if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
         }
@@ -114,28 +104,25 @@ public class MetricsLite {
 
         // load the config
         configurationFile = getConfigFile();
-        configuration = YamlConfiguration.loadConfiguration(configurationFile);
+        configuration = new YamlConfiguration(configurationFile);
+        configuration.load();
 
         // add some defaults
-        configuration.addDefault("opt-out", false);
-        configuration.addDefault("guid", UUID.randomUUID().toString());
-        configuration.addDefault("debug", false);
-
-        // Do we need to create the file?
-        if (configuration.get("guid", null) == null) {
-            configuration.options().header("http://mcstats.org").copyDefaults(true);
-            configuration.save(configurationFile);
-        }
+        configuration.getChild("opt-out").getBoolean(false);
+        configuration.getChild("guid").getString(UUID.randomUUID().toString());
+        configuration.getChild("debug").getBoolean(false);
+        configuration.setHeader("http://mcstats.org");
+        configuration.save();
 
         // Load the guid then
-        guid = configuration.getString("guid");
-        debug = configuration.getBoolean("debug", false);
+        guid = configuration.getNode("guid").getString();
+        debug = configuration.getChild("debug").getBoolean(false);
     }
 
     /**
-     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
-     * the initial data to the metrics backend, and then after that it will post in increments of
-     * PING_INTERVAL * 1200 ticks.
+     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send the
+     * initial data to the metrics backend, and then after that it will post in increments of PING_INTERVAL * 1200
+     * ticks.
      *
      * @return True if statistics measuring is running, otherwise false.
      */
@@ -147,12 +134,12 @@ public class MetricsLite {
             }
 
             // Is metrics already running?
-            if (task != null) {
+            if (taskId >= 0) {
                 return true;
             }
 
             // Begin hitting the server with glorious data
-            task = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, new Runnable() {
+            taskId = plugin.getEngine().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 
                 private boolean firstPost = true;
 
@@ -161,9 +148,9 @@ public class MetricsLite {
                         // This has to be synchronized or it can collide with the disable method.
                         synchronized (optOutLock) {
                             // Disable Task, if it is running and the server owner decided to opt-out
-                            if (isOptOut() && task != null) {
-                                task.cancel();
-                                task = null;
+                            if (isOptOut() && taskId > 0) {
+                                plugin.getEngine().getScheduler().cancelTask(taskId);
+                                taskId = -1;
                             }
                         }
 
@@ -177,11 +164,11 @@ public class MetricsLite {
                         firstPost = false;
                     } catch (IOException e) {
                         if (debug) {
-                            Bukkit.getLogger().log(Level.INFO, "[Metrics] " + e.getMessage());
+                            Spout.getLogger().log(Level.INFO, "[Metrics] " + e.getMessage());
                         }
                     }
                 }
-            }, 0, PING_INTERVAL * 1200);
+            }, 0, PING_INTERVAL * 1200, TaskPriority.LOW);
 
             return true;
         }
@@ -193,22 +180,17 @@ public class MetricsLite {
      * @return true if metrics should be opted out of it
      */
     public boolean isOptOut() {
-        synchronized(optOutLock) {
+        synchronized (optOutLock) {
             try {
                 // Reload the metrics file
-                configuration.load(getConfigFile());
-            } catch (IOException ex) {
+                configuration.load();
+            } catch (ConfigurationException ex) {
                 if (debug) {
-                    Bukkit.getLogger().log(Level.INFO, "[Metrics] " + ex.getMessage());
-                }
-                return true;
-            } catch (InvalidConfigurationException ex) {
-                if (debug) {
-                    Bukkit.getLogger().log(Level.INFO, "[Metrics] " + ex.getMessage());
+                    Spout.getLogger().log(Level.INFO, "[Metrics] " + ex.getMessage());
                 }
                 return true;
             }
-            return configuration.getBoolean("opt-out", false);
+            return configuration.getNode("opt-out").getBoolean(false);
         }
     }
 
@@ -216,18 +198,19 @@ public class MetricsLite {
      * Enables metrics for the server by setting "opt-out" to false in the config file and starting the metrics task.
      *
      * @throws IOException
+     * @throws ConfigurationException
      */
-    public void enable() throws IOException {
+    public void enable() throws IOException, ConfigurationException {
         // This has to be synchronized or it can collide with the check in the task.
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (isOptOut()) {
-                configuration.set("opt-out", false);
-                configuration.save(configurationFile);
+                configuration.getNode("opt-out").setValue(false);
+                configuration.save();
             }
 
             // Enable Task, if it is not running
-            if (task == null) {
+            if (taskId < 0) {
                 start();
             }
         }
@@ -237,20 +220,21 @@ public class MetricsLite {
      * Disables metrics for the server by setting "opt-out" to true in the config file and canceling the metrics task.
      *
      * @throws IOException
+     * @throws ConfigurationException
      */
-    public void disable() throws IOException {
+    public void disable() throws IOException, ConfigurationException {
         // This has to be synchronized or it can collide with the check in the task.
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (!isOptOut()) {
-                configuration.set("opt-out", true);
-                configuration.save(configurationFile);
+                configuration.getNode("opt-out").setValue(true);
+                configuration.save();
             }
 
             // Disable Task, if it is running
-            if (task != null) {
-                task.cancel();
-                task = null;
+            if (taskId > 0) {
+                this.plugin.getEngine().getScheduler().cancelTask(taskId);
+                taskId = -1;
             }
         }
     }
@@ -279,11 +263,14 @@ public class MetricsLite {
         // Server software specific section
         PluginDescriptionFile description = plugin.getDescription();
         String pluginName = description.getName();
-        boolean onlineMode = Bukkit.getServer().getOnlineMode(); // TRUE if online mode is enabled
         String pluginVersion = description.getVersion();
-        String serverVersion = Bukkit.getVersion();
-        int playersOnline = Bukkit.getServer().getOnlinePlayers().length;
-
+        String serverVersion = Spout.getEngine().getVersion();
+        int playersOnline;
+        if (Spout.getPlatform() == Platform.SERVER) {
+            playersOnline = ((Server) Spout.getEngine()).getOnlinePlayers().length;
+        } else {
+            playersOnline = 1;
+        }
         // END server software specific section -- all code below does not use any code outside of this class / Java
 
         // Construct the post data
@@ -312,8 +299,8 @@ public class MetricsLite {
         encodeDataPair(data, "osarch", osarch);
         encodeDataPair(data, "osversion", osversion);
         encodeDataPair(data, "cores", Integer.toString(coreCount));
-        encodeDataPair(data, "online-mode", Boolean.toString(onlineMode));
         encodeDataPair(data, "java_version", java_version);
+
 
         // If we're pinging, append it
         if (isPing) {
@@ -369,8 +356,8 @@ public class MetricsLite {
     }
 
     /**
-     * <p>Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first
-     * key/value pair MUST be included manually, e.g:</p>
+     * <p>Encode a key/value data pair to be used in a HTTP post request. This INCLUDES a & so the first key/value pair
+     * MUST be included manually, e.g:</p>
      * <code>
      * StringBuffer data = new StringBuffer();
      * data.append(encode("guid")).append('=').append(encode(guid));
@@ -394,5 +381,4 @@ public class MetricsLite {
     private static String encode(final String text) throws UnsupportedEncodingException {
         return URLEncoder.encode(text, "UTF-8");
     }
-
 }
