@@ -18,6 +18,10 @@
             <id>Bukkit Official</id>
             <url>http://repo.bukkit.org/content/repositories/public</url>
         </repository>
+		<repository>
+			<id>Spout Official</id>
+			<url>http://nexus.spout.org/content/groups/public/</url>
+		</repository>
     </repositories>
 
     <dependencies>
@@ -28,6 +32,13 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+		<dependency>
+			<groupId>org.spout</groupId>
+			<artifactId>spoutapi</artifactId>
+			<version>dev-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
     </dependencies>
 
     <distributionManagement>
