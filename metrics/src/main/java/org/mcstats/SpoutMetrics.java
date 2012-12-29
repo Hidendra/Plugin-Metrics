@@ -51,6 +51,7 @@ import org.spout.api.exception.ConfigurationException;
 import org.spout.api.plugin.Platform;
 import org.spout.api.plugin.Plugin;
 import org.spout.api.plugin.PluginDescriptionFile;
+import org.spout.api.scheduler.Task;
 import org.spout.api.scheduler.TaskPriority;
 import org.spout.api.util.config.yaml.YamlConfiguration;
 
@@ -121,7 +122,7 @@ public class SpoutMetrics {
     /**
      * Id of the scheduled task
      */
-    private volatile int taskId = -1;
+    private volatile Task taskId = null;
 
     public SpoutMetrics(final Plugin plugin) throws ConfigurationException {
         if (plugin == null) {
@@ -213,7 +214,7 @@ public class SpoutMetrics {
             }
 
             // Is metrics already running?
-            if (taskId >= 0) {
+            if (taskId != null) {
                 return true;
             }
 
@@ -227,9 +228,9 @@ public class SpoutMetrics {
                         // This has to be synchronized or it can collide with the disable method.
                         synchronized (optOutLock) {
                             // Disable Task, if it is running and the server owner decided to opt-out
-                            if (isOptOut() && taskId > 0) {
+                            if (isOptOut() && taskId != null) {
                                 plugin.getEngine().getScheduler().cancelTask(taskId);
-                                taskId = -1;
+                                taskId = null;
                                 // Tell all plotters to stop gathering information.
                                 for (SpoutMetrics.Graph graph : graphs) {
                                     graph.onOptOut();
@@ -292,7 +293,7 @@ public class SpoutMetrics {
             }
 
             // Enable Task, if it is not running
-            if (taskId < 0) {
+            if (taskId == null) {
                 start();
             }
         }
@@ -313,9 +314,9 @@ public class SpoutMetrics {
             }
 
             // Disable Task, if it is running
-            if (taskId > 0) {
+            if (taskId != null) {
                 this.plugin.getEngine().getScheduler().cancelTask(taskId);
-                taskId = -1;
+                taskId = null;
             }
         }
     }
