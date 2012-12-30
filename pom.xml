@@ -34,8 +34,9 @@
     </dependencies>
 
     <modules>
-        <module>metrics</module>
-        <module>metrics-lite</module>
+        <module>mods/bukkit</module>
+        <module>mods/spout</module>
+        <module>mods/forge</module>
     </modules>
 
     <build>
