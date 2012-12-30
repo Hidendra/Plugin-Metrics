@@ -22,6 +22,10 @@
 			<id>Spout Official</id>
 			<url>http://nexus.spout.org/content/groups/public/</url>
 		</repository>
+		<repository>
+			<id>Dynmap Official</id>
+			<url>http://repo.mikeprimm.com/</url>
+		</repository>
     </repositories>
 
     <dependencies>
@@ -36,6 +40,13 @@
 			<groupId>org.spout</groupId>
 			<artifactId>spoutapi</artifactId>
 			<version>dev-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.minecraftforge</groupId>
+			<artifactId>minecraft_deobfuscated</artifactId>
+			<version>1.4.6-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
