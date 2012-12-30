@@ -346,7 +346,7 @@ public class Metrics {
         PluginDescriptionFile description = plugin.getDescription();
         String pluginName = description.getName();
         String pluginVersion = description.getVersion();
-        String serverVersion = Spout.getEngine().getVersion();
+        String serverVersion = "Spout " + Spout.getEngine().getVersion();
         int playersOnline;
         if (Spout.getPlatform() == Platform.SERVER) {
             playersOnline = ((Server) Spout.getEngine()).getOnlinePlayers().length;
