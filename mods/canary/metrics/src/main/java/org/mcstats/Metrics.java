@@ -758,23 +758,4 @@ public class Metrics {
         }
     }
 
-    public static interface ServerDataCollector {
-
-        /**
-         * Get the full server version. This should be of the format: "NAME VERSION (MC: VERSION)"
-         * The (MC: XXX) portion is very important for minecraft version detection
-         *
-         * @return the full server version
-         */
-        public String getFullServerVersion();
-
-        /**
-         * Get the number of players online
-         *
-         * @return
-         */
-        public int getPlayersOnline();
-
-    }
-
 }
