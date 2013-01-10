@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Tyler Blair. All rights reserved.
+ * Copyright 2011-2013 Tyler Blair. All rights reserved.
  * Ported to Minecraft Forge by Mike Primm
  *
  * Redistribution and use in source and binary forms, with or without modification, are
