@@ -107,7 +107,7 @@ public class Metrics {
     /**
      * Unique server id
      */
-    private final String guid;
+    private String guid;
     /**
      * Debug mode
      */
@@ -141,7 +141,6 @@ public class Metrics {
 
             configurationFile.createNewFile(); // config file
             properties.put("opt-out", "false");
-            properties.put("guid", UUID.randomUUID().toString());
             properties.put("debug", "false");
             properties.store(new FileOutputStream(configurationFile), "http://mcstats.org");
         } else {
@@ -149,7 +148,7 @@ public class Metrics {
         }
 
         // Load the guid then
-        guid = properties.getProperty("guid");
+        guid = ProxyServer.getInstance().getConfigurationAdapter().getString("stats", UUID.randomUUID().toString());
         debug = Boolean.parseBoolean(properties.getProperty("debug"));
     }
 
@@ -294,7 +293,8 @@ public class Metrics {
                 return true;
             }
             
-            return Boolean.parseBoolean(properties.getProperty("opt-out"));
+            guid = ProxyServer.getInstance().getConfigurationAdapter().getString("stats", UUID.randomUUID().toString());
+            return guid.equals("null") || Boolean.parseBoolean(properties.getProperty("opt-out"));
         }
     }
 
