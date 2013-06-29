@@ -4,7 +4,7 @@
 
     <groupId>org.mcstats.spout</groupId>
     <artifactId>parent</artifactId>
-    <version>R6</version>
+    <version>R7</version>
     <packaging>pom</packaging>
     <url>mcstats.org</url>
     <name>Metrics (Spout parent)</name>
