@@ -431,11 +431,13 @@ public class MetricsLite {
      * @throws UnsupportedEncodingException
      */
     private static void appendJSONPair(StringBuilder json, String key, String value) throws UnsupportedEncodingException {
-        boolean isValueNumeric;
+        boolean isValueNumeric = false;
 
         try {
-            Double.parseDouble(value);
-            isValueNumeric = true;
+            if (value.equals("0") || !value.endsWith("0")) {
+                Double.parseDouble(value);
+                isValueNumeric = true;
+            }
         } catch (NumberFormatException e) {
             isValueNumeric = false;
         }
