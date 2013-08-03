@@ -284,6 +284,17 @@ public class Metrics {
     }
 
     /**
+     * Cancels the metric task, needed so that a plugin using embedded metrics can shutdown any tasks it started properly.
+     * 
+     */
+    public void cancelTask() {
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+    }
+
+    /**
      * Disables metrics for the server by setting "opt-out" to true in the config file and canceling the metrics task.
      *
      * @throws java.io.IOException
@@ -298,10 +309,7 @@ public class Metrics {
             }
 
             // Disable Task, if it is running
-            if (task != null) {
-                task.cancel();
-                task = null;
-            }
+            this.cancelTask();
         }
     }
 
