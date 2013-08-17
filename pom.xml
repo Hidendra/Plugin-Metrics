@@ -7,7 +7,7 @@
     <name>MCStats (root)</name>
     <url>mcstats.org</url>
     <packaging>pom</packaging>
-    <version>1.2-SNAPSHOT</version>
+    <version>R8-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

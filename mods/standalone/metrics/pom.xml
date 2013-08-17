@@ -4,7 +4,7 @@
 
     <groupId>org.mcstats.standalone</groupId>
     <artifactId>metrics</artifactId>
-    <version>R7</version>
+    <version>R8-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>mcstats.org</url>
     <name>Metrics (Standalone)</name>

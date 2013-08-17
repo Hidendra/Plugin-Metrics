@@ -4,7 +4,7 @@
 
     <groupId>org.mcstats.canary</groupId>
     <artifactId>parent</artifactId>
-    <version>R7</version>
+    <version>R8-SNAPSHOT</version>
     <packaging>pom</packaging>
     <url>mcstats.org</url>
     <name>Metrics (Canary parent)</name>
