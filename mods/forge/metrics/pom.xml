@@ -18,13 +18,17 @@
             <id>mcstats</id>
             <url>http://repo.mcstats.org/content/repositories/public/</url>
         </repository>
+        <repository>
+            <id>MinecraftForge</id>
+            <url>http://files.minecraftforge.net/maven/</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.minecraftforge</groupId>
-            <artifactId>minecraft_deobfuscated</artifactId>
-            <version>1.6.2</version>
+            <groupId>net.minecraftforge</groupId>
+            <artifactId>forge</artifactId>
+            <version>1.6.4-9.11.1.964</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
