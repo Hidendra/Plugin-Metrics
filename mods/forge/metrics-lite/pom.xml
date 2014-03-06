@@ -24,7 +24,7 @@
         <dependency>
             <groupId>org.minecraftforge</groupId>
             <artifactId>minecraft_deobfuscated</artifactId>
-            <version>1.6.2</version>
+            <version>1.7.2</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
