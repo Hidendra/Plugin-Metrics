@@ -55,7 +55,7 @@ public class MetricsLite {
     /**
      * The current revision number
      */
-    private final static int REVISION = 7;
+    private final static int REVISION = 8;
 
     /**
      * The base url of the metrics domain
@@ -284,7 +284,7 @@ public class MetricsLite {
         boolean onlineMode = Bukkit.getServer().getOnlineMode(); // TRUE if online mode is enabled
         String pluginVersion = description.getVersion();
         String serverVersion = Bukkit.getVersion();
-        int playersOnline = Bukkit.getServer().getOnlinePlayers().length;
+        int playersOnline = Bukkit.getServer().getOnlinePlayers().size();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
 
