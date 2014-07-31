@@ -30,6 +30,7 @@ package org.mcstats;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
+import net.md_5.bungee.api.scheduler.ScheduledTask;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -51,6 +52,7 @@ import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
@@ -114,7 +116,7 @@ public class Metrics {
     /**
      * The scheduled task
      */
-    private Thread thread = null;
+    private volatile ScheduledTask task = null;
 
     public Metrics(final Plugin plugin) throws IOException {
         if (plugin == null) {
@@ -198,60 +200,45 @@ public class Metrics {
             }
 
             // Is metrics already running?
-            if (thread != null) {
+            if (task != null) {
                 return true;
             }
 
             // Begin hitting the server with glorious data
-            thread = new Thread(new Runnable() {
+            task = ProxyServer.getInstance().getScheduler().schedule(plugin, new Runnable() {
 
                 private boolean firstPost = true;
 
-                private long nextPost = 0L;
-
                 public void run() {
-                    while (thread != null) {
-                        if (nextPost == 0L || System.currentTimeMillis() > nextPost) {
-                            try {
-                                // This has to be synchronized or it can collide with the disable method.
-                                synchronized (optOutLock) {
-                                    // Disable Task, if it is running and the server owner decided to opt-out
-                                    if (isOptOut() && thread != null) {
-                                        Thread temp = thread;
-                                        thread = null;
-                                        // Tell all plotters to stop gathering information.
-                                        for (Graph graph : graphs) {
-                                            graph.onOptOut();
-                                        }
-                                        temp.interrupt(); // interrupting ourselves
-                                        return;
-                                    }
-                                }
-
-                                // We use the inverse of firstPost because if it is the first time we are posting,
-                                // it is not a interval ping, so it evaluates to FALSE
-                                // Each time thereafter it will evaluate to TRUE, i.e PING!
-                                postPlugin(!firstPost);
-
-                                // After the first post we set firstPost to false
-                                // Each post thereafter will be a ping
-                                firstPost = false;
-                                nextPost = System.currentTimeMillis() + (PING_INTERVAL * 60 * 1000);
-                            } catch (IOException e) {
-                                if (debug) {
-                                    System.out.println("[Metrics] " + e.getMessage());
+                    try {
+                        // This has to be synchronized or it can collide with the disable method.
+                        synchronized (optOutLock) {
+                            // Disable Task, if it is running and the server owner decided to opt-out
+                            if (isOptOut() && task != null) {
+                                task.cancel();
+                                task = null;
+                                // Tell all plotters to stop gathering information.
+                                for (Graph graph : graphs) {
+                                    graph.onOptOut();
                                 }
                             }
                         }
 
-                        try {
-                            Thread.sleep(100L);
-                        } catch (InterruptedException e) {
+                        // We use the inverse of firstPost because if it is the first time we are posting,
+                        // it is not a interval ping, so it evaluates to FALSE
+                        // Each time thereafter it will evaluate to TRUE, i.e PING!
+                        postPlugin(!firstPost);
+
+                        // After the first post we set firstPost to false
+                        // Each post thereafter will be a ping
+                        firstPost = false;
+                    } catch (IOException e) {
+                        if (debug) {
+                            System.out.println("[Metrics] " + e.getMessage());
                         }
                     }
                 }
-            }, "MCStats / Plugin Metrics");
-            thread.start();
+            }, 0, PING_INTERVAL, TimeUnit.MINUTES);
 
             return true;
         }
@@ -293,7 +280,7 @@ public class Metrics {
             }
 
             // Enable Task, if it is not running
-            if (thread == null) {
+            if (task == null) {
                 start();
             }
         }
@@ -314,9 +301,9 @@ public class Metrics {
             }
 
             // Disable Task, if it is running
-            if (thread != null) {
-                thread.interrupt();
-                thread = null;
+            if (task != null) {
+                task.cancel();
+                task = null;
             }
         }
     }
