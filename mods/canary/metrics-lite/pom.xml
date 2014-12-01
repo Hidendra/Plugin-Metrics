@@ -18,13 +18,17 @@
             <id>MCStats</id>
             <url>http://repo.mcstats.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>vi-repo</id>
+            <url>http://repo.visualillusionsent.net/repository/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
             <groupId>net.canarymod</groupId>
-            <artifactId>canarymod</artifactId>
-            <version>5.5.11-SNAPSHOT</version>
+            <artifactId>CanaryLib</artifactId>
+            <version>1.1.2</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
