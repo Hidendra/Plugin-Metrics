@@ -192,41 +192,39 @@ public class Metrics {
 
             // Begin hitting the server with glorious data
             task = TaskManager.scheduleContinuedTaskInMinutes(new Runnable() {
+                private boolean firstPost = true;
 
-                                                                  private boolean firstPost = true;
+                public void run() {
+                    try {
+                        // This has to be synchronized or it can collide with the disable method.
+                        synchronized (optOutLock) {
+                            // Disable Task, if it is running and the server owner decided to opt-out
+                            if (isOptOut() && task != null) {
+                                task.cancel(true);
+                                task = null;
+                                // Tell all plotters to stop gathering information.
+                                for (Graph graph : graphs) {
+                                    graph.onOptOut();
+                                }
+                            }
+                        }
 
-                                                                  public void run() {
-                                                                      try {
-                                                                          // This has to be synchronized or it can collide with the disable method.
-                                                                          synchronized (optOutLock) {
-                                                                              // Disable Task, if it is running and the server owner decided to opt-out
-                                                                              if (isOptOut() && task != null) {
-                                                                                  task.cancel(true);
-                                                                                  task = null;
-                                                                                  // Tell all plotters to stop gathering information.
-                                                                                  for (Graph graph : graphs) {
-                                                                                      graph.onOptOut();
-                                                                                  }
-                                                                              }
-                                                                          }
+                        // We use the inverse of firstPost because if it is the first time we are posting,
+                        // it is not a interval ping, so it evaluates to FALSE
+                        // Each time thereafter it will evaluate to TRUE, i.e PING!
+                        postPlugin(!firstPost);
 
-                                                                          // We use the inverse of firstPost because if it is the first time we are posting,
-                                                                          // it is not a interval ping, so it evaluates to FALSE
-                                                                          // Each time thereafter it will evaluate to TRUE, i.e PING!
-                                                                          postPlugin(!firstPost);
-
-                                                                          // After the first post we set firstPost to false
-                                                                          // Each post thereafter will be a ping
-                                                                          firstPost = false;
-                                                                      }
-                                                                      catch (IOException e) {
-                                                                          if (debug) {
-                                                                              Canary.log.info("[Metrics] " + e.getMessage());
-                                                                          }
-                                                                      }
-                                                                  }
-                                                              }, 1, PING_INTERVAL * 1200
-                                                             );
+                        // After the first post we set firstPost to false
+                        // Each post thereafter will be a ping
+                        firstPost = false;
+                    }
+                    catch (IOException e) {
+                        if (debug) {
+                            Canary.log.info("[Metrics] " + e.getMessage());
+                        }
+                    }
+                }
+            }, 1, PING_INTERVAL );
 
             return true;
         }
@@ -317,7 +315,7 @@ public class Metrics {
         String pluginName = description.getName();
         boolean onlineMode = Configuration.getServerConfig().isOnlineMode(); // TRUE if online mode is enabled
         String pluginVersion = description.getVersion();
-        String serverVersion = Canary.getSpecificationVersion();
+        String serverVersion = String.format("%s %s (MC: %s)", Canary.getSpecificationTitle(), Canary.getSpecificationVersion(), Canary.getServer().getServerVersion());
         int playersOnline = Canary.getServer().getNumPlayersOnline();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java

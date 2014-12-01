@@ -36,12 +36,7 @@ import net.visualillusionsent.utils.PropertiesFile;
 import net.visualillusionsent.utils.TaskManager;
 import net.visualillusionsent.utils.UtilityException;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -148,37 +143,35 @@ public class MetricsLite {
 
             // Begin hitting the server with glorious data
             task = TaskManager.scheduleContinuedTaskInMinutes(new Runnable() {
+                private boolean firstPost = true;
 
-                                                                  private boolean firstPost = true;
+                  public void run() {
+                      try {
+                          // This has to be synchronized or it can collide with the disable method.
+                          synchronized (optOutLock) {
+                              // Disable Task, if it is running and the server owner decided to opt-out
+                              if (isOptOut() && task != null) {
+                                  task.cancel(true);
+                                  task = null;
+                              }
+                          }
 
-                                                                  public void run() {
-                                                                      try {
-                                                                          // This has to be synchronized or it can collide with the disable method.
-                                                                          synchronized (optOutLock) {
-                                                                              // Disable Task, if it is running and the server owner decided to opt-out
-                                                                              if (isOptOut() && task != null) {
-                                                                                  task.cancel(true);
-                                                                                  task = null;
-                                                                              }
-                                                                          }
+                          // We use the inverse of firstPost because if it is the first time we are posting,
+                          // it is not a interval ping, so it evaluates to FALSE
+                          // Each time thereafter it will evaluate to TRUE, i.e PING!
+                          postPlugin(!firstPost);
 
-                                                                          // We use the inverse of firstPost because if it is the first time we are posting,
-                                                                          // it is not a interval ping, so it evaluates to FALSE
-                                                                          // Each time thereafter it will evaluate to TRUE, i.e PING!
-                                                                          postPlugin(!firstPost);
-
-                                                                          // After the first post we set firstPost to false
-                                                                          // Each post thereafter will be a ping
-                                                                          firstPost = false;
-                                                                      }
-                                                                      catch (IOException e) {
-                                                                          if (debug) {
-                                                                              Canary.log.info("[Metrics] " + e.getMessage());
-                                                                          }
-                                                                      }
-                                                                  }
-                                                              }, 1, PING_INTERVAL * 1200
-                                                             );
+                          // After the first post we set firstPost to false
+                          // Each post thereafter will be a ping
+                          firstPost = false;
+                      }
+                      catch (IOException e) {
+                          if (debug) {
+                              Canary.log.info("[Metrics] " + e.getMessage());
+                          }
+                      }
+                  }
+                }, 1, PING_INTERVAL );
 
             return true;
         }
@@ -269,7 +262,7 @@ public class MetricsLite {
         String pluginName = description.getName();
         boolean onlineMode = Configuration.getServerConfig().isOnlineMode(); // TRUE if online mode is enabled
         String pluginVersion = description.getVersion();
-        String serverVersion = Canary.getSpecificationVersion();
+        String serverVersion = String.format("%s %s (MC: %s)", Canary.getSpecificationTitle(), Canary.getSpecificationVersion(), Canary.getServer().getServerVersion());
         int playersOnline = Canary.getServer().getNumPlayersOnline();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
@@ -321,7 +314,8 @@ public class MetricsLite {
         // It does not reroute POST requests so we need to go around it
         if (isMineshafterPresent()) {
             connection = url.openConnection(Proxy.NO_PROXY);
-        } else {
+        }
+        else {
             connection = url.openConnection();
         }
 
@@ -359,7 +353,8 @@ public class MetricsLite {
         if (response == null || response.startsWith("ERR") || response.startsWith("7")) {
             if (response == null) {
                 response = "null";
-            } else if (response.startsWith("7")) {
+            }
+            else if (response.startsWith("7")) {
                 response = response.substring(response.startsWith("7,") ? 2 : 1);
             }
 
@@ -371,6 +366,7 @@ public class MetricsLite {
      * GZip compress a string of bytes
      *
      * @param input
+     *
      * @return
      */
     public static byte[] gzip(String input) {
@@ -380,12 +376,17 @@ public class MetricsLite {
         try {
             gzos = new GZIPOutputStream(baos);
             gzos.write(input.getBytes("UTF-8"));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (gzos != null) try {
-                gzos.close();
-            } catch (IOException ignore) {
+        }
+        finally {
+            if (gzos != null) {
+                try {
+                    gzos.close();
+                }
+                catch (IOException ignore) {
+                }
             }
         }
 
@@ -401,7 +402,8 @@ public class MetricsLite {
         try {
             Class.forName("mineshafter.MineServer");
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return false;
         }
     }
@@ -412,6 +414,7 @@ public class MetricsLite {
      * @param json
      * @param key
      * @param value
+     *
      * @throws UnsupportedEncodingException
      */
     private static void appendJSONPair(StringBuilder json, String key, String value) throws UnsupportedEncodingException {
@@ -422,7 +425,8 @@ public class MetricsLite {
                 Double.parseDouble(value);
                 isValueNumeric = true;
             }
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e) {
             isValueNumeric = false;
         }
 
@@ -435,7 +439,8 @@ public class MetricsLite {
 
         if (isValueNumeric) {
             json.append(value);
-        } else {
+        }
+        else {
             json.append(escapeJSON(value));
         }
     }
@@ -444,6 +449,7 @@ public class MetricsLite {
      * Escape a string to create a valid JSON string
      *
      * @param text
+     *
      * @return
      */
     private static String escapeJSON(String text) {
@@ -475,7 +481,8 @@ public class MetricsLite {
                     if (chr < ' ') {
                         String t = "000" + Integer.toHexString(chr);
                         builder.append("\\u" + t.substring(t.length() - 4));
-                    } else {
+                    }
+                    else {
                         builder.append(chr);
                     }
                     break;
@@ -489,7 +496,9 @@ public class MetricsLite {
     /**
      * Encode text as UTF-8
      *
-     * @param text the text to encode
+     * @param text
+     *         the text to encode
+     *
      * @return the encoded text, as UTF-8
      */
     private static String urlEncode(final String text) throws UnsupportedEncodingException {
