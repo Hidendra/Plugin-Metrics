@@ -1,56 +1,46 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.griefcraft</groupId>
-    <artifactId>mcstats-parent</artifactId>
-    <name>MCStats (root)</name>
-    <url>mcstats.org</url>
-    <packaging>pom</packaging>
+
+    <groupId>org.mcstats.sponge</groupId>
+    <artifactId>metrics</artifactId>
     <version>R8-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <url>mcstats.org</url>
+    <name>Metrics (Sponge)</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <ciManagement>
-        <system>jenkins</system>
-        <url>http://ci.griefcraft.com</url>
-    </ciManagement>
-    
-    <scm>
-        <connection>scm:git:git://github.com/Hidendra/Plugin-Metrics.git</connection>
-        <url>https://github.com/Hidendra/Plugin-Metrics</url>
-        <developerConnection>scm:git:git@github.com:Hidendra/Plugin-Metrics.git</developerConnection>
-    </scm>
+    <repositories>
+        <repository>
+            <id>sponge-maven-repo</id>
+            <name>Sponge maven repo</name>
+            <url>http://repo.spongepowered.org/Sponge/maven</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>spongeapi</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <modules>
-        <module>mods/bukkit</module>
-        <module>mods/bungee</module>
-        <module>mods/spout</module>
-        <module>mods/forge</module>
-        <module>mods/canary</module>
-        <module>mods/sponge</module>
-        <module>mods/standalone</module>
-    </modules>
 
     <build>
         <defaultGoal>clean package</defaultGoal>
 
         <plugins>
             <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
                 <configuration>
-                    <skip>true</skip>
+                    <source>1.5</source>
+                    <target>1.5</target>
                 </configuration>
             </plugin>
         </plugins>
