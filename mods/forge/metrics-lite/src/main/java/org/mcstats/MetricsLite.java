@@ -1,6 +1,7 @@
 /*
  * Copyright 2011-2013 Tyler Blair. All rights reserved.
  * Ported to Minecraft Forge by Mike Primm
+ * 1.7.2 port by Dries007
  *
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
@@ -29,14 +30,14 @@
 
 package org.mcstats;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.FMLLog;
-import cpw.mods.fml.common.IScheduledTickHandler;
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.TickType;
-import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.Configuration;
+import net.minecraftforge.common.config.Configuration;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -58,7 +59,7 @@ public class MetricsLite {
     /**
      * The current revision number
      */
-    private final static int REVISION = 7;
+    private final static int REVISION = 8;
 
     /**
      * The base url of the metrics domain
@@ -108,21 +109,11 @@ public class MetricsLite {
      */
     private final boolean debug;
 
-    /**
-     * The scheduled task
-     */
-    private volatile IScheduledTickHandler task = null;
-
-    /**
-     * Flag for tracking if metrics have been stopped/paused
-     */
-    private boolean stopped = false;
-
-    public MetricsLite(final String modname, final String modversion)
-            throws IOException {
-        if ((modname == null) || (modversion == null)) {
-            throw new IllegalArgumentException(
-                    "modname and modversion cannot be null");
+    public MetricsLite(final String modname, final String modversion) throws IOException
+    {
+        if ((modname == null) || (modversion == null))
+        {
+            throw new IllegalArgumentException("modname and modversion cannot be null");
         }
 
         this.modname = modname;
@@ -147,96 +138,76 @@ public class MetricsLite {
      *
      * @return True if statistics measuring is running, otherwise false.
      */
-    public boolean start() {
+    public boolean start()
+    {
         // Did we opt out?
-        if (isOptOut()) {
+        if (isOptOut())
+        {
             return false;
         }
-        stopped = false;
 
-        // Is metrics already running?
-        if (task != null) {
-            return true;
-        }
-
-        // Begin hitting the server with glorious data
-        task = new IScheduledTickHandler() {
-            private boolean firstPost = true;
-
-            private Thread thrd = null;
-
-            @Override
-            public void tickStart(EnumSet<TickType> type, Object... tickData) {
-            }
-
-            @Override
-            public void tickEnd(EnumSet<TickType> type, Object... tickData) {
-                if (stopped)
-                    return;
-
-                // Disable Task, if it is running and the server owner decided
-                // to opt-out
-                if (isOptOut()) {
-                    stopped = true;
-                    return;
-                }
-                if (thrd == null) {
-                    thrd = new Thread(new Runnable() {
-                        public void run() {
-                            try {
-                                // We use the inverse of firstPost because if it
-                                // is the first time we are posting,
-                                // it is not a interval ping, so it evaluates to
-                                // FALSE
-                                // Each time thereafter it will evaluate to
-                                // TRUE, i.e PING!
-                                postPlugin(!firstPost);
-                                // After the first post we set firstPost to
-                                // false
-                                // Each post thereafter will be a ping
-                                firstPost = false;
-                            } catch (IOException e) {
-                                if (debug) {
-                                    FMLLog.info("[Metrics] Exception - %s",
-                                            e.getMessage());
-                                }
-                            } finally {
-                                thrd = null;
-                            }
-                        }
-                    });
-                    thrd.start();
-                }
-            }
-
-            @Override
-            public EnumSet<TickType> ticks() {
-                return EnumSet.of(TickType.SERVER);
-            }
-
-            @Override
-            public String getLabel() {
-                return modname + " Metrics";
-            }
-
-            @Override
-            public int nextTickSpacing() {
-                if (firstPost)
-                    return 100;
-                else
-                    return PING_INTERVAL * 1200;
-            }
-        };
-        TickRegistry.registerScheduledTickHandler(task, Side.SERVER);
+        FMLCommonHandler.instance().bus().register(this);
 
         return true;
+    }
+
+    private Thread thrd = null;
+    private boolean firstPost = true;
+    int tickCount;
+    @SubscribeEvent
+    public void tick(TickEvent.ServerTickEvent tick)
+    {
+        if (tick.phase != TickEvent.Phase.END) return;
+
+        // Disable Task, if it is running and the server owner decided
+        // to opt-out
+        if (isOptOut())
+        {
+            FMLCommonHandler.instance().bus().unregister(this);
+            return;
+        }
+
+        tickCount ++;
+
+        if (tickCount % (firstPost ? 100 : PING_INTERVAL * 1200) != 0) return;
+
+        tickCount = 0;
+
+        if (thrd == null) {
+            thrd = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        // We use the inverse of firstPost because if it
+                        // is the first time we are posting,
+                        // it is not a interval ping, so it evaluates to
+                        // FALSE
+                        // Each time thereafter it will evaluate to
+                        // TRUE, i.e PING!
+                        postPlugin(!firstPost);
+                        // After the first post we set firstPost to
+                        // false
+                        // Each post thereafter will be a ping
+                        firstPost = false;
+                    } catch (IOException e) {
+                        if (debug) {
+                            FMLLog.info("[Metrics] Exception - %s",
+                                    e.getMessage());
+                        }
+                    } finally {
+                        thrd = null;
+                    }
+                }
+            });
+            thrd.start();
+        }
     }
 
     /**
      * Stop processing
      */
-    public void stop() {
-        stopped = true;
+    public void stop()
+    {
+        FMLCommonHandler.instance().bus().unregister(this);
     }
 
     /**
@@ -262,10 +233,7 @@ public class MetricsLite {
             configuration.getCategory(Configuration.CATEGORY_GENERAL).get("opt-out").set("false");
             configuration.save();
         }
-        // Enable Task, if it is not running
-        if (task == null) {
-            start();
-        }
+        FMLCommonHandler.instance().bus().register(this);
     }
 
     /**
@@ -280,6 +248,7 @@ public class MetricsLite {
             configuration.getCategory(Configuration.CATEGORY_GENERAL).get("opt-out").set("true");
             configuration.save();
         }
+        FMLCommonHandler.instance().bus().unregister(this);
     }
 
     /**
@@ -448,7 +417,7 @@ public class MetricsLite {
      * @param json
      * @param key
      * @param value
-     * @throws UnsupportedEncodingException
+     * @throws java.io.UnsupportedEncodingException
      */
     private static void appendJSONPair(StringBuilder json, String key, String value) throws UnsupportedEncodingException {
         boolean isValueNumeric = false;
