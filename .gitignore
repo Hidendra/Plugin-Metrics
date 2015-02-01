@@ -3,3 +3,12 @@ build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
+
+# intellij
+out
+*.idea
+*.iml
+*.ipr
+*.iws
+*.log
+*.log.lck
