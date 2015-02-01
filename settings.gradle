@@ -1,0 +1,9 @@
+rootProject.name = 'Plugin Metrics'
+
+include 'mods/bukkit'
+include 'mods/bungee'
+include 'mods/canary'
+include 'mods/forge'
+include 'mods/sponge'
+include 'mods/spout'
+include 'mods/standalone'
