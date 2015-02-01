@@ -30,6 +30,7 @@ package org.mcstats;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginDescription;
+import net.md_5.bungee.api.scheduler.ScheduledTask;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -114,7 +115,7 @@ public class Metrics {
     /**
      * The scheduled task
      */
-    private Thread thread = null;
+    private ScheduledTask thread = null;
 
     public Metrics(final Plugin plugin) throws IOException {
         if (plugin == null) {
@@ -203,7 +204,7 @@ public class Metrics {
             }
 
             // Begin hitting the server with glorious data
-            thread = new Thread(new Runnable() {
+            thread = ProxyServer.getInstance().getScheduler().runAsync(plugin, new Runnable() {
 
                 private boolean firstPost = true;
 
@@ -217,13 +218,13 @@ public class Metrics {
                                 synchronized (optOutLock) {
                                     // Disable Task, if it is running and the server owner decided to opt-out
                                     if (isOptOut() && thread != null) {
-                                        Thread temp = thread;
+                                        ScheduledTask temp = thread;
                                         thread = null;
                                         // Tell all plotters to stop gathering information.
                                         for (Graph graph : graphs) {
                                             graph.onOptOut();
                                         }
-                                        temp.interrupt(); // interrupting ourselves
+                                        temp.cancel();; // interrupting ourselves
                                         return;
                                     }
                                 }
@@ -250,8 +251,7 @@ public class Metrics {
                         }
                     }
                 }
-            }, "MCStats / Plugin Metrics");
-            thread.start();
+            });
 
             return true;
         }
@@ -315,7 +315,7 @@ public class Metrics {
 
             // Disable Task, if it is running
             if (thread != null) {
-                thread.interrupt();
+                thread.cancel();
                 thread = null;
             }
         }

@@ -25,15 +25,15 @@
  * authors and contributors and should not be interpreted as representing official policies,
  * either expressed or implied, of anybody else.
  */
-
 package org.mcstats;
 
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.scheduler.BukkitTask;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValueFactory;
+import org.spongepowered.api.Game;
+import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.service.scheduler.RepeatingTask;
+import org.spongepowered.api.util.config.ConfigFile;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -46,8 +46,12 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
 public class MetricsLite {
@@ -70,32 +74,37 @@ public class MetricsLite {
     /**
      * Interval of time to ping (in minutes)
      */
-    private final static int PING_INTERVAL = 15;
+    private static final int PING_INTERVAL = 15;
+
+    /**
+     * The game data is being sent for
+     */
+    private final Game game;
 
     /**
      * The plugin this metrics submits for
      */
-    private final Plugin plugin;
+    private final PluginContainer plugin;
 
     /**
      * The plugin configuration file
      */
-    private final YamlConfiguration configuration;
+    private ConfigFile configuration;
 
     /**
      * The plugin configuration file
      */
-    private final File configurationFile;
+    private File configurationFile;
 
     /**
      * Unique server id
      */
-    private final String guid;
+    private String guid;
 
     /**
      * Debug mode
      */
-    private final boolean debug;
+    private boolean debug;
 
     /**
      * Lock for synchronization
@@ -103,41 +112,45 @@ public class MetricsLite {
     private final Object optOutLock = new Object();
 
     /**
-     * Id of the scheduled task
+     * The scheduled task
      */
-    private volatile BukkitTask task = null;
+    private volatile RepeatingTask task = null;
 
-    public MetricsLite(Plugin plugin) throws IOException {
+    public MetricsLite(final Game game, final PluginContainer plugin) throws IOException {
         if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
         }
 
+        this.game = game;
         this.plugin = plugin;
 
-        // load the config
-        configurationFile = getConfigFile();
-        configuration = YamlConfiguration.loadConfiguration(configurationFile);
-
-        // add some defaults
-        configuration.addDefault("opt-out", false);
-        configuration.addDefault("guid", UUID.randomUUID().toString());
-        configuration.addDefault("debug", false);
-
-        // Do we need to create the file?
-        if (configuration.get("guid", null) == null) {
-            configuration.options().header("http://mcstats.org").copyDefaults(true);
-            configuration.save(configurationFile);
-        }
-
-        // Load the guid then
-        guid = configuration.getString("guid");
-        debug = configuration.getBoolean("debug", false);
+        loadConfiguration();
     }
 
     /**
-     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
-     * the initial data to the metrics backend, and then after that it will post in increments of
-     * PING_INTERVAL * 1200 ticks.
+     * Loads the configuration
+     */
+    private void loadConfiguration() {
+        Config fallback = ConfigFactory.parseString("mcstats = { opt-out = false, guid = null, debug = false }");
+
+        // load the config
+        configurationFile = getConfigFile();
+        configuration = ConfigFile.parseFile(configurationFile).resolveWith(fallback);
+
+        // Do we need to create the file?
+        if (configuration.getString("mcstats.guid") == null) {
+            configuration = (ConfigFile) configuration.withValue("mcstats.guid", ConfigValueFactory.fromAnyRef(UUID.randomUUID()));
+            configuration.save(false);
+        }
+
+        guid = configuration.getString("guid");
+        debug = configuration.getBoolean("debug");
+    }
+
+    /**
+     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send the
+     * initial data to the metrics backend, and then after that it will post in increments of PING_INTERVAL * 1200
+     * ticks.
      *
      * @return True if statistics measuring is running, otherwise false.
      */
@@ -154,8 +167,7 @@ public class MetricsLite {
             }
 
             // Begin hitting the server with glorious data
-            task = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, new Runnable() {
-
+            task = game.getScheduler().runRepeatingTask(plugin, new Runnable() {
                 private boolean firstPost = true;
 
                 public void run() {
@@ -179,11 +191,11 @@ public class MetricsLite {
                         firstPost = false;
                     } catch (IOException e) {
                         if (debug) {
-                            Bukkit.getLogger().log(Level.INFO, "[Metrics] " + e.getMessage());
+                            System.out.println("[Metrics] " + e.getMessage());
                         }
                     }
                 }
-            }, 0, PING_INTERVAL * 1200);
+            }, PING_INTERVAL * 1200).orNull();
 
             return true;
         }
@@ -196,21 +208,9 @@ public class MetricsLite {
      */
     public boolean isOptOut() {
         synchronized (optOutLock) {
-            try {
-                // Reload the metrics file
-                configuration.load(getConfigFile());
-            } catch (IOException ex) {
-                if (debug) {
-                    Bukkit.getLogger().log(Level.INFO, "[Metrics] " + ex.getMessage());
-                }
-                return true;
-            } catch (InvalidConfigurationException ex) {
-                if (debug) {
-                    Bukkit.getLogger().log(Level.INFO, "[Metrics] " + ex.getMessage());
-                }
-                return true;
-            }
-            return configuration.getBoolean("opt-out", false);
+            loadConfiguration();
+
+            return configuration.getBoolean("opt-out");
         }
     }
 
@@ -224,8 +224,8 @@ public class MetricsLite {
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (isOptOut()) {
-                configuration.set("opt-out", false);
-                configuration.save(configurationFile);
+                configuration = (ConfigFile) configuration.withValue("metrics.opt-out", ConfigValueFactory.fromAnyRef(false));
+                configuration.save(false);
             }
 
             // Enable Task, if it is not running
@@ -245,8 +245,8 @@ public class MetricsLite {
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (!isOptOut()) {
-                configuration.set("opt-out", true);
-                configuration.save(configurationFile);
+                configuration = (ConfigFile) configuration.withValue("metrics.opt-out", ConfigValueFactory.fromAnyRef(true));
+                configuration.save(false);
             }
 
             // Disable Task, if it is running
@@ -263,28 +263,25 @@ public class MetricsLite {
      * @return the File object for the config file
      */
     public File getConfigFile() {
-        // I believe the easiest way to get the base folder (e.g craftbukkit set via -P) for plugins to use
-        // is to abuse the plugin object we already have
-        // plugin.getDataFolder() => base/plugins/PluginA/
-        // pluginsFolder => base/plugins/
-        // The base is not necessarily relative to the startup directory.
-        File pluginsFolder = plugin.getDataFolder().getParentFile();
+        // TODO way to get data folder
+        File pluginsFolder = new File("plugins");
 
         // return => base/plugins/PluginMetrics/config.yml
-        return new File(new File(pluginsFolder, "PluginMetrics"), "config.yml");
+        return new File(new File(pluginsFolder, "PluginMetrics"), "config.hocon");
     }
 
     /**
      * Generic method that posts a plugin to the metrics website
      */
-    private void postPlugin(boolean isPing) throws IOException {
+    private void postPlugin(final boolean isPing) throws IOException {
         // Server software specific section
-        PluginDescriptionFile description = plugin.getDescription();
-        String pluginName = description.getName();
-        boolean onlineMode = Bukkit.getServer().getOnlineMode(); // TRUE if online mode is enabled
-        String pluginVersion = description.getVersion();
-        String serverVersion = Bukkit.getVersion();
-        int playersOnline = Bukkit.getServer().getOnlinePlayers().size();
+        String pluginName = plugin.getName();
+        // TODO no visible way to get onlineMode at the moment
+        boolean onlineMode = true; // TRUE if online mode is enabled
+        String pluginVersion = plugin.getVersion();
+        // TODO no visible way to get MC version at the moment
+        String serverVersion = String.format("%s %s", "Sponge", game.getImplementationVersion());
+        int playersOnline = game.getOnlinePlayers().size();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
 
@@ -426,7 +423,7 @@ public class MetricsLite {
      * @param json
      * @param key
      * @param value
-     * @throws UnsupportedEncodingException
+     * @throws java.io.UnsupportedEncodingException
      */
     private static void appendJSONPair(StringBuilder json, String key, String value) throws UnsupportedEncodingException {
         boolean isValueNumeric = false;

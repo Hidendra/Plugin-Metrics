@@ -2,12 +2,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.mcstats.bungee</groupId>
+    <groupId>org.mcstats.sponge</groupId>
     <artifactId>metrics</artifactId>
     <version>R8-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>mcstats.org</url>
-    <name>Metrics (Bungee)</name>
+    <name>Metrics (Sponge)</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,18 +15,18 @@
 
     <repositories>
         <repository>
-            <id>Bungee Official</id>
-            <url>https://oss.sonatype.org/content/groups/public/</url>
+            <id>sponge-maven-repo</id>
+            <name>Sponge maven repo</name>
+            <url>http://repo.spongepowered.org/Sponge/maven</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-api</artifactId>
-            <version>1.7-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>compile</scope>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>spongeapi</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

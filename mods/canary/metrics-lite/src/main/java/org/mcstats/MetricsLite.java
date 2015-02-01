@@ -25,25 +25,24 @@
  * authors and contributors and should not be interpreted as representing official policies,
  * either expressed or implied, of anybody else.
  */
+
 package org.mcstats;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
+import net.canarymod.Canary;
+import net.canarymod.config.Configuration;
+import net.canarymod.plugin.Plugin;
+import net.canarymod.plugin.PluginDescriptor;
+import net.visualillusionsent.utils.PropertiesFile;
+import net.visualillusionsent.utils.TaskManager;
+import net.visualillusionsent.utils.UtilityException;
+
+import java.io.*;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ScheduledFuture;
 import java.util.zip.GZIPOutputStream;
 
 public class MetricsLite {
@@ -66,32 +65,17 @@ public class MetricsLite {
     /**
      * Interval of time to ping (in minutes)
      */
-    private static final int PING_INTERVAL = 15;
+    private final static int PING_INTERVAL = 15;
 
     /**
-     * Debug mode
+     * The plugin this metrics submits for
      */
-    private final boolean debug;
-
-    /**
-     * The plugin configuration file
-     */
-    private final Properties properties = new Properties();
-
-    /**
-     * The plugin's name
-     */
-    private final String pluginName;
-
-    /**
-     * The plugin's version
-     */
-    private final String pluginVersion;
+    private final Plugin plugin;
 
     /**
      * The plugin configuration file
      */
-    private final File configurationFile;
+    private final PropertiesFile configuration;
 
     /**
      * Unique server id
@@ -99,149 +83,49 @@ public class MetricsLite {
     private final String guid;
 
     /**
+     * Debug mode
+     */
+    private final boolean debug;
+
+    /**
      * Lock for synchronization
      */
     private final Object optOutLock = new Object();
 
     /**
-     * The thread submission is running on
+     * The scheduled task
      */
-    private Thread thread = null;
+    private volatile ScheduledFuture task = null;
 
-    /**
-     * The etc instance
-     */
-    private Object etc = null;
-
-    /**
-     * The server instance
-     */
-    private Object server = null;
-
-    /**
-     * etc.getInstance().isCrow()
-     */
-    private Method isCrow = null;
-
-    /**
-     * etc.getInstance().getVersionStr()
-     */
-    private Method getVersionStr = null;
-
-    /**
-     * etc.getServer().getMCVersion()
-     */
-    private Method getMCVersion = null;
-
-    /**
-     * etc.getServer().getPlayerList()
-     */
-    private Method getPlayerList = null;
-
-    public MetricsLite(String pluginName, String pluginVersion) throws IOException {
-        if (pluginName == null || pluginVersion == null) {
+    public MetricsLite(Plugin plugin) throws IOException {
+        if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
         }
 
-        this.pluginName = pluginName;
-        this.pluginVersion = pluginVersion;
+        this.plugin = plugin;
 
-        configurationFile = getConfigFile();
+        // load the config
+        configuration = plugin.getModuleConfig("PluginMetrics");
 
-        if (!configurationFile.exists()) {
-            if (configurationFile.getPath().contains("/") || configurationFile.getPath().contains("\\")) {
-                File parent = new File(configurationFile.getParent());
-                if (!parent.exists()) {
-                    parent.mkdir();
-                }
-            }
-
-            configurationFile.createNewFile(); // config file
-            properties.put("opt-out", "false");
-            properties.put("guid", UUID.randomUUID().toString());
-            properties.put("debug", "false");
-            properties.store(new FileOutputStream(configurationFile), "http://mcstats.org");
-        } else {
-            properties.load(new FileInputStream(configurationFile));
+        // Do we need to create the file?
+        if (!configuration.containsKey("guid")) {
+            // add some defaults
+            configuration.addHeaderLines("http://mcstats.org");
+            configuration.setBoolean("opt-out", false);
+            configuration.setString("guid", UUID.randomUUID().toString());
+            configuration.setBoolean("debug", false);
+            configuration.save();
         }
 
-        guid = properties.getProperty("guid");
-        debug = Boolean.parseBoolean(properties.getProperty("debug"));
-
-        // load Canary related items
-        try {
-            Class<?> etcClazz = Class.forName("etc");
-            Method method = etcClazz.getMethod("getInstance");
-            etc = method.invoke(null);
-            method = etcClazz.getMethod("getServer");
-            server = method.invoke(null);
-
-            isCrow = etcClazz.getDeclaredMethod("isCrow");
-            getVersionStr = etcClazz.getDeclaredMethod("getVersionStr");
-            getMCVersion = server.getClass().getDeclaredMethod("getMCVersion");
-            getPlayerList = server.getClass().getDeclaredMethod("getPlayerList");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Load the guid then
+        guid = configuration.getString("guid");
+        debug = configuration.getBoolean("debug", false);
     }
 
     /**
-     * Call a method on the etc instance and ignore any thrown exceptions
-     *
-     * @param method
-     * @return
-     */
-    private String callEtc(Method method) {
-        try {
-            return (String) method.invoke(etc);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * Call a method on the server instance and ignore any thrown exceptions
-     *
-     * @param method
-     * @return
-     */
-    private String callServer(Method method) {
-        try {
-            return (String) method.invoke(server);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get the full server version
-     *
-     * @return
-     */
-    public String getFullServerVersion() {
-        return (Boolean.parseBoolean(callEtc(isCrow)) ? "Crow" : "Canary") + " " + callEtc(getVersionStr) + " (MC: " + callServer(getMCVersion) + ")";
-    }
-
-    /**
-     * Get the amount of players online
-     *
-     * @return
-     */
-    public int getPlayersOnline() {
-        List playerList = null;
-        try {
-            playerList = (List) getPlayerList.invoke(server);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return playerList != null ? playerList.size() : 0;
-    }
-
-    /**
-     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send the
-     * initial data to the metrics backend, and then after that it will post in increments of PING_INTERVAL * 1200
-     * ticks.
+     * Start measuring statistics. This will immediately create an async repeating task as the plugin and send
+     * the initial data to the metrics backend, and then after that it will post in increments of
+     * PING_INTERVAL * 1200 ticks.
      *
      * @return True if statistics measuring is running, otherwise false.
      */
@@ -253,57 +137,55 @@ public class MetricsLite {
             }
 
             // Is metrics already running?
-            if (thread != null) {
+            if (task != null) {
                 return true;
             }
 
-            thread = new Thread(new Runnable() {
-
+            // Begin hitting the server with glorious data
+            task = TaskManager.scheduleContinuedTaskInMinutes(new Runnable() {
                 private boolean firstPost = true;
 
-                private long nextPost = 0L;
+                  public void run() {
+                      try {
+                          // This has to be synchronized or it can collide with the disable method.
+                          synchronized (optOutLock) {
+                              // Disable Task, if it is running and the server owner decided to opt-out
+                              if (isOptOut() && task != null) {
+                                  task.cancel(true);
+                                  task = null;
+                              }
+                          }
 
-                public void run() {
-                    while (thread != null) {
-                        if (nextPost == 0L || System.currentTimeMillis() > nextPost) {
-                            try {
-                                // This has to be synchronized or it can collide with the disable method.
-                                synchronized (optOutLock) {
-                                    // Disable Task, if it is running and the server owner decided to opt-out
-                                    if (isOptOut() && thread != null) {
-                                        Thread temp = thread;
-                                        thread = null;
-                                        temp.interrupt(); // interrupting ourselves
-                                        return;
-                                    }
-                                }
+                          // We use the inverse of firstPost because if it is the first time we are posting,
+                          // it is not a interval ping, so it evaluates to FALSE
+                          // Each time thereafter it will evaluate to TRUE, i.e PING!
+                          postPlugin(!firstPost);
 
-                                // We use the inverse of firstPost because if it is the first time we are posting,
-                                // it is not a interval ping, so it evaluates to FALSE
-                                // Each time thereafter it will evaluate to TRUE, i.e PING!
-                                postPlugin(!firstPost);
-
-                                // After the first post we set firstPost to false
-                                // Each post thereafter will be a ping
-                                firstPost = false;
-                                nextPost = System.currentTimeMillis() + (PING_INTERVAL * 60 * 1000);
-                            } catch (IOException e) {
-                                if (debug) {
-                                    System.out.println("[Metrics] " + e.getMessage());
-                                }
-                            }
-                        }
-
-                        try {
-                            Thread.sleep(100L);
-                        } catch (InterruptedException e) {
-                        }
-                    }
-                }
-            }, "MCStats / Plugin Metrics");
-            thread.start();
+                          // After the first post we set firstPost to false
+                          // Each post thereafter will be a ping
+                          firstPost = false;
+                      }
+                      catch (IOException e) {
+                          if (debug) {
+                              Canary.log.info("[Metrics] " + e.getMessage());
+                          }
+                      }
+                  }
+                }, 1, PING_INTERVAL );
 
             return true;
+        }
+    }
+
+    /**
+     * Stops measuring statistics.
+     */
+    public void stop() {
+        synchronized (optOutLock) {
+            if (task != null) {
+                task.cancel(true);
+                task = null;
+            }
         }
     }
 
@@ -316,15 +198,15 @@ public class MetricsLite {
         synchronized (optOutLock) {
             try {
                 // Reload the metrics file
-                properties.load(new FileInputStream(configurationFile));
-            } catch (IOException ex) {
+                configuration.reload();
+            }
+            catch (UtilityException ex) {
                 if (debug) {
-                    System.out.println("[Metrics] " + ex.getMessage());
+                    Canary.log.info("[Metrics] " + ex.getMessage());
                 }
                 return true;
             }
-
-            return Boolean.parseBoolean(properties.getProperty("opt-out"));
+            return configuration.getBoolean("opt-out", false);
         }
     }
 
@@ -338,12 +220,12 @@ public class MetricsLite {
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (isOptOut()) {
-                properties.setProperty("opt-out", "false");
-                properties.store(new FileOutputStream(configurationFile), "http://mcstats.org");
+                configuration.setBoolean("opt-out", false);
+                configuration.save();
             }
 
             // Enable Task, if it is not running
-            if (thread == null) {
+            if (task == null) {
                 start();
             }
         }
@@ -359,41 +241,29 @@ public class MetricsLite {
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (!isOptOut()) {
-                properties.setProperty("opt-out", "true");
-                properties.store(new FileOutputStream(configurationFile), "http://mcstats.org");
+                configuration.setBoolean("opt-out", true);
+                configuration.save();
             }
 
             // Disable Task, if it is running
-            if (thread != null) {
-                thread.interrupt();
-                thread = null;
+            if (task != null) {
+                task.cancel(true);
+                task = null;
             }
         }
     }
 
     /**
-     * Gets the File object of the config file that should be used to store data such as the GUID and opt-out status
-     *
-     * @return the File object for the config file
-     */
-    public File getConfigFile() {
-        // I believe the easiest way to get the base folder (e.g craftbukkit set via -P) for plugins to use
-        // is to abuse the plugin object we already have
-        // plugin.getDataFolder() => base/plugins/PluginA/
-        // pluginsFolder => base/plugins/
-        // The base is not necessarily relative to the startup directory.
-        File pluginsFolder = new File("plugins");
-
-        // return => base/plugins/PluginMetrics/config.yml
-        return new File(new File(pluginsFolder, "PluginMetrics"), "config.txt");
-    }
-
-    /**
      * Generic method that posts a plugin to the metrics website
      */
-    private void postPlugin(final boolean isPing) throws IOException {
-        String serverVersion = getFullServerVersion();
-        int playersOnline = getPlayersOnline();
+    private void postPlugin(boolean isPing) throws IOException {
+        // Server software specific section
+        PluginDescriptor description = plugin.getDescriptor();
+        String pluginName = description.getName();
+        boolean onlineMode = Configuration.getServerConfig().isOnlineMode(); // TRUE if online mode is enabled
+        String pluginVersion = description.getVersion();
+        String serverVersion = String.format("%s %s (MC: %s)", Canary.getSpecificationTitle(), Canary.getSpecificationVersion(), Canary.getServer().getServerVersion());
+        int playersOnline = Canary.getServer().getNumPlayersOnline();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
 
@@ -423,7 +293,7 @@ public class MetricsLite {
         appendJSONPair(json, "osarch", osarch);
         appendJSONPair(json, "osversion", osversion);
         appendJSONPair(json, "cores", Integer.toString(coreCount));
-        // appendJSONPair(json, "auth_mode", onlineMode ? "1" : "0");
+        appendJSONPair(json, "auth_mode", onlineMode ? "1" : "0");
         appendJSONPair(json, "java_version", java_version);
 
         // If we're pinging, append it
@@ -444,7 +314,8 @@ public class MetricsLite {
         // It does not reroute POST requests so we need to go around it
         if (isMineshafterPresent()) {
             connection = url.openConnection(Proxy.NO_PROXY);
-        } else {
+        }
+        else {
             connection = url.openConnection();
         }
 
@@ -482,7 +353,8 @@ public class MetricsLite {
         if (response == null || response.startsWith("ERR") || response.startsWith("7")) {
             if (response == null) {
                 response = "null";
-            } else if (response.startsWith("7")) {
+            }
+            else if (response.startsWith("7")) {
                 response = response.substring(response.startsWith("7,") ? 2 : 1);
             }
 
@@ -494,6 +366,7 @@ public class MetricsLite {
      * GZip compress a string of bytes
      *
      * @param input
+     *
      * @return
      */
     public static byte[] gzip(String input) {
@@ -503,12 +376,17 @@ public class MetricsLite {
         try {
             gzos = new GZIPOutputStream(baos);
             gzos.write(input.getBytes("UTF-8"));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (gzos != null) try {
-                gzos.close();
-            } catch (IOException ignore) {
+        }
+        finally {
+            if (gzos != null) {
+                try {
+                    gzos.close();
+                }
+                catch (IOException ignore) {
+                }
             }
         }
 
@@ -524,7 +402,8 @@ public class MetricsLite {
         try {
             Class.forName("mineshafter.MineServer");
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return false;
         }
     }
@@ -535,6 +414,7 @@ public class MetricsLite {
      * @param json
      * @param key
      * @param value
+     *
      * @throws UnsupportedEncodingException
      */
     private static void appendJSONPair(StringBuilder json, String key, String value) throws UnsupportedEncodingException {
@@ -545,7 +425,8 @@ public class MetricsLite {
                 Double.parseDouble(value);
                 isValueNumeric = true;
             }
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e) {
             isValueNumeric = false;
         }
 
@@ -558,7 +439,8 @@ public class MetricsLite {
 
         if (isValueNumeric) {
             json.append(value);
-        } else {
+        }
+        else {
             json.append(escapeJSON(value));
         }
     }
@@ -567,6 +449,7 @@ public class MetricsLite {
      * Escape a string to create a valid JSON string
      *
      * @param text
+     *
      * @return
      */
     private static String escapeJSON(String text) {
@@ -598,7 +481,8 @@ public class MetricsLite {
                     if (chr < ' ') {
                         String t = "000" + Integer.toHexString(chr);
                         builder.append("\\u" + t.substring(t.length() - 4));
-                    } else {
+                    }
+                    else {
                         builder.append(chr);
                     }
                     break;
@@ -612,7 +496,9 @@ public class MetricsLite {
     /**
      * Encode text as UTF-8
      *
-     * @param text the text to encode
+     * @param text
+     *         the text to encode
+     *
      * @return the encoded text, as UTF-8
      */
     private static String urlEncode(final String text) throws UnsupportedEncodingException {

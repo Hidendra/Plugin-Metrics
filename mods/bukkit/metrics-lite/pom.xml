@@ -15,18 +15,17 @@
 
     <repositories>
         <repository>
-            <id>Bukkit Official</id>
-            <url>http://repo.bukkit.org/content/repositories/public</url>
+            <id>md-5</id>
+            <url>http://repo.md-5.net/content/repositories/public</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>1.4.5-R0.3-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>compile</scope>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.7.10-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
