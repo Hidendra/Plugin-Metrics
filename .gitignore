@@ -1,5 +1,5 @@
-.idea
-out
-target
-status
-*.iml
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
