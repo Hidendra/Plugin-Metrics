@@ -1,9 +1,22 @@
 rootProject.name = 'Plugin Metrics'
 
-include 'mods/bukkit'
-include 'mods/bungee'
-include 'mods/canary'
-include 'mods/forge'
-include 'mods/sponge'
-include 'mods/spout'
-include 'mods/standalone'
+include 'mods/bukkit/metrics'
+include 'mods/bukkit/metrics-lite'
+
+include 'mods/bungee/metrics'
+include 'mods/bungee/metrics-lite'
+
+include 'mods/canary/metrics'
+include 'mods/canary/metrics-lite'
+
+include 'mods/forge/metrics'
+include 'mods/forge/metrics-lite'
+
+include 'mods/sponge/metrics'
+include 'mods/sponge/metrics-lite'
+
+include 'mods/spout/metrics'
+include 'mods/spout/metrics-lite'
+
+include 'mods/standalone/metrics'
+include 'mods/standalone/metrics-lite'
