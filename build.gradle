@@ -22,6 +22,7 @@ subprojects {
       url "http://repo.md-5.net/content/repositories/public"
     }
     maven {
+      name 'Bungee Official'
       url "https://oss.sonatype.org/content/groups/public/"
     }
     maven {
