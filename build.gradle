@@ -29,6 +29,7 @@ subprojects {
       url "http://nexus.spout.org/content/groups/public/"
     }
     maven {
+      name 'MCStats'
       url "http://repo.mcstats.org/content/repositories/public/"
     }
     maven {
@@ -38,6 +39,7 @@ subprojects {
       url "http://repo.mcstats.org/content/groups/public/"
     }
     maven {
+      name 'vi-repo'
       url "http://repo.visualillusionsent.net/repository/public/"
     }
     maven {
