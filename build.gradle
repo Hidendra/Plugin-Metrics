@@ -8,6 +8,23 @@ allprojects  {
 subprojects {
   apply plugin: 'java'
 
+  buildscript {
+    repositories {
+      mavenCentral()
+      maven {
+        name 'MinecraftForge'
+        url "http://files.minecraftforge.net/maven/"
+      }
+      maven {
+        name = "Sonatype Snapshots"
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+      }
+    }
+    dependencies {
+      classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+    }
+  }
+
   sourceCompatibility = 1.5
   targetCompatibility = 1.5
 
@@ -31,9 +48,6 @@ subprojects {
     maven {
       name 'MCStats'
       url "http://repo.mcstats.org/content/repositories/public/"
-    }
-    maven {
-      url "http://files.minecraftforge.net/maven/"
     }
     maven {
       url "http://repo.mcstats.org/content/groups/public/"

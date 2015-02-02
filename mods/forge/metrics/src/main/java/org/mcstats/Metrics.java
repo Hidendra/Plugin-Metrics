@@ -55,7 +55,7 @@ import java.util.EnumSet;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
-public class MetricsLite {
+public class Metrics {
 
     /**
      * The current revision number
@@ -115,7 +115,7 @@ public class MetricsLite {
      */
     private boolean stopped = false;
 
-    public MetricsLite(final String modname, final String modversion)
+    public Metrics(final String modname, final String modversion)
             throws IOException
     {
         if ((modname == null) || (modversion == null))
