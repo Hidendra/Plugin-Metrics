@@ -1,5 +1,14 @@
-.idea
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# intellij
 out
-target
-status
+*.idea
 *.iml
+*.ipr
+*.iws
+*.log
+*.log.lck

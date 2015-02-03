@@ -1,0 +1,25 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name 'MinecraftForge'
+            url "http://files.minecraftforge.net/maven/"
+        }
+        maven {
+            name = "Sonatype Snapshots"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+    }
+}
+
+
+apply plugin: 'forge'
+
+group = 'org.mcstats.forge'
+
+minecraft {
+    version = '1.7.10-10.13.2.1291'
+}

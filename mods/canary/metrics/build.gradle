@@ -1,0 +1,5 @@
+group = 'org.mcstats.canary'
+
+dependencies {
+    compile 'net.canarymod:CanaryLib:1.1.2'
+}

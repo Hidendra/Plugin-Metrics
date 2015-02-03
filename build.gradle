@@ -1,0 +1,51 @@
+allprojects  {
+  apply plugin: 'maven'
+
+  group = 'com.griefcraft'
+  version = 'R8-SNAPSHOT'
+}
+
+subprojects {
+  apply plugin: 'java'
+
+  sourceCompatibility = 1.5
+  targetCompatibility = 1.5
+
+  repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+      url "http://repo.maven.apache.org/maven2"
+    }
+    maven {
+      name 'md-5'
+      url "http://repo.md-5.net/content/repositories/public"
+    }
+    maven {
+      name 'Bungee Official'
+      url "https://oss.sonatype.org/content/groups/public/"
+    }
+    maven {
+      url "http://nexus.spout.org/content/groups/public/"
+    }
+    maven {
+      name 'MCStats'
+      url "http://repo.mcstats.org/content/repositories/public/"
+    }
+    maven {
+      url "http://repo.mcstats.org/content/groups/public/"
+    }
+    maven {
+      name 'vi-repo'
+      url "http://repo.visualillusionsent.net/repository/public/"
+    }
+    maven {
+      name 'Sponge maven repo'
+      url 'http://repo.spongepowered.org/maven'
+    }
+  }
+
+  dependencies {
+    testCompile 'junit:junit:4.10'
+  }
+}
