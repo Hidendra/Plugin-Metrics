@@ -1,0 +1,5 @@
+group = 'org.mcstats.sponge'
+
+dependencies {
+    compile 'org.spongepowered:spongeapi:1.0'
+}

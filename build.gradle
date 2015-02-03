@@ -40,7 +40,8 @@ subprojects {
       url "http://repo.visualillusionsent.net/repository/public/"
     }
     maven {
-      url "http://repo.spongepowered.org/Sponge/maven"
+      name 'Sponge maven repo'
+      url 'http://repo.spongepowered.org/maven'
     }
   }
 
