@@ -2,21 +2,35 @@ rootProject.name = 'Plugin Metrics'
 
 include 'mods/bukkit/metrics'
 include 'mods/bukkit/metrics-lite'
+project(':mods/bukkit/metrics').name = 'Metrics (Bukkit)'
+project(':mods/bukkit/metrics-lite').name = 'Metrics-Lite (Bukkit)'
 
 include 'mods/bungee/metrics'
 include 'mods/bungee/metrics-lite'
+project(':mods/bungee/metrics').name = 'Metrics (Bungee)'
+project(':mods/bungee/metrics-lite').name = 'Metrics-Lite (Bungee)'
 
 include 'mods/canary/metrics'
 include 'mods/canary/metrics-lite'
+project(':mods/canary/metrics').name = 'Metrics (Canary)'
+project(':mods/canary/metrics-lite').name = 'Metrics-Lite (Canary)'
 
 include 'mods/forge/metrics'
 include 'mods/forge/metrics-lite'
+project(':mods/forge/metrics').name = 'Metrics (Forge)'
+project(':mods/forge/metrics-lite').name = 'Metrics-Lite (Forge)'
 
 include 'mods/sponge/metrics'
 include 'mods/sponge/metrics-lite'
+project(':mods/sponge/metrics').name = 'Metrics (Sponge)'
+project(':mods/sponge/metrics-lite').name = 'Metrics-Lite (Sponge)'
 
 include 'mods/spout/metrics'
 include 'mods/spout/metrics-lite'
+project(':mods/spout/metrics').name = 'Metrics (Spout)'
+project(':mods/spout/metrics-lite').name = 'Metrics-Lite (Spout)'
 
 include 'mods/standalone/metrics'
 include 'mods/standalone/metrics-lite'
+project(':mods/standalone/metrics').name = 'Metrics (Standalone)'
+project(':mods/standalone/metrics-lite').name = 'Metrics-Lite (Standalone)'
