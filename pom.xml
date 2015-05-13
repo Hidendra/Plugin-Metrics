@@ -36,7 +36,6 @@
     <modules>
         <module>mods/bukkit</module>
         <module>mods/bungee</module>
-        <module>mods/spout</module>
         <module>mods/forge</module>
         <module>mods/canary</module>
         <module>mods/sponge</module>
