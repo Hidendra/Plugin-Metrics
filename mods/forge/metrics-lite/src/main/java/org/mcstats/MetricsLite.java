@@ -38,7 +38,13 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.config.Configuration;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -62,12 +68,6 @@ public class MetricsLite {
      * The url used to report a server's status
      */
     private static final String REPORT_URL = "/plugin/%s";
-
-    /**
-     * The separator to use for custom data. This MUST NOT change unless you are
-     * hosting your own version of metrics and want to change it.
-     */
-    private static final String CUSTOM_DATA_SEPARATOR = "~~";
 
     /**
      * Interval of time to ping (in minutes)
@@ -101,10 +101,9 @@ public class MetricsLite {
      */
     private final boolean debug;
 
-    /**
-     * Flag for tracking if metrics have been stopped/paused
-     */
-    private boolean stopped = false;
+    private Thread thread = null;
+    private boolean firstPost = true;
+    int tickCount;
 
     public MetricsLite(final String modname, final String modversion)
             throws IOException {
@@ -140,16 +139,11 @@ public class MetricsLite {
         if (isOptOut()) {
             return false;
         }
-        stopped = false;
 
         FMLCommonHandler.instance().bus().register(this);
 
         return true;
     }
-
-    private Thread thrd = null;
-    private boolean firstPost = true;
-    int tickCount;
 
     @SubscribeEvent
     public void tick(TickEvent.ServerTickEvent tick) {
@@ -168,8 +162,8 @@ public class MetricsLite {
 
         tickCount = 0;
 
-        if (thrd == null) {
-            thrd = new Thread(new Runnable() {
+        if (thread == null) {
+            thread = new Thread(new Runnable() {
                 public void run() {
                     try {
                         // We use the inverse of firstPost because if it
@@ -188,11 +182,11 @@ public class MetricsLite {
                             FMLLog.info("[Metrics] Exception - %s", e.getMessage());
                         }
                     } finally {
-                        thrd = null;
+                        thread = null;
                     }
                 }
             });
-            thrd.start();
+            thread.start();
         }
     }
 
@@ -200,7 +194,6 @@ public class MetricsLite {
      * Stop processing
      */
     public void stop() {
-        stopped = true;
     }
 
     /**

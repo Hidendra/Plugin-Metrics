@@ -22,9 +22,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.minecraftforge</groupId>
-            <artifactId>minecraft_deobfuscated</artifactId>
-            <version>1.6.2</version>
+            <groupId>forge</groupId>
+            <artifactId>minecraft-server</artifactId>
+            <version>1.7.10-10.13.1.1226</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
