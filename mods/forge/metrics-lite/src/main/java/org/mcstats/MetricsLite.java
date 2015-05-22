@@ -107,10 +107,8 @@ public class MetricsLite {
     private boolean stopped = false;
 
     public MetricsLite(final String modname, final String modversion)
-            throws IOException
-    {
-        if ((modname == null) || (modversion == null))
-        {
+            throws IOException {
+        if ((modname == null) || (modversion == null)) {
             throw new IllegalArgumentException(
                     "modname and modversion cannot be null");
         }
@@ -137,11 +135,9 @@ public class MetricsLite {
      *
      * @return True if statistics measuring is running, otherwise false.
      */
-    public boolean start()
-    {
+    public boolean start() {
         // Did we opt out?
-        if (isOptOut())
-        {
+        if (isOptOut()) {
             return false;
         }
         stopped = false;
@@ -151,19 +147,17 @@ public class MetricsLite {
         return true;
     }
 
-    private Thread  thrd      = null;
+    private Thread thrd = null;
     private boolean firstPost = true;
     int tickCount;
 
     @SubscribeEvent
-    public void tick(TickEvent.ServerTickEvent tick)
-    {
+    public void tick(TickEvent.ServerTickEvent tick) {
         if (tick.phase != TickEvent.Phase.END) return;
 
         // Disable Task, if it is running and the server owner decided
         // to opt-out
-        if (isOptOut())
-        {
+        if (isOptOut()) {
             FMLCommonHandler.instance().bus().unregister(this);
             return;
         }
@@ -174,14 +168,10 @@ public class MetricsLite {
 
         tickCount = 0;
 
-        if (thrd == null)
-        {
-            thrd = new Thread(new Runnable()
-            {
-                public void run()
-                {
-                    try
-                    {
+        if (thrd == null) {
+            thrd = new Thread(new Runnable() {
+                public void run() {
+                    try {
                         // We use the inverse of firstPost because if it
                         // is the first time we are posting,
                         // it is not a interval ping, so it evaluates to
@@ -193,16 +183,11 @@ public class MetricsLite {
                         // false
                         // Each post thereafter will be a ping
                         firstPost = false;
-                    }
-                    catch (IOException e)
-                    {
-                        if (debug)
-                        {
+                    } catch (IOException e) {
+                        if (debug) {
                             FMLLog.info("[Metrics] Exception - %s", e.getMessage());
                         }
-                    }
-                    finally
-                    {
+                    } finally {
                         thrd = null;
                     }
                 }
