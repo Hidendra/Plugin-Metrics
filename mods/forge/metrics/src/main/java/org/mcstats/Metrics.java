@@ -75,12 +75,6 @@ public class Metrics {
     private static final String REPORT_URL = "/plugin/%s";
 
     /**
-     * The separator to use for custom data. This MUST NOT change unless you are
-     * hosting your own version of metrics and want to change it.
-     */
-    private static final String CUSTOM_DATA_SEPARATOR = "~~";
-
-    /**
      * Interval of time to ping (in minutes)
      */
     private static final int PING_INTERVAL = 15;
@@ -88,9 +82,9 @@ public class Metrics {
     /**
      * The mod this metrics submits for
      */
-    private final String modname;
+    private final String modName;
 
-    private final String modversion;
+    private final String modVersion;
 
     /**
      * All of the custom graphs to submit to metrics
@@ -121,15 +115,13 @@ public class Metrics {
     private boolean firstPost = true;
     int tickCount;
 
-    public Metrics(final String modname, final String modversion)
-            throws IOException {
-        if ((modname == null) || (modversion == null)) {
-            throw new IllegalArgumentException(
-                    "modname and modversion cannot be null");
+    public Metrics(final String modName, final String modVersion) throws IOException {
+        if (modName == null || modVersion == null) {
+            throw new IllegalArgumentException("modName and modVersion cannot be null");
         }
 
-        this.modname = modname;
-        this.modversion = modversion;
+        this.modName = modName;
+        this.modVersion = modVersion;
 
         // load the config
         configurationFile = getConfigFile();
@@ -300,9 +292,9 @@ public class Metrics {
      */
     private void postPlugin(final boolean isPing) throws IOException {
         // Server software specific section
-        String pluginName = modname;
+        String pluginName = modName;
         boolean onlineMode = MinecraftServer.getServer().isServerInOnlineMode();
-        String pluginVersion = modversion;
+        String pluginVersion = modVersion;
         String serverVersion;
         if (MinecraftServer.getServer().isDedicatedServer()) {
             serverVersion = "MinecraftForge (MC: " + MinecraftServer.getServer().getMinecraftVersion() + ")";

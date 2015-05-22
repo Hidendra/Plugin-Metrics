@@ -77,9 +77,9 @@ public class MetricsLite {
     /**
      * The mod this metrics submits for
      */
-    private final String modname;
+    private final String modName;
 
-    private final String modversion;
+    private final String modVersion;
 
     /**
      * The metrics configuration file
@@ -105,15 +105,13 @@ public class MetricsLite {
     private boolean firstPost = true;
     int tickCount;
 
-    public MetricsLite(final String modname, final String modversion)
-            throws IOException {
-        if ((modname == null) || (modversion == null)) {
-            throw new IllegalArgumentException(
-                    "modname and modversion cannot be null");
+    public MetricsLite(final String modName, final String modVersion) throws IOException {
+        if (modName == null || modVersion == null) {
+            throw new IllegalArgumentException("modName and modVersion cannot be null");
         }
 
-        this.modname = modname;
-        this.modversion = modversion;
+        this.modName = modName;
+        this.modVersion = modVersion;
 
         // load the config
         configurationFile = getConfigFile();
@@ -253,9 +251,9 @@ public class MetricsLite {
      */
     private void postPlugin(final boolean isPing) throws IOException {
         // Server software specific section
-        String pluginName = modname;
+        String pluginName = modName;
         boolean onlineMode = MinecraftServer.getServer().isServerInOnlineMode();
-        String pluginVersion = modversion;
+        String pluginVersion = modVersion;
         String serverVersion;
         if (MinecraftServer.getServer().isDedicatedServer()) {
             serverVersion = "MinecraftForge (MC: " + MinecraftServer.getServer().getMinecraftVersion() + ")";
