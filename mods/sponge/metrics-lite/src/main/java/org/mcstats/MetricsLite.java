@@ -27,14 +27,14 @@
  */
 package org.mcstats;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.plugin.PluginContainer;
-import org.spongepowered.api.service.scheduler.RepeatingTask;
-import org.spongepowered.api.util.config.ConfigFile;
+import org.spongepowered.api.service.scheduler.Task;
 
+import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,12 +46,8 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 public class MetricsLite {
@@ -89,7 +85,12 @@ public class MetricsLite {
     /**
      * The plugin configuration file
      */
-    private ConfigFile configuration;
+    private CommentedConfigurationNode config;
+
+    /**
+     * The configuration loader
+     */
+    private ConfigurationLoader<CommentedConfigurationNode> configurationLoader;
 
     /**
      * The plugin configuration file
@@ -114,8 +115,9 @@ public class MetricsLite {
     /**
      * The scheduled task
      */
-    private volatile RepeatingTask task = null;
+    private volatile Task task = null;
 
+    @Inject
     public MetricsLite(final Game game, final PluginContainer plugin) throws IOException {
         if (plugin == null) {
             throw new IllegalArgumentException("Plugin cannot be null");
@@ -131,20 +133,29 @@ public class MetricsLite {
      * Loads the configuration
      */
     private void loadConfiguration() {
-        Config fallback = ConfigFactory.parseString("mcstats = { opt-out = false, guid = null, debug = false }");
-
-        // load the config
         configurationFile = getConfigFile();
-        configuration = ConfigFile.parseFile(configurationFile).resolveWith(fallback);
+        configurationLoader = HoconConfigurationLoader.builder().setFile(configurationFile).build();
 
-        // Do we need to create the file?
-        if (configuration.getString("mcstats.guid") == null) {
-            configuration = (ConfigFile) configuration.withValue("mcstats.guid", ConfigValueFactory.fromAnyRef(UUID.randomUUID()));
-            configuration.save(false);
+        try {
+            if (!configurationFile.exists()) {
+                configurationFile.createNewFile();
+                config = configurationLoader.load();
+
+                config.setComment("This contains settings for MCStats: http://mcstats.org");
+                config.getNode("mcstats.guid").setValue(UUID.randomUUID().toString());
+                config.getNode("mcstats.opt-out").setValue(false);
+                config.getNode("mcstats.debug").setValue(false);
+
+                configurationLoader.save(config);
+            } else {
+                config = configurationLoader.load();
+            }
+
+            guid = config.getNode("mcstats.guid").getString();
+            debug = config.getNode("mcstats.debug").getBoolean();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        guid = configuration.getString("guid");
-        debug = configuration.getBoolean("debug");
     }
 
     /**
@@ -167,7 +178,7 @@ public class MetricsLite {
             }
 
             // Begin hitting the server with glorious data
-            task = game.getScheduler().runRepeatingTask(plugin, new Runnable() {
+            task = game.getAsyncScheduler().runRepeatingTask(plugin, new Runnable() {
                 private boolean firstPost = true;
 
                 public void run() {
@@ -195,7 +206,7 @@ public class MetricsLite {
                         }
                     }
                 }
-            }, PING_INTERVAL * 1200).orNull();
+            }, TimeUnit.MINUTES, PING_INTERVAL).orNull();
 
             return true;
         }
@@ -210,7 +221,7 @@ public class MetricsLite {
         synchronized (optOutLock) {
             loadConfiguration();
 
-            return configuration.getBoolean("opt-out");
+            return config.getNode("mcstats.opt-out").getBoolean();
         }
     }
 
@@ -224,8 +235,8 @@ public class MetricsLite {
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (isOptOut()) {
-                configuration = (ConfigFile) configuration.withValue("metrics.opt-out", ConfigValueFactory.fromAnyRef(false));
-                configuration.save(false);
+                config.getNode("mcstats.opt-out").setValue(false);
+                configurationLoader.save(config);
             }
 
             // Enable Task, if it is not running
@@ -245,8 +256,8 @@ public class MetricsLite {
         synchronized (optOutLock) {
             // Check if the server owner has already set opt-out, if not, set it.
             if (!isOptOut()) {
-                configuration = (ConfigFile) configuration.withValue("metrics.opt-out", ConfigValueFactory.fromAnyRef(true));
-                configuration.save(false);
+                config.getNode("mcstats.opt-out").setValue(true);
+                configurationLoader.save(config);
             }
 
             // Disable Task, if it is running
@@ -263,25 +274,25 @@ public class MetricsLite {
      * @return the File object for the config file
      */
     public File getConfigFile() {
-        // TODO way to get data folder
-        File pluginsFolder = new File("plugins");
+        // TODO configDir
+        File configFolder = new File("config");
 
-        // return => base/plugins/PluginMetrics/config.yml
-        return new File(new File(pluginsFolder, "PluginMetrics"), "config.hocon");
+        return new File(configFolder, "PluginMetrics.conf");
     }
 
     /**
      * Generic method that posts a plugin to the metrics website
+     *
      */
     private void postPlugin(final boolean isPing) throws IOException {
         // Server software specific section
         String pluginName = plugin.getName();
-        // TODO no visible way to get onlineMode at the moment
-        boolean onlineMode = true; // TRUE if online mode is enabled
+        boolean onlineMode = game.getServer().getOnlineMode(); // TRUE if online mode is enabled
         String pluginVersion = plugin.getVersion();
         // TODO no visible way to get MC version at the moment
+        // TODO added by game.getPlatform().getMinecraftVersion() -- impl in 2.1
         String serverVersion = String.format("%s %s", "Sponge", game.getImplementationVersion());
-        int playersOnline = game.getOnlinePlayers().size();
+        int playersOnline = game.getServer().getOnlinePlayers().size();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
 
