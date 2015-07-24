@@ -410,8 +410,6 @@ public class Metrics {
         }
         
         String json = gson.toJson(data);
-        System.out.println(json);
-        if (this.plugin != null) return;
         
         byte[] uncompressed = json.getBytes();
         byte[] compressed = gzip(json);
