@@ -115,7 +115,7 @@ public class Metrics {
     private boolean firstPost = true;
     int tickCount;
 
-    public Metrics(final String modName, final String modVersion) throws IOException {
+    public Metrics(final String modName, final String modVersion) {
         if (modName == null || modVersion == null) {
             throw new IllegalArgumentException("modName and modVersion cannot be null");
         }
