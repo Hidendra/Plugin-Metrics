@@ -30,14 +30,6 @@
 
 package org.mcstats;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.FMLLog;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.config.Configuration;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -56,6 +48,14 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
+
+import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.common.config.Configuration;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 
 public class Metrics {
 
@@ -115,7 +115,7 @@ public class Metrics {
     private boolean firstPost = true;
     int tickCount;
 
-    public Metrics(final String modName, final String modVersion) throws IOException {
+    public Metrics(final String modName, final String modVersion) {
         if (modName == null || modVersion == null) {
             throw new IllegalArgumentException("modName and modVersion cannot be null");
         }
@@ -161,7 +161,6 @@ public class Metrics {
         if (graph == null) {
             throw new IllegalArgumentException("Graph cannot be null");
         }
-
         graphs.add(graph);
     }
 
@@ -178,43 +177,30 @@ public class Metrics {
         if (isOptOut()) {
             return false;
         }
-
         FMLCommonHandler.instance().bus().register(this);
-
         return true;
     }
 
     @SubscribeEvent
     public void tick(TickEvent.ServerTickEvent tick) {
-        if (tick.phase != TickEvent.Phase.END) return;
-
-        // Disable Task, if it is running and the server owner decided
-        // to opt-out
-        if (isOptOut()) {
-            FMLCommonHandler.instance().bus().unregister(this);
+        if (tick.phase != TickEvent.Phase.END)
             return;
-        }
 
         tickCount++;
-
-        if (tickCount % (firstPost ? 100 : PING_INTERVAL * 1200) != 0) return;
+        if (tickCount % (firstPost ? 100 : PING_INTERVAL * 1200) != 0)
+            return;
 
         tickCount = 0;
 
         if (thread == null) {
             thread = new Thread(new Runnable() {
+                @Override
                 public void run() {
                     try {
-                        // We use the inverse of firstPost because if it
-                        // is the first time we are posting,
-                        // it is not a interval ping, so it evaluates to
-                        // FALSE
-                        // Each time thereafter it will evaluate to
-                        // TRUE, i.e PING!
+                        // We use the inverse of firstPost because if it is the first time we are posting, it is not a interval ping, so it evaluates to FALSE.
+                        // Each time thereafter it will evaluate to TRUE, i.e PING!
                         postPlugin(!firstPost);
-                        // After the first post we set firstPost to
-                        // false
-                        // Each post thereafter will be a ping
+                        // After the first post we set firstPost to false. Each post thereafter will be a ping
                         firstPost = false;
                     } catch (IOException e) {
                         if (debug) {
@@ -233,6 +219,7 @@ public class Metrics {
      * Stop processing
      */
     public void stop() {
+        FMLCommonHandler.instance().bus().unregister(this);
     }
 
     /**
@@ -259,7 +246,7 @@ public class Metrics {
             configuration.save();
         }
         // Enable Task, if it is not running
-        FMLCommonHandler.instance().bus().register(this);
+        start();
     }
 
     /**
@@ -274,7 +261,7 @@ public class Metrics {
             configuration.getCategory(Configuration.CATEGORY_GENERAL).get("opt-out").set("true");
             configuration.save();
         }
-        FMLCommonHandler.instance().bus().unregister(this);
+        stop();
     }
 
     /**
