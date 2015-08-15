@@ -223,7 +223,7 @@ public class Metrics {
             }
 
             // Begin hitting the server with glorious data
-            task = game.getAsyncScheduler().runRepeatingTask(plugin, new Runnable() {
+            task = game.getScheduler().createTaskBuilder().async().execute(new Runnable() {
                 private boolean firstPost = true;
 
                 public void run() {
@@ -255,7 +255,7 @@ public class Metrics {
                         }
                     }
                 }
-            }, TimeUnit.MINUTES, PING_INTERVAL).orNull();
+            }).interval(PING_INTERVAL, TimeUnit.MINUTES).submit(plugin);
 
             return true;
         }
@@ -337,9 +337,7 @@ public class Metrics {
         String pluginName = plugin.getName();
         boolean onlineMode = game.getServer().getOnlineMode(); // TRUE if online mode is enabled
         String pluginVersion = plugin.getVersion();
-        // TODO no visible way to get MC version at the moment
-        // TODO added by game.getPlatform().getMinecraftVersion() -- impl in 2.1
-        String serverVersion = String.format("%s %s", "Sponge", game.getImplementationVersion());
+        String serverVersion = String.format("%s %s", "Sponge", game.getPlatform().getMinecraftVersion());
         int playersOnline = game.getServer().getOnlinePlayers().size();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
