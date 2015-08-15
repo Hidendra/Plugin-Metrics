@@ -228,8 +228,6 @@ public class Metrics {
 
                 public void run() {
                     try {
-                        System.out.println("[Metrics] " + "exexuted");
-
                         // This has to be synchronized or it can collide with the disable method.
                         synchronized (optOutLock) {
                             // Disable Task, if it is running and the server owner decided to opt-out
