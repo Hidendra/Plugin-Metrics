@@ -175,9 +175,8 @@ public class Metrics {
      * @param graph The name of the graph
      */
     public void addGraph(final Graph graph) {
-        if (graph == null) {
+        if (graph == null)
             throw new IllegalArgumentException("Graph cannot be null");
-        }
 
         graphs.add(graph);
     }
@@ -192,14 +191,12 @@ public class Metrics {
     public boolean start() {
         synchronized (optOutLock) {
             // Did we opt out?
-            if (isOptOut()) {
+            if (isOptOut())
                 return false;
-            }
 
             // Is metrics already running?
-            if (task != null) {
+            if (task != null)
                 return true;
-            }
 
             // Begin hitting the server with glorious data
             task = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, new Runnable() {
