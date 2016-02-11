@@ -147,23 +147,18 @@ public class MetricsLite {
     public void tick(TickEvent.ServerTickEvent tick) {
         if (tick.phase != TickEvent.Phase.END) return;
 
-        // Disable Task, if it is running and the server owner decided
-        // to opt-out
-        if (isOptOut()) {
-            FMLCommonHandler.instance().bus().unregister(this);
-            return;
-        }
-
-        tickCount++;
-
-        if (tickCount % (firstPost ? 100 : PING_INTERVAL * 1200) != 0) return;
-
-        tickCount = 0;
+        if (tickCount++ % (PING_INTERVAL * 1200) != 0) return;
 
         if (thread == null) {
             thread = new Thread(new Runnable() {
                 public void run() {
                     try {
+                        // Disable Task, if it is running and the server owner decided
+                        // to opt-out
+                        if (isOptOut()) {
+                            FMLCommonHandler.instance().bus().unregister(MetricsLite.this);
+                            return;
+                        }
                         // We use the inverse of firstPost because if it
                         // is the first time we are posting,
                         // it is not a interval ping, so it evaluates to
