@@ -26,16 +26,7 @@
  * either expressed or implied, of anybody else.
  */
 package org.mcstats;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Server;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.scheduler.BukkitTask;
-
+ 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -44,6 +35,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -58,8 +50,25 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
-public class Metrics {
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.scheduler.BukkitTask;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.reflect.TypeToken;
+
+public class Metrics {
     /**
      * The current revision number
      */
@@ -79,7 +88,12 @@ public class Metrics {
      * Interval of time to ping (in minutes)
      */
     private static final int PING_INTERVAL = 15;
-
+    
+    /**
+     * Gson instance
+     */
+    private static final Gson gson = new GsonBuilder().registerTypeAdapter(new TypeToken<Set<Graph>>() {}.getType(), new GraphSetSerializer()).create();
+    
     /**
      * The plugin this metrics submits for
      */
@@ -352,92 +366,34 @@ public class Metrics {
      * Generic method that posts a plugin to the metrics website
      */
     private void postPlugin(final boolean isPing) throws IOException {
+    	
+    	// Data to send
+    	Data data = new Data();
+    	
         // Server software specific section
         PluginDescriptionFile description = plugin.getDescription();
         String pluginName = description.getName();
-        boolean onlineMode = Bukkit.getServer().getOnlineMode(); // TRUE if online mode is enabled
-        String pluginVersion = description.getVersion();
-        String serverVersion = Bukkit.getVersion();
-        int playersOnline = this.getOnlinePlayers();
 
-        // END server software specific section -- all code below does not use any code outside of this class / Java
-
-        // Construct the post data
-        StringBuilder json = new StringBuilder(1024);
-        json.append('{');
-
-        // The plugin's description file containg all of the plugin data such as name, version, author, etc
-        appendJSONPair(json, "guid", guid);
-        appendJSONPair(json, "plugin_version", pluginVersion);
-        appendJSONPair(json, "server_version", serverVersion);
-        appendJSONPair(json, "players_online", Integer.toString(playersOnline));
-
-        // New data as of R6
-        String osname = System.getProperty("os.name");
-        String osarch = System.getProperty("os.arch");
-        String osversion = System.getProperty("os.version");
-        String java_version = System.getProperty("java.version");
-        int coreCount = Runtime.getRuntime().availableProcessors();
-
-        // normalize os arch .. amd64 -> x86_64
-        if (osarch.equals("amd64")) {
-            osarch = "x86_64";
-        }
-
-        appendJSONPair(json, "osname", osname);
-        appendJSONPair(json, "osarch", osarch);
-        appendJSONPair(json, "osversion", osversion);
-        appendJSONPair(json, "cores", Integer.toString(coreCount));
-        appendJSONPair(json, "auth_mode", onlineMode ? "1" : "0");
-        appendJSONPair(json, "java_version", java_version);
+        data.guid = guid;
+        data.plugin_version = description.getVersion();
+        data.server_version = Bukkit.getVersion();
+        data.players_online = this.getOnlinePlayers();
+        
+        data.osname = System.getProperty("os.name");
+        data.orarch = System.getProperty("os.arch").equals("amd64") ? "x86_64" : System.getProperty("os.arch");
+        data.osversion = System.getProperty("os.version");
+        data.cores = Runtime.getRuntime().availableProcessors();
+        data.auth_mode = Bukkit.getServer().getOnlineMode() ? 1 : 0;
+        data.java_version = System.getProperty("java.version");
+        
+        
 
         // If we're pinging, append it
         if (isPing) {
-            appendJSONPair(json, "ping", "1");
+            data.ping = 1;
         }
 
-        if (graphs.size() > 0) {
-            synchronized (graphs) {
-                json.append(',');
-                json.append('"');
-                json.append("graphs");
-                json.append('"');
-                json.append(':');
-                json.append('{');
-
-                boolean firstGraph = true;
-
-                final Iterator<Graph> iter = graphs.iterator();
-
-                while (iter.hasNext()) {
-                    Graph graph = iter.next();
-
-                    StringBuilder graphJson = new StringBuilder();
-                    graphJson.append('{');
-
-                    for (Plotter plotter : graph.getPlotters()) {
-                        appendJSONPair(graphJson, plotter.getColumnName(), Integer.toString(plotter.getValue()));
-                    }
-
-                    graphJson.append('}');
-
-                    if (!firstGraph) {
-                        json.append(',');
-                    }
-
-                    json.append(escapeJSON(graph.getName()));
-                    json.append(':');
-                    json.append(graphJson);
-
-                    firstGraph = false;
-                }
-
-                json.append('}');
-            }
-        }
-
-        // close json
-        json.append('}');
+        data.graphs = this.graphs;
 
         // Create the url
         URL url = new URL(BASE_URL + String.format(REPORT_URL, urlEncode(pluginName)));
@@ -452,10 +408,11 @@ public class Metrics {
         } else {
             connection = url.openConnection();
         }
-
-
-        byte[] uncompressed = json.toString().getBytes();
-        byte[] compressed = gzip(json.toString());
+        
+        String json = gson.toJson(data);
+        
+        byte[] uncompressed = json.getBytes();
+        byte[] compressed = gzip(json);
 
         // Headers
         connection.addRequestProperty("User-Agent", "MCStats/" + REVISION);
@@ -547,86 +504,6 @@ public class Metrics {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * Appends a json encoded key/value pair to the given string builder.
-     *
-     * @param json
-     * @param key
-     * @param value
-     * @throws UnsupportedEncodingException
-     */
-    private static void appendJSONPair(StringBuilder json, String key, String value) throws UnsupportedEncodingException {
-        boolean isValueNumeric = false;
-
-        try {
-            if (value.equals("0") || !value.endsWith("0")) {
-                Double.parseDouble(value);
-                isValueNumeric = true;
-            }
-        } catch (NumberFormatException e) {
-            isValueNumeric = false;
-        }
-
-        if (json.charAt(json.length() - 1) != '{') {
-            json.append(',');
-        }
-
-        json.append(escapeJSON(key));
-        json.append(':');
-
-        if (isValueNumeric) {
-            json.append(value);
-        } else {
-            json.append(escapeJSON(value));
-        }
-    }
-
-    /**
-     * Escape a string to create a valid JSON string
-     *
-     * @param text
-     * @return
-     */
-    private static String escapeJSON(String text) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append('"');
-        for (int index = 0; index < text.length(); index++) {
-            char chr = text.charAt(index);
-
-            switch (chr) {
-                case '"':
-                case '\\':
-                    builder.append('\\');
-                    builder.append(chr);
-                    break;
-                case '\b':
-                    builder.append("\\b");
-                    break;
-                case '\t':
-                    builder.append("\\t");
-                    break;
-                case '\n':
-                    builder.append("\\n");
-                    break;
-                case '\r':
-                    builder.append("\\r");
-                    break;
-                default:
-                    if (chr < ' ') {
-                        String t = "000" + Integer.toHexString(chr);
-                        builder.append("\\u" + t.substring(t.length() - 4));
-                    } else {
-                        builder.append(chr);
-                    }
-                    break;
-            }
-        }
-        builder.append('"');
-
-        return builder.toString();
     }
 
     /**
@@ -781,5 +658,46 @@ public class Metrics {
             final Plotter plotter = (Plotter) object;
             return plotter.name.equals(name) && plotter.getValue() == getValue();
         }
+    }
+    
+    public static class Data {
+    	
+    	public String guid;
+    	public String plugin_version;
+    	public String server_version;
+    	public int players_online;
+    	
+    	public String osname;
+    	public String orarch;
+    	public String osversion;
+    	public int cores;
+    	public int auth_mode;
+    	
+    	public String java_version;
+    	
+    	public int ping;
+    	
+    	public Set<Graph> graphs;
+    }
+
+    
+    public static class GraphSetSerializer implements JsonSerializer<Set<Graph>> {
+    	
+    	@Override
+    	public JsonElement serialize(Set<Graph> list, Type type, JsonSerializationContext context) {
+    		JsonObject graphs = new JsonObject();
+    		
+    		for (Graph graph : list) {
+    			JsonObject graphObject = new JsonObject();
+    			for (Plotter plotter : graph.getPlotters()) {
+    				graphObject.add(plotter.getColumnName(), new JsonPrimitive(plotter.getValue()));
+    			}
+    			graphs.add(graph.getName(), graphObject);
+    		}
+    		
+    		
+    		return graphs;
+    	}
+    	
     }
 }
