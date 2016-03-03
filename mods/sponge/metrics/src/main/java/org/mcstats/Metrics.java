@@ -32,7 +32,7 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.plugin.PluginContainer;
-import org.spongepowered.api.service.scheduler.Task;
+import org.spongepowered.api.scheduler.Task;
 
 import javax.inject.Inject;
 import java.io.BufferedReader;
@@ -223,7 +223,7 @@ public class Metrics {
             }
 
             // Begin hitting the server with glorious data
-            task = game.getAsyncScheduler().runRepeatingTask(plugin, new Runnable() {
+            task = game.getScheduler().createTaskBuilder().async().interval(PING_INTERVAL, TimeUnit.MINUTES).execute(new Runnable() {
                 private boolean firstPost = true;
 
                 public void run() {
@@ -255,7 +255,7 @@ public class Metrics {
                         }
                     }
                 }
-            }, TimeUnit.MINUTES, PING_INTERVAL).orNull();
+            }).submit(plugin);
 
             return true;
         }
@@ -339,7 +339,7 @@ public class Metrics {
         String pluginVersion = plugin.getVersion();
         // TODO no visible way to get MC version at the moment
         // TODO added by game.getPlatform().getMinecraftVersion() -- impl in 2.1
-        String serverVersion = String.format("%s %s", "Sponge", game.getImplementationVersion());
+        String serverVersion = String.format("%s %s", "Sponge", game.getPlatform().getApi().getVersion());
         int playersOnline = game.getServer().getOnlinePlayers().size();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
