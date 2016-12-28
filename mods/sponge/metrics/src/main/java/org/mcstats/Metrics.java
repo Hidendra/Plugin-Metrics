@@ -336,10 +336,10 @@ public class Metrics {
         // Server software specific section
         String pluginName = plugin.getName();
         boolean onlineMode = game.getServer().getOnlineMode(); // TRUE if online mode is enabled
-        String pluginVersion = plugin.getVersion();
+        String pluginVersion = plugin.getVersion().get();
         // TODO no visible way to get MC version at the moment
         // TODO added by game.getPlatform().getMinecraftVersion() -- impl in 2.1
-        String serverVersion = String.format("%s %s", "Sponge", game.getPlatform().getApi().getVersion());
+        String serverVersion = String.format("%s %s", "Sponge", game.getPlatform().getMinecraftVersion());
         int playersOnline = game.getServer().getOnlinePlayers().size();
 
         // END server software specific section -- all code below does not use any code outside of this class / Java
